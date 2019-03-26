@@ -27,7 +27,7 @@ object TestData {
   // Transfer Syntax UIDs
   def transferSyntaxUID(uid: String = UID.ExplicitVRLittleEndian, bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = element(Tag.TransferSyntaxUID, uid, bigEndian, explicitVR)
 
-  def groupLength(groupNumber: Short, length: Int, bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = shortToBytes(groupNumber, bigEndian) ++ ByteString(0, 0) ++ ByteString("UL") ++ shortToBytes(4, bigEndian) ++ intToBytes(length, bigEndian)
+  def groupLength(groupNumber: Short, length: Int, bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = shortToBytes(groupNumber, bigEndian) ++ ByteString(0, 0) ++ (if (explicitVR) ByteString("UL") ++ shortToBytes(4, bigEndian) else intToBytes(4, bigEndian)) ++ intToBytes(length, bigEndian)
 
   def characterSetsJis(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = element(Tag.SpecificCharacterSet, "ISO 2022 IR 13\\ISO 2022 IR 87", bigEndian, explicitVR)
 

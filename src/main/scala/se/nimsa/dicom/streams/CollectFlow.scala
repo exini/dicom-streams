@@ -32,7 +32,7 @@ object CollectFlow {
     * elements can be processed correctly according to this information. As an example, an implementation may have
     * different graph paths for different modalities and the modality must be known before any elements are processed.
     *
-    * @param tags          tag paths of data elements to collect. Collection (and hence buffering) will end when the
+    * @param tagPaths      tag paths of data elements to collect. Collection (and hence buffering) will end when the
     *                      stream moves past the highest tag number
     * @param label         a tag for the resulting ElementsPart to separate this from other such elements in the same
     *                      flow
@@ -40,10 +40,10 @@ object CollectFlow {
     *                      if this limit is exceed. Set to 0 for an unlimited buffer size
     * @return A DicomPart Flow which will begin with a ElementsPart part followed by other parts in the flow
     */
-  def collectFlow(tags: Set[_ <: TagPath], label: String, maxBufferSize: Int = 1000000): PartFlow = {
-    val maxTag = if (tags.isEmpty) 0 else tags.map(_.toList.head.tag).max
-    val tagCondition = (tagPath: TagPath) => tags.exists(tagPath.startsWith)
-    val stopCondition = if (tags.isEmpty)
+  def collectFlow(tagPaths: Set[_ <: TagPath], label: String, maxBufferSize: Int = 1000000): PartFlow = {
+    val maxTag = if (tagPaths.isEmpty) 0 else tagPaths.map(_.head.tag).max
+    val tagCondition = (tagPath: TagPath) => tagPaths.exists(tagPath.startsWith)
+    val stopCondition = if (tagPaths.isEmpty)
       (_: TagPath) => true
     else
       (tagPath: TagPath) => tagPath.isRoot && tagPath.tag > maxTag
@@ -110,10 +110,10 @@ object CollectFlow {
           }
 
           part match {
-            case _: HeaderPart if stopCondition(tagPath) =>
+            case _: TagPart if stopCondition(tagPath) =>
               elementsAndBuffer()
 
-            case header: HeaderPart if tagCondition(tagPath) || header.tag == Tag.SpecificCharacterSet =>
+              case header: HeaderPart if tagCondition(tagPath) || header.tag == Tag.SpecificCharacterSet =>
               currentElement = Some(ValueElement(header.tag, header.vr, Value.empty, header.bigEndian, header.explicitVR))
               Nil
 

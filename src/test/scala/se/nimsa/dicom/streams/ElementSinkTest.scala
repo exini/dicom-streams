@@ -9,9 +9,7 @@ import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 import se.nimsa.dicom.data.Elements.{SequenceDelimitationElement, SequenceElement, _}
 import se.nimsa.dicom.data.TestData.pixeDataFragments
 import se.nimsa.dicom.data.{Tag, UID, _}
-import se.nimsa.dicom.streams.ElementFlows.elementFlow
 import se.nimsa.dicom.streams.ElementSink.elementSink
-import se.nimsa.dicom.streams.ParseFlow.parseFlow
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -74,7 +72,7 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with FlatS
     elements.toElements shouldBe elementList
   }
 
-  it should "convert an empty offsets table item to and empty list of offsets" in {
+  it should "convert an empty offsets table item to an empty list of offsets" in {
     val elementList = List(
       FragmentsElement(Tag.PixelData, VR.OB),
       FragmentElement(1, 0, Value.empty),
@@ -104,14 +102,7 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with FlatS
   "Fragments" should "be empty" in {
     val bytes = pixeDataFragments() ++ sequenceDelimitation()
 
-    val elements = Await.result(
-      Source.single(bytes)
-        .via(parseFlow)
-        .via(elementFlow)
-        .runWith(elementSink),
-      5.seconds)
-
-    val fragments = elements.getFragments(Tag.PixelData).get
+    val fragments = toElementsBlocking(Source.single(bytes)).getFragments(Tag.PixelData).get
     fragments.size shouldBe 0
     fragments.offsets shouldBe empty
   }

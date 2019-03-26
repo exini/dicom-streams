@@ -312,15 +312,15 @@ object DicomFlows {
   def fmiGroupLengthFlow: PartFlow = Flow[DicomPart]
     .via(collectFlow(tagPath => tagPath.isRoot && isFileMetaInformation(tagPath.tag), tagPath => !isFileMetaInformation(tagPath.tag), "fmigrouplength", 0))
     .via(tagFilter(tagPath => !isFileMetaInformation(tagPath.tag), _ => true, logGroupLengthWarnings = false))
-    .concat(Source.single(DicomEndMarker))
-    .statefulMapConcat {
+    .via(DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with EndEvent[DicomPart] {
+      var fmi = List.empty[DicomPart]
+      var hasEmitted = false
 
-      () =>
-        var fmi = List.empty[DicomPart]
-        var firstHeader: Option[HeaderPart] = None
-        var hasEmitted = false
+      override def onEnd(): List[DicomPart] =
+        if (this.hasEmitted) Nil else fmi
 
-      {
+      override def onPart(part: DicomPart): List[DicomPart] = part match {
+
         case fmiElements: ElementsPart if fmiElements.label == "fmigrouplength" =>
           val elements = fmiElements.elements
           if (elements.data.nonEmpty) {
@@ -334,34 +334,19 @@ object DicomFlows {
           }
           Nil
 
-        case preamble: PreamblePart =>
-          if (hasEmitted)
-            preamble :: Nil
-          else {
+        case p if !hasEmitted && p.bytes.nonEmpty =>
             hasEmitted = true
-            preamble :: fmi
-          }
+            p match {
+              case preamble: PreamblePart =>
+                preamble :: fmi
+              case _ =>
+                fmi ::: p :: Nil
+            }
 
-        case header: HeaderPart =>
-          if (firstHeader.isEmpty) firstHeader = Some(header)
-          if (hasEmitted)
-            header :: Nil
-          else {
-            hasEmitted = true
-            fmi ::: header :: Nil
-          }
-
-        case DicomEndMarker =>
-          if (hasEmitted)
-            Nil
-          else {
-            hasEmitted = true
-            fmi
-          }
-
-        case part => part :: Nil
+        case p =>
+          p :: Nil
       }
-    }
+    }))
 
   /**
     * Remove all DICOM parts that do not contribute to file bytes

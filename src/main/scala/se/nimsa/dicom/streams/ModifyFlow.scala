@@ -17,6 +17,7 @@
 package se.nimsa.dicom.streams
 
 import akka.util.ByteString
+import se.nimsa.dicom.data._
 import se.nimsa.dicom.data.DicomParts._
 import se.nimsa.dicom.data.TagPath.{EmptyTagPath, TagPathTag}
 import se.nimsa.dicom.data.{Dictionary, TagPath, VR, isFileMetaInformation}
@@ -118,8 +119,7 @@ object ModifyFlow {
       def valueOrNot(bytes: ByteString): List[DicomPart] =
         if (bytes.isEmpty) Nil else ValueChunk(bigEndian, bytes, last = true) :: Nil
 
-      def headerAndValueParts(tagPath: TagPath, modification: ByteString => ByteString): List[DicomPart] = {
-        val valueBytes = modification(ByteString.empty)
+      def headerAndValueParts(tagPath: TagPath, valueBytes: ByteString): List[DicomPart] = {
         val vr = Dictionary.vrOf(tagPath.tag)
         if (vr == VR.UN) throw new IllegalArgumentException("Tag is not present in dictionary, cannot determine value representation")
         if (vr == VR.SQ) throw new IllegalArgumentException("Cannot insert sequences")
@@ -137,10 +137,10 @@ object ModifyFlow {
       def findInsertParts: List[DicomPart] = currentInsertions
         .filter(i => isBetween(latestTagPath, i.tagPath, tagPath))
         .filter(i => isInDataset(i.tagPath, tagPath))
-        .flatMap(i => headerAndValueParts(i.tagPath, _ => i.insertion(None)))
+        .flatMap(i => headerAndValueParts(i.tagPath, padToEvenLength(i.insertion(None), i.tagPath.tag)))
 
       def findModifyPart(header: HeaderPart): List[DicomPart] = currentModifications
-        .find(m => m.matches(tagPath))
+          .find(m => m.matches(tagPath))
         .map { tagModification =>
           currentHeader = Some(header)
           currentModification = Some(tagModification)
@@ -184,7 +184,7 @@ object ModifyFlow {
             if (currentModification.isDefined && currentHeader.isDefined) {
               value = value ++ chunk.bytes
               if (chunk.last) {
-                val newValue = currentModification.get.modification(value)
+                val newValue = padToEvenLength(currentModification.get.modification(value), currentHeader.get.vr)
                 val newHeader = currentHeader.get.withUpdatedLength(newValue.length)
                 currentModification = None
                 currentHeader = None
@@ -203,7 +203,7 @@ object ModifyFlow {
         currentInsertions
           .filter(_.tagPath.isRoot)
           .filter(m => latestTagPath < m.tagPath)
-          .flatMap(m => headerAndValueParts(m.tagPath, _ => m.insertion(None)))
+          .flatMap(m => headerAndValueParts(m.tagPath, padToEvenLength(m.insertion(None), m.tagPath.tag)))
     })
 
 }

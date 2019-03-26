@@ -204,7 +204,7 @@ class ItemDelimitationPartMarker(item: Int) extends ItemDelimitationPart(item, b
   * care has to be taken for DICOM data with determinate length sequences and items.
   */
 trait GuaranteedDelimitationEvents[Out] extends InFragments[Out] {
-  var partStack: List[(LengthPart, Long)] = Nil
+  protected var partStack: List[(LengthPart, Long)] = Nil
 
   def subtractLength(part: DicomPart): List[(LengthPart, Long)] = partStack.map { case (p, bytesLeft) => (p, bytesLeft - part.bytes.length) }
 
@@ -315,24 +315,24 @@ trait TagPathTracking[Out] extends DicomFlow[Out] with GuaranteedValueEvent[Out]
   * stream to indeterminate length sequences and items, and to remove group length attributes.
   */
 trait GroupLengthWarnings[Out] extends DicomFlow[Out] with InFragments[Out] {
-  val log: Logger = LoggerFactory.getLogger("GroupLengthWarningsLogger")
-  var silent = false // opt out of warnings
+  protected val log: Logger = LoggerFactory.getLogger("GroupLengthWarningsLogger")
+  protected var silent = false // opt out of warnings
 
   abstract override def onHeader(part: HeaderPart): List[Out] = {
     if (!silent && isGroupLength(part.tag) && part.tag != Tag.FileMetaInformationGroupLength)
-      log.warn(s"Group length attribute detected, consider removing group lengths to maintain valid DICOM information")
+      log.warn("Group length attribute detected, consider removing group lengths to maintain valid DICOM information")
     super.onHeader(part)
   }
 
   abstract override def onSequence(part: SequencePart): List[Out] = {
     if (!silent && !part.indeterminate && part.length > 0)
-      log.warn(s"Determinate length sequence detected, consider re-encoding sequences to indeterminate length to maintain valid DICOM information")
+      log.warn("Determinate length sequence detected, consider re-encoding sequences to indeterminate length to maintain valid DICOM information")
     super.onSequence(part)
   }
 
   abstract override def onItem(part: ItemPart): List[Out] = {
     if (!silent && !inFragments && !part.indeterminate && part.length > 0)
-      log.warn(s"Determinate length item detected, consider re-encoding items to indeterminate length to maintain valid DICOM information")
+      log.warn("Determinate length item detected, consider re-encoding items to indeterminate length to maintain valid DICOM information")
     super.onItem(part)
   }
 

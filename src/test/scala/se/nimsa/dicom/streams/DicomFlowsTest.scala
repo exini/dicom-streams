@@ -448,7 +448,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with FlatSpe
     val source = Source.single(bytes)
       .via(parseFlow)
       .via(modifyFlow(modifications = Seq(
-        TagModification.equals(TagPath.fromTag(Tag.FileMetaInformationGroupLength), _ => fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian))),
+        TagModification.equals(TagPath.fromTag(Tag.FileMetaInformationGroupLength), _ => fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)).drop(8)),
         TagModification.equals(TagPath.fromTag(Tag.TransferSyntaxUID), _ => ByteString(UID.DeflatedExplicitVRLittleEndian)
         ))))
       .via(deflateDatasetFlow)
@@ -473,7 +473,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with FlatSpe
     val source = Source.single(bytes)
       .via(parseFlow)
       .via(modifyFlow(modifications = Seq(
-        TagModification.equals(TagPath.fromTag(Tag.FileMetaInformationGroupLength), _ => fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian))),
+        TagModification.equals(TagPath.fromTag(Tag.FileMetaInformationGroupLength), _ => fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)).drop(8)),
         TagModification.equals(TagPath.fromTag(Tag.TransferSyntaxUID), _ => ByteString(UID.DeflatedExplicitVRLittleEndian)
         ))))
       .via(deflateDatasetFlow)

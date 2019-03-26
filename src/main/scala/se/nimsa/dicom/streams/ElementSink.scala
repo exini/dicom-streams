@@ -33,7 +33,6 @@ object ElementSink {
   private case class ElementSinkData(builderStack: Seq[ElementsBuilder] = Seq(Elements.newBuilder()),
                                       sequenceStack: Seq[Sequence] = Seq.empty,
                                       fragments: Option[Fragments] = None) {
-    def updated(builder: ElementsBuilder): ElementSinkData = copy(builderStack = builder +: builderStack.tail)
     def updated(sequence: Sequence): ElementSinkData = copy(sequenceStack = sequence +: sequenceStack.tail)
     def updated(fragments: Option[Fragments]): ElementSinkData = copy(fragments = fragments)
     def pushBuilder(builder: ElementsBuilder): ElementSinkData = copy(builderStack = builder +: builderStack)
@@ -57,7 +56,7 @@ object ElementSink {
           case valueElement: ValueElement =>
             val builder = sinkData.builderStack.head
             builder += valueElement
-            sinkData.updated(builder)
+            sinkData
 
           case fragments: FragmentsElement =>
             sinkData.updated(Some(Fragments.empty(fragments)))
@@ -70,7 +69,7 @@ object ElementSink {
             val fragments = sinkData.fragments.get
             val builder = sinkData.builderStack.head
             builder += fragments
-            sinkData.updated(builder).updated(None)
+            sinkData.updated(None)
 
           case sequenceElement: SequenceElement =>
             sinkData.pushSequence(Sequence.empty(sequenceElement))
@@ -82,7 +81,7 @@ object ElementSink {
 
           case _: ItemDelimitationElement if sinkData.hasSequence =>
             val elements = sinkData.builderStack.head.result()
-            val sequence = sinkData.sequenceStack.head//  + elements
+            val sequence = sinkData.sequenceStack.head
             val updatedSequence = sequence.items.lastOption
               .map(item => sequence.copy(items = sequence.items.init :+ item.setElements(elements)))
               .getOrElse(sequence)
@@ -92,7 +91,7 @@ object ElementSink {
             val sequence = sinkData.sequenceStack.head
             val builder = sinkData.builderStack.head
             builder += sequence
-            sinkData.updated(builder).popSequence()
+            sinkData.popSequence()
 
           case _ =>
             sinkData
