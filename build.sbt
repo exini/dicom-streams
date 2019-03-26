@@ -3,7 +3,7 @@ import DicomSourceGenerators._
 
 name := "dicom-streams"
 version := "0.10-SNAPSHOT"
-organization := "se.nimsa"
+organization := "com.exini"
 scalaVersion := "2.12.8"
 scalacOptions := Seq("-encoding", "UTF-8", "-Xlint", "-deprecation", "-unchecked", "-feature", "-target:jvm-1.8")
 scalacOptions in(Compile, doc) ++= Seq(
@@ -14,7 +14,7 @@ scalacOptions in(Compile, doc) ++= Seq(
 
 enablePlugins(BuildInfoPlugin)
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
-buildInfoPackage := "se.nimsa.dicom"
+buildInfoPackage := "com.exini.dicom"
 
 // repos
 
@@ -63,8 +63,8 @@ mappings in (Compile, packageSrc) ++= {
 
 // for automatic license stub generation
 
-organizationName := "Lars Edenbrandt"
-startYear := Some(2018)
+organizationName := "EXINI Diagnostics"
+startYear := Some(2019)
 licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 // coverage
