@@ -5,7 +5,7 @@ jdk:
 
 notifications:
   email:
-    - karl.sjostrand@gmail.com
+    - karl.sjostrand@exini.com
 
 script: "sbt clean coverage test"
 after_success: "sbt coverageReport coveralls"
