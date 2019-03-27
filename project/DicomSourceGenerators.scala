@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lars Edenbrandt
+ * Copyright 2019 EXINI Diagnostics
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ object DicomSourceGenerators {
   }
 
   def generateTag(): String =
-    s"""package se.nimsa.dicom.data
+    s"""package com.exini.dicom.data
        |
        |object Tag {
        |
@@ -116,7 +116,7 @@ object DicomSourceGenerators {
       .filter(_._1 != "Retired")
       .distinct
 
-    s"""package se.nimsa.dicom.data
+    s"""package com.exini.dicom.data
        |
        |object UID {
        |
@@ -173,7 +173,7 @@ object DicomSourceGenerators {
   def generateTagToKeyword(): String = {
     val (_, splitValue, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
     
-    s"""package se.nimsa.dicom.data
+    s"""package com.exini.dicom.data
        |
        |import scala.annotation.switch
        |
@@ -211,7 +211,7 @@ object DicomSourceGenerators {
   def generateTagToVR(): String = {
     val (_, splitValue, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
     
-    s"""package se.nimsa.dicom.data
+    s"""package com.exini.dicom.data
        |
        |import VR._
        |import scala.annotation.switch
@@ -256,7 +256,7 @@ object DicomSourceGenerators {
   def generateTagToVM(): String = {
     val (_, splitValue, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
     
-    s"""package se.nimsa.dicom.data
+    s"""package com.exini.dicom.data
        |
        |import scala.annotation.switch
        |

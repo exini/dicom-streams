@@ -2,9 +2,9 @@
 
 Service | Status | Description
 ------- | ------ | -----------
-Travis            | [![Build Status](https://travis-ci.org/slicebox/dicom-streams.svg?branch=develop)](https://travis-ci.org/slicebox/dicom-streams.svg?branch=develop) | [Tests](https://travis-ci.org/slicebox/dicom-streams/)
-Coveralls         | [![Coverage Status](https://coveralls.io/repos/github/slicebox/dicom-streams/badge.svg?branch=develop)](https://coveralls.io/github/slicebox/dicom-streams?branch=develop) | Code coverage
-Gitter            | [![Join the chat at https://gitter.im/slicebox/dicom-streams](https://badges.gitter.im/slicebox/dicom-streams.svg)](https://gitter.im/slicebox/dicom-streams?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Chatroom
+Travis            | [![Build Status](https://travis-ci.org/exini/dicom-streams.svg?branch=develop)](https://travis-ci.org/exini/dicom-streams.svg?branch=develop) | [Tests](https://travis-ci.org/exini/dicom-streams/)
+Coveralls         | [![Coverage Status](https://coveralls.io/repos/github/exini/dicom-streams/badge.svg?branch=develop)](https://coveralls.io/github/exini/dicom-streams?branch=develop) | Code coverage
+Gitter            | [![Join the chat at https://gitter.im/exini/dicom-streams](https://badges.gitter.im/exini/dicom-streams.svg)](https://gitter.im/exini/dicom-streams?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Chatroom
 
 The purpose of this project is to create a streaming API for reading and processing DICOM data using [akka-streams](http://doc.akka.io/docs/akka/current/scala/stream/index.html). 
 
@@ -25,7 +25,7 @@ resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snap
 
 The library is included by
 ```scala
-libraryDependencies += "se.nimsa" %% "dicom-streams" % "0.9"
+libraryDependencies += "com.exini" %% "dicom-streams" % "0.9"
 ```
 
 ### Data Model
