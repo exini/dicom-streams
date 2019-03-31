@@ -2,7 +2,7 @@ import sbt.IO
 import DicomSourceGenerators._
 
 name := "dicom-streams"
-version := "0.10-SNAPSHOT"
+version := "0.10"
 organization := "com.exini"
 scalaVersion := "2.12.8"
 scalacOptions := Seq("-encoding", "UTF-8", "-Xlint", "-deprecation", "-unchecked", "-feature", "-target:jvm-1.8")
@@ -29,8 +29,8 @@ libraryDependencies ++= {
     "org.scala-lang.modules" %% "scala-xml" % "1.1.1",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    "org.slf4j" % "slf4j-simple" % "1.7.25",
-    "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+    "org.slf4j" % "slf4j-simple" % "1.7.26",
+    "org.scalatest" %% "scalatest" % "3.0.7" % "test",
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test"
   )
 }
