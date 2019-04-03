@@ -98,9 +98,9 @@ homepage := Some(url("https://github.com/exini/dicom-streams"))
 
 developers := List(
   Developer(
-    id    = "KarlSjostrand",
+    id    = "karl-exini",
     name  = "Karl Sjöstrand",
     email = "karl.sjostrand@exini.com",
-    url   = url("https://github.com/KarlSjostrand")
+    url   = url("https://github.com/karl-exini")
   )
 )
