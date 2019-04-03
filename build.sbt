@@ -86,12 +86,21 @@ publishTo := {
 
 pomIncludeRepository := { _ => false }
 
-pomExtra :=
-  <url>https://github.com/slicebox/dicom-streams</url>
-    <developers>
-      <developer>
-        <id>KarlSjostrand</id>
-        <name>Karl Sjöstrand</name>
-        <url>https://github.com/KarlSjostrand</url>
-      </developer>
-    </developers>
+scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/exini/dicom-streams"),
+    "scm:git@github.com:exini/dicom-streams.git"
+  )
+)
+
+homepage := Some(url("https://github.com/exini/dicom-streams"))
+
+
+developers := List(
+  Developer(
+    id    = "KarlSjostrand",
+    name  = "Karl Sjöstrand",
+    email = "karl.sjostrand@exini.com",
+    url   = url("https://github.com/KarlSjostrand")
+  )
+)
