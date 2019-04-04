@@ -598,4 +598,22 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with FlatSpecL
       .expectValueChunk()
       .expectDicomComplete()
   }
+
+  it should "not warn after re-encoding to indeterminate length sequences and items" in {
+    println()
+    val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate()
+    val source = Source.single(bytes)
+      .via(parseFlow)
+      .via(toIndeterminateLengthSequences)
+      .via(DicomFlowFactory.create(new IdentityFlow with GroupLengthWarnings[DicomPart]))
+
+    source.runWith(TestSink.probe[DicomPart])
+      .expectSequence(Tag.DerivationCodeSequence, indeterminateLength)
+      .expectItem(1, indeterminateLength)
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectDicomComplete()
+  }
 }
