@@ -181,7 +181,7 @@ sealed trait TagTree extends TagPathLike {
 
   def toString(lookup: Boolean): String = {
     def toTagString(tag: Int): String = if (lookup) {
-      val keyword = Dictionary.keywordOf(tag)
+      val keyword = Lookup.keywordOf(tag)
       if (keyword.isEmpty) tagToString(tag) else keyword
     }
     else
@@ -337,7 +337,7 @@ object TagTree {
 
     def parseTag(s: String): Int = try Integer.parseInt(s.substring(1, 5) + s.substring(6, 10), 16) catch {
       case _: Throwable =>
-        Dictionary.tagOf(s)
+        Lookup.tagOf(s)
     }
 
     def parseIndex(s: String): Option[Int] = if (s == "*") None else Some(Integer.parseInt(s))

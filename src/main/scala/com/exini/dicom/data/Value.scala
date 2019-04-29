@@ -17,7 +17,7 @@
 package com.exini.dicom.data
 
 import java.net.URI
-import java.time.format.{DateTimeFormatterBuilder, SignStyle}
+import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder, SignStyle}
 import java.time.temporal.ChronoField._
 import java.time._
 
@@ -54,6 +54,7 @@ case class Value private[data](bytes: ByteString) {
       case OF => Seq(parseFL(bytes, bigEndian).mkString(" "))
       case OD => Seq(parseFD(bytes, bigEndian).mkString(" "))
       case ST | LT | UT | UR => Seq(trimPadding(characterSets.decode(vr, bytes), vr.paddingByte))
+      case DA | TM | DT => split(bytes.utf8String).map(trim)
       case UC => split(trimPadding(characterSets.decode(vr, bytes), vr.paddingByte))
       case _ => split(characterSets.decode(vr, bytes)).map(trim)
     }
@@ -478,20 +479,11 @@ object Value {
     .appendPattern("[Z]")
     .toFormatter
 
-  final val dateFormatForEncoding = new DateTimeFormatterBuilder()
-    .appendValue(YEAR, 4, 4, SignStyle.EXCEEDS_PAD)
-    .appendPattern("MMdd")
-    .toFormatter
-
-  final val timeFormatForEncoding = new DateTimeFormatterBuilder()
-    .appendValue(HOUR_OF_DAY, 2, 2, SignStyle.EXCEEDS_PAD)
-    .appendPattern("mmss")
-    .toFormatter
+  final val dateFormatForEncoding = DateTimeFormatter.ofPattern("uuuuMMdd")
+  final val timeFormatForEncoding = DateTimeFormatter.ofPattern("HHmmss'.'SSSSSS")
 
   def formatDate(date: LocalDate): String = date.format(dateFormatForEncoding)
-
   def formatTime(time: LocalTime): String = time.format(timeFormatForEncoding)
-
   def formatDateTime(dateTime: ZonedDateTime): String = dateTime.format(dateTimeZoneFormat)
 
   def parseDate(s: String): Option[LocalDate] =

@@ -132,7 +132,7 @@ class ParseFlow private(chunkSize: Int, stopTag: Option[Int]) extends ByteString
           ParseResult(None, toDatasetStep(ByteString(0, 0), state))
         } else {
           // no meta elements can lead to vr = null
-          val updatedVr = if (vr == VR.UN) Dictionary.vrOf(tag) else vr
+          val updatedVr = if (vr == VR.UN) Lookup.vrOf(tag) else vr
           val bytes = reader.take(headerLength)
           val updatedPos = state.pos + headerLength + valueLength
           val updatedState = tag match {
@@ -272,7 +272,7 @@ class ParseFlow private(chunkSize: Int, stopTag: Option[Int]) extends ByteString
       else if (explicitVr)
         (tag, VR.valueOf(bytesToVR(data.drop(4))))
       else
-        (tag, Dictionary.vrOf(tag))
+        (tag, Lookup.vrOf(tag))
     }
 
     private def readHeader(reader: ByteReader, state: HeaderState): (Int, VR, Int, Long) = {

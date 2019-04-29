@@ -272,7 +272,7 @@ object DicomSourceGenerators {
        |    case t if (t & 0xFFFFFF00) == Tag.SourceImageIDs => Multiplicity.oneToMany
        |    case t =>
        |      val t2 = adjustTag(t)
-       |      Dictionary.vrOf(t2) match {
+       |      Lookup.vrOf(t2) match {
        |        case VR.SQ | VR.OF | VR.OD | VR.OW | VR.OB | VR.OL | VR.UR | VR.UN | VR.LT | VR.ST | VR.UT => Multiplicity.single
        |        case _ => if (t2 < $splitValue) vmOfLow(t2) else vmOfHigh(t2)
        |      }

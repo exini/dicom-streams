@@ -512,6 +512,15 @@ class ValueTest extends FlatSpec with Matchers {
     Value.fromDate(VR.LT, date1).toString(VR.LT) shouldBe Some("20040329")
   }
 
+  it should "produce the expected bytes from time(s)" in {
+    val dt1 = LocalTime.of(11, 59, 35, 123456000)
+    val dt2 = LocalTime.of(11, 59, 36, 123456000)
+    Value.fromTime(VR.TM, dt1).toTime().get shouldBe dt1
+    Value.fromTimes(VR.TM, Seq(dt1, dt2)).toTimes() shouldBe Seq(dt1, dt2)
+
+    Value.fromTime(VR.LT, dt1).toString(VR.LT) shouldBe Some("115935.123456")
+  }
+
   it should "produce the expected bytes from date-time(s)" in {
     val dt1 = ZonedDateTime.of(2004, 3, 29, 11, 59, 35, 123456000, ZoneOffset.UTC)
     val dt2 = ZonedDateTime.of(2004, 3, 29, 11, 59, 36, 123456000, ZoneOffset.UTC)

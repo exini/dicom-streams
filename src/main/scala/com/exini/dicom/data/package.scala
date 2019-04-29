@@ -89,7 +89,7 @@ package object data {
 
   def lengthToLong(length: Int): Long = if (length == indeterminateLength) -1L else intToUnsignedLong(length)
 
-  def padToEvenLength(bytes: ByteString, tag: Int): ByteString = padToEvenLength(bytes, Dictionary.vrOf(tag))
+  def padToEvenLength(bytes: ByteString, tag: Int): ByteString = padToEvenLength(bytes, Lookup.vrOf(tag))
   def padToEvenLength(bytes: ByteString, vr: VR): ByteString = {
     val padding = if ((bytes.length & 1) != 0) ByteString(vr.paddingByte) else ByteString.empty
     bytes ++ padding
@@ -118,25 +118,19 @@ package object data {
   def isPrivate(tag: Int): Boolean = groupNumber(tag) % 2 == 1
   def isGroupLength(tag: Int): Boolean = elementNumber(tag) == 0
 
-  // UID utility tools (from dcm4che UIDUtils)
-  private final val uuidRoot = "2.25"
+  // UID utility tools
+  private final val uidRoot = "2.25"
   private def toUID(root: String, uuid: UUID) = {
     val uuidBytes = ByteString(0) ++
       longToBytesBE(uuid.getMostSignificantBits) ++
       longToBytesBE(uuid.getLeastSignificantBits)
     val uuidString = new BigInteger(uuidBytes.toArray).toString
-    val rootLength = root.length
-    val uuidLength = uuidString.length
-    val cs = new Array[Char](rootLength + uuidLength + 1)
-    root.getChars(0, rootLength, cs, 0)
-    cs(rootLength) = '.'
-    uuidString.getChars(0, uuidLength, cs, rootLength + 1)
-    new String(cs)
+    s"$root.$uuidString".take(64)
   }
-  private def nameBasedUID(name: ByteString, root: String): String = toUID(root, UUID.nameUUIDFromBytes(name.toArray))
   private def randomUID(root: String): String = toUID(root, UUID.randomUUID)
-  def createUID(): String = randomUID(uuidRoot)
+  private def nameBasedUID(name: ByteString, root: String): String = toUID(root, UUID.nameUUIDFromBytes(name.toArray))
+  def createUID(): String = randomUID(uidRoot)
   def createUID(root: String): String = randomUID(root)
-  def createNameBasedUID(name: ByteString): String = nameBasedUID(name, uuidRoot)
+  def createNameBasedUID(name: ByteString): String = nameBasedUID(name, uidRoot)
   def createNameBasedUID(name: ByteString, root: String): String = nameBasedUID(name, root)
 }

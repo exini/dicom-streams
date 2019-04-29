@@ -281,97 +281,97 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def setStrings(tag: Int, vr: VR, values: Seq[String], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromStrings(vr, values, bigEndian), bigEndian, explicitVR)
   def setStrings(tag: Int, values: Seq[String], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setStrings(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setStrings(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setString(tag: Int, vr: VR, value: String, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromString(vr, value, bigEndian), bigEndian, explicitVR)
   def setString(tag: Int, value: String, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setString(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setString(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setShorts(tag: Int, vr: VR, values: Seq[Short], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromShorts(vr, values, bigEndian), bigEndian, explicitVR)
   def setShorts(tag: Int, values: Seq[Short], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setShorts(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setShorts(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setShort(tag: Int, vr: VR, value: Short, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromShort(vr, value, bigEndian), bigEndian, explicitVR)
   def setShort(tag: Int, value: Short, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setShort(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setShort(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setInts(tag: Int, vr: VR, values: Seq[Int], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromInts(vr, values, bigEndian), bigEndian, explicitVR)
   def setInts(tag: Int, values: Seq[Int], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setInts(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setInts(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setInt(tag: Int, vr: VR, value: Int, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromInt(vr, value, bigEndian), bigEndian, explicitVR)
   def setInt(tag: Int, value: Int, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setInt(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setInt(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setLongs(tag: Int, vr: VR, values: Seq[Long], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromLongs(vr, values, bigEndian), bigEndian, explicitVR)
   def setLongs(tag: Int, values: Seq[Long], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setLongs(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setLongs(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setLong(tag: Int, vr: VR, value: Long, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromLong(vr, value, bigEndian), bigEndian, explicitVR)
   def setLong(tag: Int, value: Long, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setLong(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setLong(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setFloats(tag: Int, vr: VR, values: Seq[Float], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromFloats(vr, values, bigEndian), bigEndian, explicitVR)
   def setFloats(tag: Int, values: Seq[Float], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setFloats(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setFloats(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setFloat(tag: Int, vr: VR, value: Float, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromFloat(vr, value, bigEndian), bigEndian, explicitVR)
   def setFloat(tag: Int, value: Float, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setFloat(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setFloat(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setDoubles(tag: Int, vr: VR, values: Seq[Double], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromDoubles(vr, values, bigEndian), bigEndian, explicitVR)
   def setDoubles(tag: Int, values: Seq[Double], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setDoubles(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setDoubles(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setDouble(tag: Int, vr: VR, value: Double, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromDouble(vr, value, bigEndian), bigEndian, explicitVR)
   def setDouble(tag: Int, value: Double, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setDouble(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setDouble(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setDates(tag: Int, vr: VR, values: Seq[LocalDate], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromDates(vr, values), bigEndian, explicitVR)
   def setDates(tag: Int, values: Seq[LocalDate], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setDates(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setDates(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setDate(tag: Int, vr: VR, value: LocalDate, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromDate(vr, value), bigEndian, explicitVR)
   def setDate(tag: Int, value: LocalDate, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setDate(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setDate(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setTimes(tag: Int, vr: VR, values: Seq[LocalTime], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromTimes(vr, values), bigEndian, explicitVR)
   def setTimes(tag: Int, values: Seq[LocalTime], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setTimes(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setTimes(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setTime(tag: Int, vr: VR, value: LocalTime, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromTime(vr, value), bigEndian, explicitVR)
   def setTime(tag: Int, value: LocalTime, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setTime(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setTime(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setDateTimes(tag: Int, vr: VR, values: Seq[ZonedDateTime], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromDateTimes(vr, values), bigEndian, explicitVR)
   def setDateTimes(tag: Int, values: Seq[ZonedDateTime], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setDateTimes(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setDateTimes(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setDateTime(tag: Int, vr: VR, value: ZonedDateTime, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromDateTime(vr, value), bigEndian, explicitVR)
   def setDateTime(tag: Int, value: ZonedDateTime, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setDateTime(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setDateTime(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setPatientNames(tag: Int, vr: VR, values: Seq[PatientName], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromPatientNames(vr, values), bigEndian, explicitVR)
   def setPatientNames(tag: Int, values: Seq[PatientName], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setPatientNames(tag, Dictionary.vrOf(tag), values, bigEndian, explicitVR)
+    setPatientNames(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setPatientName(tag: Int, vr: VR, value: PatientName, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromPatientName(vr, value), bigEndian, explicitVR)
   def setPatientName(tag: Int, value: PatientName, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setPatientName(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setPatientName(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setURI(tag: Int, vr: VR, value: URI, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromURI(vr, value), bigEndian, explicitVR)
   def setURI(tag: Int, value: URI, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setURI(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+    setURI(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def remove(tag: Int): Elements = filter(_.tag != tag)
   def remove(tagPath: TagPath): Elements = tagPath match {
@@ -419,12 +419,12 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
         val strings = e.value.toStrings(e.vr, e.bigEndian, characterSets)
         val s = strings.mkString(multiValueDelimiter)
         val vm = strings.length.toString
-        s"$indent${tagToString(e.tag)} ${e.vr} [$s] ${space1(s)} # ${space2(e.length)} ${e.length}, $vm ${Dictionary.keywordOf(e.tag)}" :: Nil
+        s"$indent${tagToString(e.tag)} ${e.vr} [$s] ${space1(s)} # ${space2(e.length)} ${e.length}, $vm ${Lookup.keywordOf(e.tag)}" :: Nil
 
       case s: Sequence =>
         val heading = {
           val description = if (s.length == indeterminateLength) "Sequence with indeterminate length" else s"Sequence with explicit length ${s.length}"
-          s"$indent${tagToString(s.tag)} SQ ($description) ${space1(description)} # ${space2(s.length)} ${s.length}, 1 ${Dictionary.keywordOf(s.tag)}"
+          s"$indent${tagToString(s.tag)} SQ ($description) ${space1(description)} # ${space2(s.length)} ${s.length}, 1 ${Lookup.keywordOf(s.tag)}"
         }
         val items = s.items.flatMap { i =>
           val heading = {
@@ -441,7 +441,7 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
       case f: Fragments =>
         val heading = {
           val description = s"Fragments with ${f.size} fragment(s)"
-          s"$indent${tagToString(f.tag)} ${f.vr} ($description) ${space1(description)} #    na, 1 ${Dictionary.keywordOf(f.tag)}"
+          s"$indent${tagToString(f.tag)} ${f.vr} ($description) ${space1(description)} #    na, 1 ${Lookup.keywordOf(f.tag)}"
         }
         val offsets = f.offsets.map { o =>
           val description = s"Offsets table with ${o.length} offset(s)"
@@ -533,17 +533,17 @@ object Elements {
       val strings = value.toStrings(vr, bigEndian, defaultCharacterSet)
       val s = strings.mkString(multiValueDelimiter)
       val vm = strings.length.toString
-      s"ValueElement(${tagToString(tag)} $vr [$s] # $length, $vm ${Dictionary.keywordOf(tag)})"
+      s"ValueElement(${tagToString(tag)} $vr [$s] # $length, $vm ${Lookup.keywordOf(tag)})"
     }
   }
 
   object ValueElement {
     def apply(tag: Int, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
-      ValueElement(tag, Dictionary.vrOf(tag), value, bigEndian, explicitVR)
+      ValueElement(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
     def fromBytes(tag: Int, bytes: ByteString, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
       apply(tag, Value(bytes), bigEndian, explicitVR)
     def fromString(tag: Int, string: String, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
-      apply(tag, Value.fromString(Dictionary.vrOf(tag), string, bigEndian), bigEndian, explicitVR)
+      apply(tag, Value.fromString(Lookup.vrOf(tag), string, bigEndian), bigEndian, explicitVR)
     def empty(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
       ValueElement(tag, vr, Value.empty, bigEndian, explicitVR)
   }
@@ -551,13 +551,13 @@ object Elements {
   case class SequenceElement(tag: Int, length: Long, bigEndian: Boolean = false, explicitVR: Boolean = true) extends Element {
     override def toBytes: ByteString = HeaderPart(tag, VR.SQ, length, isFmi = false, bigEndian, explicitVR).bytes
     override def toParts: List[DicomPart] = SequencePart(tag, length, bigEndian, explicitVR, toBytes) :: Nil
-    override def toString: String = s"SequenceElement(${tagToString(tag)} SQ # $length ${Dictionary.keywordOf(tag)})"
+    override def toString: String = s"SequenceElement(${tagToString(tag)} SQ # $length ${Lookup.keywordOf(tag)})"
   }
 
   case class FragmentsElement(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true) extends Element {
     override def toBytes: ByteString = toParts.head.bytes
     override def toParts: List[DicomPart] = HeaderPart(tag, vr, indeterminateLength, isFmi = false, bigEndian, explicitVR) :: Nil
-    override def toString: String = s"FragmentsElement(${tagToString(tag)} $vr # ${Dictionary.keywordOf(tag)})"
+    override def toString: String = s"FragmentsElement(${tagToString(tag)} $vr # ${Lookup.keywordOf(tag)})"
   }
 
   case class FragmentElement(index: Int, length: Long, value: Value, bigEndian: Boolean = false) extends Element {
@@ -611,7 +611,7 @@ object Elements {
       SequenceDelimitationElement(marker = !indeterminate, bigEndian) :: Nil
     def size: Int = items.length
     def setItem(index: Int, item: Item): Sequence = copy(items = items.updated(index - 1, item))
-    override def toString: String = s"Sequence(${tagToString(tag)} SQ # $length ${items.length} ${Dictionary.keywordOf(tag)})"
+    override def toString: String = s"Sequence(${tagToString(tag)} SQ # $length ${items.length} ${Lookup.keywordOf(tag)})"
   }
 
   object Sequence {
@@ -708,7 +708,7 @@ object Elements {
       fragments.zipWithIndex.map { case (fragment, index) => fragment.toElement(index + 2) } :::
       SequenceDelimitationElement(bigEndian) :: Nil
     def setFragment(index: Int, fragment: Fragment): Fragments = copy(fragments = fragments.updated(index - 1, fragment))
-    override def toString: String = s"Fragments(${tagToString(tag)} $vr # ${fragments.length} ${Dictionary.keywordOf(tag)})"
+    override def toString: String = s"Fragments(${tagToString(tag)} $vr # ${fragments.length} ${Lookup.keywordOf(tag)})"
   }
 
   object Fragments {

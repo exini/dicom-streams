@@ -20,7 +20,7 @@ import akka.util.ByteString
 import com.exini.dicom.data._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath.{EmptyTagPath, TagPathTag}
-import com.exini.dicom.data.{Dictionary, TagPath, VR, isFileMetaInformation}
+import com.exini.dicom.data.{Lookup, TagPath, VR, isFileMetaInformation}
 
 object ModifyFlow {
 
@@ -120,7 +120,7 @@ object ModifyFlow {
         if (bytes.isEmpty) Nil else ValueChunk(bigEndian, bytes, last = true) :: Nil
 
       def headerAndValueParts(tagPath: TagPath, valueBytes: ByteString): List[DicomPart] = {
-        val vr = Dictionary.vrOf(tagPath.tag)
+        val vr = Lookup.vrOf(tagPath.tag)
         if (vr == VR.UN) throw new IllegalArgumentException("Tag is not present in dictionary, cannot determine value representation")
         if (vr == VR.SQ) throw new IllegalArgumentException("Cannot insert sequences")
         val isFmi = isFileMetaInformation(tagPath.tag)

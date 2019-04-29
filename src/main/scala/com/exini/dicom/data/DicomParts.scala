@@ -44,12 +44,19 @@ object DicomParts {
     def indeterminate: Boolean = length == indeterminateLength
   }
 
+  /**
+    * A 'DicomPart' with a VR type (e.g. `HeaderPart`, `SequencePart`, `FragmentsPart`)
+    */
+  trait VrPart extends DicomPart {
+    def vr: VR
+  }
+
   case class PreamblePart(bytes: ByteString) extends DicomPart {
     def bigEndian = false
     override def toString = s"${getClass.getSimpleName} (${bytes.length} bytes)"
   }
 
-  case class HeaderPart(tag: Int, vr: VR, length: Long, isFmi: Boolean, bigEndian: Boolean, explicitVR: Boolean, bytes: ByteString) extends DicomPart with TagPart with LengthPart {
+  case class HeaderPart(tag: Int, vr: VR, length: Long, isFmi: Boolean, bigEndian: Boolean, explicitVR: Boolean, bytes: ByteString) extends DicomPart with TagPart with VrPart with LengthPart {
 
     def withUpdatedLength(newLength: Long): HeaderPart =
       if (newLength == length)
@@ -94,13 +101,14 @@ object DicomParts {
 
   case class ItemDelimitationPart(index: Int, bigEndian: Boolean, bytes: ByteString) extends DicomPart
 
-  case class SequencePart(tag: Int, length: Long, bigEndian: Boolean, explicitVR: Boolean, bytes: ByteString) extends DicomPart with TagPart with LengthPart {
+  case class SequencePart(tag: Int, length: Long, bigEndian: Boolean, explicitVR: Boolean, bytes: ByteString) extends DicomPart with TagPart with VrPart with LengthPart {
+    override val vr: VR = VR.SQ
     override def toString = s"${getClass.getSimpleName} ${tagToString(tag)} length = $length ${if (bigEndian) "(big endian) " else ""}${if (!explicitVR) "(implicit) " else ""}$bytes"
   }
 
   case class SequenceDelimitationPart(bigEndian: Boolean, bytes: ByteString) extends DicomPart
 
-  case class FragmentsPart(tag: Int, length: Long, vr: VR, bigEndian: Boolean, explicitVR: Boolean, bytes: ByteString) extends DicomPart with TagPart with LengthPart {
+  case class FragmentsPart(tag: Int, length: Long, vr: VR, bigEndian: Boolean, explicitVR: Boolean, bytes: ByteString) extends DicomPart with TagPart with VrPart with LengthPart {
     override def toString = s"${getClass.getSimpleName} ${tagToString(tag)} $vr ${if (bigEndian) "(big endian) " else ""}$bytes"
   }
 

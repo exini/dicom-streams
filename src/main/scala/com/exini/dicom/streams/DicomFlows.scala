@@ -58,8 +58,8 @@ object DicomFlows {
     *                         synthetic DICOM parts inserted to hold state.
     * @return the associated filter Flow
     */
-  def whitelistFilter(whitelist: Set[_ <: TagTree], defaultCondition: DicomPart => Boolean): PartFlow =
-    tagFilter(currentPath => whitelist.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath)), defaultCondition)
+  def whitelistFilter(whitelist: Set[_ <: TagTree], defaultCondition: DicomPart => Boolean = _ => true, logGroupLengthWarnings: Boolean = true): PartFlow =
+    tagFilter(currentPath => whitelist.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath)), defaultCondition, logGroupLengthWarnings)
 
   /**
     * Filter a stream of dicom parts such that elements with tag paths in the black list are discarded. Tag paths in
@@ -73,8 +73,8 @@ object DicomFlows {
     *                         synthetic DICOM parts inserted to hold state.
     * @return the associated filter Flow
     */
-  def blacklistFilter(blacklist: Set[_ <: TagTree], defaultCondition: DicomPart => Boolean): PartFlow =
-    tagFilter(currentPath => !blacklist.exists(_.isTrunkOf(currentPath)), defaultCondition)
+  def blacklistFilter(blacklist: Set[_ <: TagTree], defaultCondition: DicomPart => Boolean = _ => true, logGroupLengthWarnings: Boolean = true): PartFlow =
+    tagFilter(currentPath => !blacklist.exists(_.isTrunkOf(currentPath)), defaultCondition, logGroupLengthWarnings)
 
   /**
     * Filter a stream of dicom parts such that all elements that are group length elements except
@@ -118,10 +118,9 @@ object DicomFlows {
   def tagFilter(keepCondition: TagPath => Boolean, defaultCondition: DicomPart => Boolean = _ => true, logGroupLengthWarnings: Boolean = true): PartFlow =
     DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
       silent = !logGroupLengthWarnings
-      var keeping = false
 
       override def onPart(part: DicomPart): List[DicomPart] = {
-        keeping = tagPath match {
+        val keeping = tagPath match {
           case EmptyTagPath => defaultCondition(part)
           case path => keepCondition(path)
         }
@@ -147,6 +146,23 @@ object DicomFlows {
       override def onPart(part: DicomPart): List[DicomPart] = part match {
         case p: HeaderPart =>
           keeping = keepCondition(p)
+          if (keeping) p :: Nil else Nil
+        case p: ValueChunk =>
+          if (keeping) p :: Nil else Nil
+        case p =>
+          keeping = true
+          p :: Nil
+      }
+    })
+
+  def tagHeaderFilter(keepCondition: (TagPath, HeaderPart) => Boolean, logGroupLengthWarnings: Boolean = true): PartFlow =
+    DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
+      silent = !logGroupLengthWarnings
+      var keeping = true
+
+      override def onPart(part: DicomPart): List[DicomPart] = part match {
+        case p: HeaderPart =>
+          keeping = keepCondition(tagPath, p)
           if (keeping) p :: Nil else Nil
         case p: ValueChunk =>
           if (keeping) p :: Nil else Nil
