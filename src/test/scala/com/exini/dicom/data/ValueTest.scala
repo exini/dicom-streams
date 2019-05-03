@@ -1,5 +1,6 @@
 package com.exini.dicom.data
 
+import java.math.BigInteger
 import java.time.{LocalDate, LocalTime, ZoneOffset, ZonedDateTime}
 
 import akka.util.ByteString
@@ -62,6 +63,8 @@ class ValueTest extends FlatSpec with Matchers {
     Value(shortToBytes(-3)).toInts(VR.US) shouldBe Seq((1 << 16) - 3)
     Value(intToBytes(-3)).toInts(VR.SL) shouldBe Seq(-3)
     Value(intToBytes(-3)).toInts(VR.UL) shouldBe Seq(-3)
+    Value(longToBytes(-3)).toInts(VR.SV) shouldBe Seq(-3)
+    Value(longToBytes(3)).toInts(VR.UV) shouldBe Seq(3)
     Value(ByteString("3.1415")).toInts(VR.DS) shouldBe Seq(3)
     Value(ByteString("-3")).toInts(VR.IS) shouldBe Seq(-3)
     Value(ByteString("-3")).toInts(VR.AT) shouldBe empty
@@ -90,6 +93,8 @@ class ValueTest extends FlatSpec with Matchers {
     Value(shortToBytes(-3)).toLongs(VR.US) shouldBe Seq((1 << 16) - 3L)
     Value(intToBytes(-3)).toLongs(VR.SL) shouldBe Seq(-3L)
     Value(intToBytes(-3)).toLongs(VR.UL) shouldBe Seq((1L << 32) - 3L)
+    Value(longToBytes(-3)).toLongs(VR.SV) shouldBe Seq(-3L)
+    Value(longToBytes(3)).toLongs(VR.UV) shouldBe Seq(3L)
     Value(ByteString("3.1415")).toLongs(VR.DS) shouldBe Seq(3L)
     Value(ByteString("-3")).toLongs(VR.IS) shouldBe Seq(-3L)
     Value(VR.AT, ByteString("-3")).toLongs(VR.AT) shouldBe empty
@@ -101,6 +106,38 @@ class ValueTest extends FlatSpec with Matchers {
 
   it should "return None if no entry exists" in {
     Value(ByteString.empty).toLong(VR.SL) shouldBe None
+  }
+
+  "Parsing very long values" should "return empty sequence for empty byte string" in {
+    Value(ByteString.empty).toLongs(VR.UV) shouldBe Seq.empty
+  }
+
+  it should "parse multiple long values" in {
+    Value(ByteString(1, 2, 3, 4, 5, 6, 7, 8) ++ ByteString(1, 2, 1, 2, 1, 2, 1, 2)).toVeryLongs(VR.UV, bigEndian = true) shouldBe
+      Seq(new BigInteger(1, Array[Byte](1, 2, 3, 4, 5, 6, 7, 8)), new BigInteger(1, Array[Byte](1, 2, 1, 2, 1, 2, 1, 2)))
+  }
+
+  it should "return long values for all numerical VRs" in {
+    Value(floatToBytes(math.Pi.toFloat)).toVeryLongs(VR.FL) shouldBe Seq(BigInteger.valueOf(3))
+    Value(doubleToBytes(math.Pi)).toVeryLongs(VR.FD) shouldBe Seq(BigInteger.valueOf(3))
+    Value(shortToBytes(-3)).toVeryLongs(VR.SS) shouldBe Seq(BigInteger.valueOf(-3))
+    Value(shortToBytes(-3)).toVeryLongs(VR.US) shouldBe Seq(BigInteger.valueOf((1 << 16) - 3L))
+    Value(intToBytes(-3)).toVeryLongs(VR.SL) shouldBe Seq(BigInteger.valueOf(-3))
+    Value(intToBytes(-3)).toVeryLongs(VR.UL) shouldBe Seq(BigInteger.valueOf((1L << 32) - 3L))
+    Value(longToBytes(-3)).toVeryLongs(VR.SV) shouldBe Seq(BigInteger.valueOf(-3))
+    Value(longToBytes(3)).toVeryLongs(VR.UV) shouldBe Seq(BigInteger.valueOf(3L))
+    Value(ByteString("3.1415")).toVeryLongs(VR.DS) shouldBe Seq(BigInteger.valueOf(3))
+    Value(ByteString("-3")).toVeryLongs(VR.IS) shouldBe Seq(BigInteger.valueOf(-3))
+    Value(VR.AT, ByteString("-3")).toVeryLongs(VR.AT) shouldBe empty
+  }
+
+  "Parsing a single very long value" should "return the first entry among multiple values" in {
+    Value(ByteString(1, 2, 3, 4, 5, 6, 7, 8) ++ ByteString(1, 2, 1, 2, 1, 2, 1, 2)).toVeryLong(VR.UV, bigEndian = true) shouldBe
+      Some(new BigInteger(1, Array[Byte](1, 2, 3, 4, 5, 6, 7, 8)))
+  }
+
+  it should "return None if no entry exists" in {
+    Value(ByteString.empty).toVeryLong(VR.UV) shouldBe None
   }
 
   "Parsing short values" should "return empty sequence for empty byte string" in {
@@ -118,6 +155,8 @@ class ValueTest extends FlatSpec with Matchers {
     Value(shortToBytes(-3)).toShorts(VR.US) shouldBe Seq(-3.toShort)
     Value(intToBytes(-3)).toShorts(VR.SL) shouldBe Seq(-3.toShort)
     Value(intToBytes(-3)).toShorts(VR.UL) shouldBe Seq(-3.toShort)
+    Value(longToBytes(-3)).toShorts(VR.SV) shouldBe Seq(-3.toShort)
+    Value(longToBytes(3)).toShorts(VR.UV) shouldBe Seq(3.toShort)
     Value(ByteString("3.1415")).toShorts(VR.DS) shouldBe Seq(3.toShort)
     Value(ByteString("-3")).toShorts(VR.IS) shouldBe Seq(-3.toShort)
     Value(ByteString("-3")).toShorts(VR.AT) shouldBe empty
@@ -146,6 +185,8 @@ class ValueTest extends FlatSpec with Matchers {
     Value(shortToBytes(-3)).toFloats(VR.US) shouldBe Seq(((1 << 16) - 3).toFloat)
     Value(intToBytes(-3)).toFloats(VR.SL) shouldBe Seq(-3.toFloat)
     Value(intToBytes(-3)).toFloats(VR.UL) shouldBe Seq(((1L << 32) - 3).toFloat)
+    Value(longToBytes(-3)).toFloats(VR.SV) shouldBe Seq(-3.toFloat)
+    Value(longToBytes(3)).toFloats(VR.UV) shouldBe Seq(3.toFloat)
     Value(ByteString("3.1415")).toFloats(VR.DS) shouldBe Seq(3.1415.toFloat)
     Value(ByteString("-3")).toFloats(VR.IS) shouldBe Seq(-3.toFloat)
     Value(ByteString("-3")).toFloats(VR.AT) shouldBe empty
@@ -172,8 +213,10 @@ class ValueTest extends FlatSpec with Matchers {
     Value(doubleToBytes(math.Pi)).toDoubles(VR.FD) shouldBe Seq(math.Pi)
     Value(shortToBytes(-3)).toDoubles(VR.SS) shouldBe Seq(-3.0)
     Value(shortToBytes(-3)).toDoubles(VR.US) shouldBe Seq((1 << 16) - 3.0)
-    Value(intToBytes(-3)).toDoubles(VR.SL) shouldBe Seq(-3.toFloat)
+    Value(intToBytes(-3)).toDoubles(VR.SL) shouldBe Seq(-3.0)
     Value(intToBytes(-3)).toDoubles(VR.UL) shouldBe Seq((1L << 32) - 3.0)
+    Value(longToBytes(-3)).toDoubles(VR.SV) shouldBe Seq(-3.0)
+    Value(longToBytes(3)).toDoubles(VR.UV) shouldBe Seq(3.0)
     Value(ByteString("3.1415")).toDoubles(VR.DS) shouldBe Seq(3.1415)
     Value(ByteString("-3")).toDoubles(VR.IS) shouldBe Seq(-3.0)
     Value(ByteString("-3")).toDoubles(VR.AT) shouldBe empty
@@ -303,6 +346,16 @@ class ValueTest extends FlatSpec with Matchers {
     Value(ByteString(Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte))).toString(VR.OB) shouldBe Some("01 02 03 04 05 06 07 08")
   }
 
+  it should "format OL values" in {
+    Value(ByteString(Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte))).toString(VR.OL) shouldBe Some("04030201 08070605")
+    Value(ByteString(Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte))).toString(VR.OL, bigEndian = true) shouldBe Some("01020304 05060708")
+  }
+
+  it should "format OV values" in {
+    Value(ByteString(Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte))).toString(VR.OV) shouldBe Some("0807060504030201")
+    Value(ByteString(Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte))).toString(VR.OV, bigEndian = true) shouldBe Some("0102030405060708")
+  }
+
   it should "format OF values" in {
     Value(intToBytesLE(java.lang.Float.floatToIntBits(1.2F)) ++ intToBytesLE(java.lang.Float.floatToIntBits(56.78F))).toString(VR.OF) shouldBe Some("1.2 56.78")
   }
@@ -315,14 +368,24 @@ class ValueTest extends FlatSpec with Matchers {
     Value(ByteString(Array(1, 2, 3, 4).map(_.toByte))).toString(VR.AT) shouldBe Some("(0201,0403)")
   }
 
+  it should "format US values" in {
+    Value(ByteString(Array(1, 2).map(_.toByte))).toString(VR.US) shouldBe Some(0x0201.toString)
+    Value(ByteString(Array(255, 255).map(_.toByte))).toString(VR.US) shouldBe Some(0xFFFF.toString)
+  }
+
   it should "format UL values" in {
     Value(ByteString(Array(1, 2, 3, 4).map(_.toByte))).toString(VR.UL) shouldBe Some(0x04030201.toString)
     Value(ByteString(Array(255, 255, 255, 255).map(_.toByte))).toString(VR.UL) shouldBe Some(0xFFFFFFFFL.toString)
   }
 
-  it should "format US values" in {
-    Value(ByteString(Array(1, 2).map(_.toByte))).toString(VR.US) shouldBe Some(0x0201.toString)
-    Value(ByteString(Array(255, 255).map(_.toByte))).toString(VR.US) shouldBe Some(0xFFFF.toString)
+  it should "format UV values" in {
+    Value(ByteString(Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte))).toString(VR.UV) shouldBe Some(0x0807060504030201L.toString)
+    Value(ByteString(Array(255, 255, 255, 255, 255, 255, 255, 255).map(_.toByte))).toString(VR.UV) shouldBe Some("18446744073709551615")
+  }
+
+  it should "format SS values" in {
+    Value(ByteString(Array(1, 2).map(_.toByte))).toString(VR.SS) shouldBe Some(0x0201.toString)
+    Value(ByteString(Array(255, 255).map(_.toByte))).toString(VR.SS) shouldBe Some("-1")
   }
 
   it should "format SL values" in {
@@ -330,9 +393,9 @@ class ValueTest extends FlatSpec with Matchers {
     Value(ByteString(Array(255, 255, 255, 255).map(_.toByte))).toString(VR.SL) shouldBe Some("-1")
   }
 
-  it should "format SS values" in {
-    Value(ByteString(Array(1, 2).map(_.toByte))).toString(VR.SS) shouldBe Some(0x0201.toString)
-    Value(ByteString(Array(255, 255).map(_.toByte))).toString(VR.SS) shouldBe Some("-1")
+  it should "format SV values" in {
+    Value(ByteString(Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte))).toString(VR.SV) shouldBe Some(0x0807060504030201L.toString)
+    Value(ByteString(Array(255, 255, 255, 255, 255, 255, 255, 255).map(_.toByte))).toString(VR.SV) shouldBe Some("-1")
   }
 
   it should "format FL values" in {
@@ -422,8 +485,10 @@ class ValueTest extends FlatSpec with Matchers {
     Value.fromString(VR.AT, "00A01234").toInt(VR.AT).get shouldBe 0x00A01234
     Value.fromString(VR.FL, "3.1415").toFloat(VR.FL).get shouldBe 3.1415F
     Value.fromString(VR.FD, "3.1415").toDouble(VR.FD).get shouldBe 3.1415
+    Value.fromString(VR.SV, "-1024").toInt(VR.SV).get shouldBe -1024
     Value.fromString(VR.SL, "-1024").toInt(VR.SL).get shouldBe -1024
     Value.fromString(VR.SS, "-1024").toShort(VR.SS).get shouldBe -1024.toShort
+    Value.fromString(VR.UV, "4294967295").toLong(VR.UV).get shouldBe 4294967295L
     Value.fromString(VR.UL, "4294967295").toLong(VR.UL).get shouldBe 4294967295L
     Value.fromString(VR.US, "65535").toInt(VR.US).get shouldBe 65535
   }
@@ -436,8 +501,10 @@ class ValueTest extends FlatSpec with Matchers {
 
     Value.fromShort(VR.FL, 3.1415.toShort).toFloat(VR.FL).get shouldBe 3.0F
     Value.fromShort(VR.FD, 3.1415.toShort).toDouble(VR.FD).get shouldBe 3.0
+    Value.fromShort(VR.SV, (-1024).toShort).toInt(VR.SV).get shouldBe -1024
     Value.fromShort(VR.SL, (-1024).toShort).toInt(VR.SL).get shouldBe -1024
     Value.fromShort(VR.SS, (-1024).toShort).toShort(VR.SS).get shouldBe -1024.toShort
+    Value.fromShort(VR.UV, 42.toShort).toLong(VR.UV).get shouldBe 42L
     Value.fromShort(VR.UL, 42.toShort).toLong(VR.UL).get shouldBe 42L
     Value.fromShort(VR.US, 42.toShort).toInt(VR.US).get shouldBe 42
   }
@@ -451,8 +518,10 @@ class ValueTest extends FlatSpec with Matchers {
     Value.fromInt(VR.AT, 0x00A01234).toInt(VR.AT).get shouldBe 0x00A01234
     Value.fromInt(VR.FL, 3.1415.toInt).toFloat(VR.FL).get shouldBe 3.0F
     Value.fromInt(VR.FD, 3.1415.toInt).toDouble(VR.FD).get shouldBe 3.0
+    Value.fromInt(VR.SV, -1024).toInt(VR.SV).get shouldBe -1024
     Value.fromInt(VR.SL, -1024).toInt(VR.SL).get shouldBe -1024
     Value.fromInt(VR.SS, -1024).toShort(VR.SS).get shouldBe -1024.toShort
+    Value.fromInt(VR.UV, 42).toLong(VR.UV).get shouldBe 42L
     Value.fromInt(VR.UL, 42).toLong(VR.UL).get shouldBe 42L
     Value.fromInt(VR.US, 65535).toInt(VR.US).get shouldBe 65535
   }
@@ -466,10 +535,29 @@ class ValueTest extends FlatSpec with Matchers {
     Value.fromLong(VR.AT, 0x00A01234L).toInt(VR.AT).get shouldBe 0x00A01234
     Value.fromLong(VR.FL, 3.1415.toLong).toFloat(VR.FL).get shouldBe 3.0F
     Value.fromLong(VR.FD, 3.1415.toLong).toDouble(VR.FD).get shouldBe 3.0
+    Value.fromLong(VR.SV, -1024L).toInt(VR.SV).get shouldBe -1024
     Value.fromLong(VR.SL, -1024L).toInt(VR.SL).get shouldBe -1024
     Value.fromLong(VR.SS, -1024L).toShort(VR.SS).get shouldBe -1024.toShort
+    Value.fromLong(VR.UV, 4294967295L).toLong(VR.UV).get shouldBe 4294967295L
     Value.fromLong(VR.UL, 4294967295L).toLong(VR.UL).get shouldBe 4294967295L
     Value.fromLong(VR.US, 65535L).toInt(VR.US).get shouldBe 65535
+  }
+
+  it should "produce the expected bytes from very long(s)" in {
+    Value.fromVeryLong(VR.UV, BigInteger.valueOf(1234)).toVeryLong(VR.UV).get shouldBe BigInteger.valueOf(1234)
+    Value.fromVeryLong(VR.UV, BigInteger.valueOf(1234), bigEndian = true).toVeryLong(VR.UV, bigEndian = true).get shouldBe BigInteger.valueOf(1234)
+    Value.fromVeryLong(VR.UV, BigInteger.valueOf(1234)).toVeryLong(VR.UV).get shouldBe BigInteger.valueOf(1234)
+    Value.fromVeryLongs(VR.UV, Seq(BigInteger.valueOf(512), BigInteger.valueOf(256))).toVeryLongs(VR.UV) shouldBe Seq(BigInteger.valueOf(512), BigInteger.valueOf(256))
+
+    Value.fromVeryLong(VR.AT, BigInteger.valueOf(0x00A01234)).toInt(VR.AT).get shouldBe 0x00A01234
+    Value.fromVeryLong(VR.FL, BigInteger.valueOf(3.1415.toLong)).toFloat(VR.FL).get shouldBe 3.0F
+    Value.fromVeryLong(VR.FD, BigInteger.valueOf(3.1415.toLong)).toDouble(VR.FD).get shouldBe 3.0
+    Value.fromVeryLong(VR.SV, BigInteger.valueOf(-1024L)).toInt(VR.SV).get shouldBe -1024
+    Value.fromVeryLong(VR.SL, BigInteger.valueOf(-1024L)).toInt(VR.SL).get shouldBe -1024
+    Value.fromVeryLong(VR.SS, BigInteger.valueOf(-1024L)).toShort(VR.SS).get shouldBe -1024.toShort
+    Value.fromVeryLong(VR.UV, BigInteger.valueOf(4294967295L)).toLong(VR.UV).get shouldBe 4294967295L
+    Value.fromVeryLong(VR.UL, BigInteger.valueOf(4294967295L)).toLong(VR.UL).get shouldBe 4294967295L
+    Value.fromVeryLong(VR.US, BigInteger.valueOf(65535L)).toInt(VR.US).get shouldBe 65535
   }
 
   it should "produce the expected bytes from float(s)" in {
@@ -481,8 +569,10 @@ class ValueTest extends FlatSpec with Matchers {
     Value.fromFloat(VR.AT, 0x00A01234.toFloat).toInt(VR.AT).get shouldBe 0x00A01234
     Value.fromFloat(VR.FL, 3.1415F).toFloat(VR.FL).get shouldBe 3.1415F
     Value.fromFloat(VR.FD, 3.1415F).toDouble(VR.FD).get.toFloat shouldBe 3.1415F
+    Value.fromFloat(VR.SV, -1024F).toInt(VR.SV).get shouldBe -1024
     Value.fromFloat(VR.SL, -1024F).toInt(VR.SL).get shouldBe -1024
     Value.fromFloat(VR.SS, -1024F).toShort(VR.SS).get shouldBe -1024.toShort
+    Value.fromFloat(VR.UV, 42.0F).toLong(VR.UV).get shouldBe 42L
     Value.fromFloat(VR.UL, 42.0F).toLong(VR.UL).get shouldBe 42L
     Value.fromFloat(VR.US, 65535F).toInt(VR.US).get shouldBe 65535
   }
@@ -496,8 +586,10 @@ class ValueTest extends FlatSpec with Matchers {
     Value.fromDouble(VR.AT, 0x00A01234.toDouble).toInt(VR.AT).get shouldBe 0x00A01234
     Value.fromDouble(VR.FL, 3.1415).toFloat(VR.FL).get shouldBe 3.1415F
     Value.fromDouble(VR.FD, 3.1415).toDouble(VR.FD).get.toFloat shouldBe 3.1415F
+    Value.fromDouble(VR.SV, -1024.0).toInt(VR.SV).get shouldBe -1024
     Value.fromDouble(VR.SL, -1024.0).toInt(VR.SL).get shouldBe -1024
     Value.fromDouble(VR.SS, -1024.0).toShort(VR.SS).get shouldBe -1024.toShort
+    Value.fromDouble(VR.UV, 42.0).toLong(VR.UV).get shouldBe 42L
     Value.fromDouble(VR.UL, 42.0).toLong(VR.UL).get shouldBe 42L
     Value.fromDouble(VR.US, 65535.0).toInt(VR.US).get shouldBe 65535
   }

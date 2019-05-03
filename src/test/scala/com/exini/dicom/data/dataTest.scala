@@ -7,8 +7,24 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class dataTest extends FlatSpec with Matchers {
 
-  "Converting an int to a hex string" should "convert 1194684 to 123ABC" in {
+  "Converting an numbers to hex strings" should "convert the int 1194684 to 123ABC" in {
     intToHexString(1194684) shouldBe "00123ABC"
+  }
+
+  it should "convert the tag 0x00100020 to (0010, 0020)" in {
+    tagToString(0x00100020) shouldBe "(0010,0020)"
+  }
+
+  it should "convert the byte 0x2A to 2A" in {
+    byteToHexString(0x2A.toByte) shouldBe "2A"
+  }
+
+  it should "convert the short 0xFEDC to FEDC" in {
+    shortToHexString(0xFEDC.toShort) shouldBe "FEDC"
+  }
+
+  it should "convert the long 0x1234567887654321 to 1234567887654321" in {
+    longToHexString(0x1234567887654321L) shouldBe "1234567887654321"
   }
 
   "Creating a UID" should "create a random UID" in {

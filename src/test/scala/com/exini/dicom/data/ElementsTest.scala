@@ -1,5 +1,6 @@
 package com.exini.dicom.data
 
+import java.math.BigInteger
 import java.net.URI
 import java.time.{LocalDate, LocalTime, ZoneOffset}
 
@@ -119,6 +120,14 @@ class ElementsTest extends FlatSpec with Matchers {
     elements.getLong(Tag.ReferencedFrameNumber) shouldBe Some(1L)
     elements.getLongs(TagPath.fromTag(Tag.ReferencedFrameNumber)) shouldBe Seq(1L, 2L, 3L)
     elements.getLong(TagPath.fromTag(Tag.ReferencedFrameNumber)) shouldBe Some(1L)
+  }
+
+  it should "return very longs" in {
+    val elements = create(new ValueElement(0x44550010, VR.UV, Value.fromVeryLong(VR.UV, BigInteger.valueOf(1)), bigEndian = false, explicitVR = true))
+    elements.getVeryLongs(0x44550010) shouldBe Seq(BigInteger.valueOf(1))
+    elements.getVeryLong(0x44550010) shouldBe Some(BigInteger.valueOf(1))
+    elements.getVeryLongs(TagPath.fromTag(0x44550010)) shouldBe Seq(BigInteger.valueOf(1))
+    elements.getVeryLong(TagPath.fromTag(0x44550010)) shouldBe Some(BigInteger.valueOf(1))
   }
 
   it should "return floats" in {
@@ -352,6 +361,13 @@ class ElementsTest extends FlatSpec with Matchers {
       .getLongs(Tag.SimpleFrameList) shouldBe Seq(1, 2, 3)
     elements.setLong(Tag.SimpleFrameList, 42)
       .getLongs(Tag.SimpleFrameList) shouldBe Seq(42)
+  }
+
+  it should "set very longs" in {
+    elements.setVeryLongs(0x44550010, VR.UV, Seq(BigInteger.valueOf(1), BigInteger.valueOf(2)), bigEndian = false, explicitVR = true)
+      .getVeryLongs(0x44550010) shouldBe Seq(BigInteger.valueOf(1), BigInteger.valueOf(2))
+    elements.setVeryLong(0x44550010, VR.UV, BigInteger.valueOf(1), bigEndian = false, explicitVR = true)
+      .getVeryLongs(0x44550010) shouldBe Seq(BigInteger.valueOf(1))
   }
 
   it should "set floats" in {

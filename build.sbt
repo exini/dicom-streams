@@ -24,9 +24,9 @@ resolvers ++= Seq(
 // deps
 
 libraryDependencies ++= {
-  val akkaVersion = "2.5.21"
+  val akkaVersion = "2.5.22"
   Seq(
-    "org.scala-lang.modules" %% "scala-xml" % "1.1.1",
+    "org.scala-lang.modules" %% "scala-xml" % "1.2.0",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "org.slf4j" % "slf4j-simple" % "1.7.26",

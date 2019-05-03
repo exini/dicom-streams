@@ -39,6 +39,7 @@ object VR extends Enumeration {
   final val OD = Val(0x4f44, 12, 0)
   final val OF = Val(0x4f46, 12, 0)
   final val OL = Val(0x4f4c, 12, 0)
+  final val OV = Val(0x4f56, 12, 0)
   final val OW = Val(0x4f57, 12, 0)
   final val PN = Val(0x504e, 8, ' ')
   final val SH = Val(0x5348, 8, ' ')
@@ -46,6 +47,7 @@ object VR extends Enumeration {
   final val SQ = Val(0x5351, 12, 0)
   final val SS = Val(0x5353, 8, 0)
   final val ST = Val(0x5354, 8, ' ')
+  final val SV = Val(0x5356, 12, 0)
   final val TM = Val(0x544d, 8, ' ')
   final val UC = Val(0x5543, 12, ' ')
   final val UI = Val(0x5549, 8, 0)
@@ -54,6 +56,7 @@ object VR extends Enumeration {
   final val UR = Val(0x5552, 12, ' ')
   final val US = Val(0x5553, 8, 0)
   final val UT = Val(0x5554, 12, ' ')
+  final val UV = Val(0x5556, 12, 0)
 
   private lazy final val valueOfMap: Map[Int, Value] = VR.values.map(vr => vr.code -> vr).toMap
   def valueOf(code: Int): VR = try valueOfMap(code) catch { case _: Throwable => null }

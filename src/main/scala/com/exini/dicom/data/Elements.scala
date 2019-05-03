@@ -16,6 +16,7 @@
 
 package com.exini.dicom.data
 
+import java.math.BigInteger
 import java.net.URI
 import java.time.{LocalDate, LocalTime, ZoneOffset, ZonedDateTime}
 
@@ -102,6 +103,10 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def getLongs(tagPath: TagPathTag): Seq[Long] = getAllPath(tagPath, v => v.value.toLongs(v.vr, v.bigEndian))
   def getLong(tag: Int): Option[Long] = get(tag, v => v.value.toLong(v.vr, v.bigEndian))
   def getLong(tagPath: TagPathTag): Option[Long] = getPath(tagPath, v => v.value.toLong(v.vr, v.bigEndian))
+  def getVeryLongs(tag: Int): Seq[BigInteger] = getAll(tag, v => v.value.toVeryLongs(v.vr, v.bigEndian))
+  def getVeryLongs(tagPath: TagPathTag): Seq[BigInteger] = getAllPath(tagPath, v => v.value.toVeryLongs(v.vr, v.bigEndian))
+  def getVeryLong(tag: Int): Option[BigInteger] = get(tag, v => v.value.toVeryLong(v.vr, v.bigEndian))
+  def getVeryLong(tagPath: TagPathTag): Option[BigInteger] = getPath(tagPath, v => v.value.toVeryLong(v.vr, v.bigEndian))
   def getFloats(tag: Int): Seq[Float] = getAll(tag, v => v.value.toFloats(v.vr, v.bigEndian))
   def getFloats(tagPath: TagPathTag): Seq[Float] = getAllPath(tagPath, v => v.value.toFloats(v.vr, v.bigEndian))
   def getFloat(tag: Int): Option[Float] = get(tag, v => v.value.toFloat(v.vr, v.bigEndian))
@@ -313,6 +318,15 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     setValue(tag, vr, Value.fromLong(vr, value, bigEndian), bigEndian, explicitVR)
   def setLong(tag: Int, value: Long, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
     setLong(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
+
+  def setVeryLongs(tag: Int, vr: VR, values: Seq[BigInteger], bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setValue(tag, vr, Value.fromVeryLongs(vr, values, bigEndian), bigEndian, explicitVR)
+  def setVeryLongs(tag: Int, values: Seq[BigInteger], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setVeryLongs(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
+  def setVeryLong(tag: Int, vr: VR, value: BigInteger, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setValue(tag, vr, Value.fromVeryLong(vr, value, bigEndian), bigEndian, explicitVR)
+  def setVeryLong(tag: Int, value: BigInteger, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setVeryLong(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setFloats(tag: Int, vr: VR, values: Seq[Float], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromFloats(vr, values, bigEndian), bigEndian, explicitVR)
