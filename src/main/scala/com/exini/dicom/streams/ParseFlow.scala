@@ -26,7 +26,7 @@ import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.VR.VR
 import com.exini.dicom.data._
 
-class ParseFlow private(chunkSize: Int, stopTag: Option[Int]) extends ByteStringParser[DicomPart] {
+class ParseFlow private(chunkSize: Int, stopTag: Option[Long]) extends ByteStringParser[DicomPart] {
 
   import ByteStringParser._
 
@@ -173,7 +173,7 @@ class ParseFlow private(chunkSize: Int, stopTag: Option[Int]) extends ByteString
     case class InDatasetHeader(state: DatasetHeaderState) extends DicomParseStep {
       private def readDatasetHeader(reader: ByteReader, state: DatasetHeaderState): Option[DicomPart] = {
         val (tag, vr, headerLength, valueLength) = readHeader(reader, state)
-        if (stopTag.isDefined && tag >= stopTag.get)
+        if (stopTag.isDefined && intToUnsignedLong(tag) >= stopTag.get && intToUnsignedLong(tag) < intToUnsignedLong(Tag.Item))
           None
         else if (vr != null) {
           val bytes = reader.take(headerLength)
@@ -313,7 +313,7 @@ object ParseFlow {
     * @param stopTag   optional stop tag (exclusive) after which reading of incoming data bytes is stopped
     * @param inflate   indicates whether deflated DICOM data should be deflated and parsed or passed on as deflated data chunks.
     */
-  def apply(chunkSize: Int = 8192, stopTag: Option[Int] = None, inflate: Boolean = true): Flow[ByteString, DicomPart, NotUsed] =
+  def apply(chunkSize: Int = 8192, stopTag: Option[Long] = None, inflate: Boolean = true): Flow[ByteString, DicomPart, NotUsed] =
     if (inflate)
       Flow.fromGraph(GraphDSL.create() { implicit builder =>
         import GraphDSL.Implicits._
