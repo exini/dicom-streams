@@ -378,6 +378,26 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with FlatSpecL
       .expectDicomComplete()
   }
 
+  it should "apply stop tag correctly also when preceded by sequence" in {
+    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation() ++ patientNameJohnDoe() ++ pixelData(100)
+
+    val source = Source.single(bytes)
+      .via(ParseFlow(stopTag = Some(Tag.PatientName + 1)))
+
+    source.runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectSequence(Tag.DerivationCodeSequence)
+      .expectItem(1)
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectDicomComplete()
+  }
+
   it should "chunk value data according to max chunk size" in {
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe()
 

@@ -600,7 +600,6 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with FlatSpecL
   }
 
   it should "not warn after re-encoding to indeterminate length sequences and items" in {
-    println()
     val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate()
     val source = Source.single(bytes)
       .via(parseFlow)

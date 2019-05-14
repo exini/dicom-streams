@@ -41,12 +41,12 @@ object CollectFlow {
     * @return A DicomPart Flow which will begin with a ElementsPart part followed by other parts in the flow
     */
   def collectFlow(tagPaths: Set[_ <: TagPath], label: String, maxBufferSize: Int = 1000000): PartFlow = {
-    val maxTag = if (tagPaths.isEmpty) 0 else tagPaths.map(_.head.tag).max
+    val maxTag = if (tagPaths.isEmpty) 0 else tagPaths.map(_.head.tag).map(intToUnsignedLong).max
     val tagCondition = (tagPath: TagPath) => tagPaths.exists(tagPath.startsWith)
     val stopCondition = if (tagPaths.isEmpty)
       (_: TagPath) => true
     else
-      (tagPath: TagPath) => tagPath.isRoot && tagPath.tag > maxTag
+      (tagPath: TagPath) => tagPath.isRoot && intToUnsignedLong(tagPath.tag) > maxTag
     collectFlow(tagCondition, stopCondition, label, maxBufferSize)
   }
 

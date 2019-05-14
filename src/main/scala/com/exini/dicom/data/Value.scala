@@ -16,6 +16,7 @@
 
 package com.exini.dicom.data
 
+import java.math.{BigInteger, BigDecimal}
 import java.net.URI
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder, SignStyle}
 import java.time.temporal.ChronoField._
@@ -45,12 +46,16 @@ case class Value private[data](bytes: ByteString) {
       case AT => parseAT(bytes, bigEndian).map(tagToString)
       case FL => parseFL(bytes, bigEndian).map(_.toString)
       case FD => parseFD(bytes, bigEndian).map(_.toString)
-      case SL => parseSL(bytes, bigEndian).map(_.toString)
       case SS => parseSS(bytes, bigEndian).map(_.toString)
-      case UL => parseSL(bytes, bigEndian).map(Integer.toUnsignedString)
+      case SL => parseSL(bytes, bigEndian).map(_.toString)
+      case SV => parseSV(bytes, bigEndian).map(_.toString)
       case US => parseSS(bytes, bigEndian).map(java.lang.Short.toUnsignedInt).map(_.toString)
+      case UL => parseSL(bytes, bigEndian).map(java.lang.Integer.toUnsignedString)
+      case UV => parseSV(bytes, bigEndian).map(java.lang.Long.toUnsignedString)
       case OB => Seq(bytes.map(byteToHexString).mkString(" "))
       case OW => Seq(split(bytes, 2).map(bytesToShort(_, bigEndian)).map(shortToHexString).mkString(" "))
+      case OL => Seq(split(bytes, 4).map(bytesToInt(_, bigEndian)).map(intToHexString).mkString(" "))
+      case OV => Seq(split(bytes, 8).map(bytesToLong(_, bigEndian)).map(longToHexString).mkString(" "))
       case OF => Seq(parseFL(bytes, bigEndian).mkString(" "))
       case OD => Seq(parseFD(bytes, bigEndian).mkString(" "))
       case ST | LT | UT | UR => Seq(trimPadding(characterSets.decode(vr, bytes), vr.paddingByte))
@@ -66,10 +71,12 @@ case class Value private[data](bytes: ByteString) {
   def toShorts(vr: VR, bigEndian: Boolean = false): Seq[Short] = vr match {
     case FL => parseFL(bytes, bigEndian).map(_.toShort)
     case FD => parseFD(bytes, bigEndian).map(_.toShort)
-    case SL => parseSL(bytes, bigEndian).map(_.toShort)
     case SS => parseSS(bytes, bigEndian)
-    case UL => parseUL(bytes, bigEndian).map(_.toShort)
+    case SL => parseSL(bytes, bigEndian).map(_.toShort)
+    case SV => parseSV(bytes, bigEndian).map(_.toShort)
     case US => parseUS(bytes, bigEndian).map(_.toShort)
+    case UL => parseUL(bytes, bigEndian).map(_.toShort)
+    case UV => parseUV(bytes, bigEndian).map(_.shortValue)
     case DS => parseDS(bytes).map(_.toShort)
     case IS => parseIS(bytes).map(_.toShort)
     case _ => Seq.empty
@@ -83,10 +90,12 @@ case class Value private[data](bytes: ByteString) {
     case AT => parseAT(bytes, bigEndian)
     case FL => parseFL(bytes, bigEndian).map(_.toInt)
     case FD => parseFD(bytes, bigEndian).map(_.toInt)
-    case SL => parseSL(bytes, bigEndian)
     case SS => parseSS(bytes, bigEndian).map(_.toInt)
-    case UL => parseUL(bytes, bigEndian).map(_.toInt)
+    case SL => parseSL(bytes, bigEndian)
+    case SV => parseSV(bytes, bigEndian).map(_.toInt)
     case US => parseUS(bytes, bigEndian)
+    case UL => parseUL(bytes, bigEndian).map(_.toInt)
+    case UV => parseUV(bytes, bigEndian).map(_.intValue)
     case DS => parseDS(bytes).map(_.toInt)
     case IS => parseIS(bytes).map(_.toInt)
     case _ => Seq.empty
@@ -99,12 +108,32 @@ case class Value private[data](bytes: ByteString) {
   def toLongs(vr: VR, bigEndian: Boolean = false): Seq[Long] = vr match {
     case FL => parseFL(bytes, bigEndian).map(_.toLong)
     case FD => parseFD(bytes, bigEndian).map(_.toLong)
-    case SL => parseSL(bytes, bigEndian).map(_.toLong)
     case SS => parseSS(bytes, bigEndian).map(_.toLong)
-    case UL => parseUL(bytes, bigEndian)
+    case SL => parseSL(bytes, bigEndian).map(_.toLong)
+    case SV => parseSV(bytes, bigEndian)
     case US => parseUS(bytes, bigEndian).map(_.toLong)
+    case UL => parseUL(bytes, bigEndian)
+    case UV => parseUV(bytes, bigEndian).map(_.longValue)
     case DS => parseDS(bytes).map(_.toLong)
     case IS => parseIS(bytes)
+    case _ => Seq.empty
+  }
+
+  /**
+    * @return this value as a sequence of big integers. Casting is performed if necessary. If the value has no
+    *         big integer representation, an empty sequence is returned.
+    */
+  def toVeryLongs(vr: VR, bigEndian: Boolean = false): Seq[BigInteger] = vr match {
+    case FL => parseFL(bytes, bigEndian).map(_.toDouble).map(BigDecimal.valueOf).map(_.toBigInteger)
+    case FD => parseFD(bytes, bigEndian).map(BigDecimal.valueOf).map(_.toBigInteger)
+    case SS => parseSS(bytes, bigEndian).map(_.toLong).map(BigInteger.valueOf)
+    case SL => parseSL(bytes, bigEndian).map(_.toLong).map(BigInteger.valueOf)
+    case SV => parseSV(bytes, bigEndian).map(BigInteger.valueOf)
+    case US => parseUS(bytes, bigEndian).map(_.toLong).map(BigInteger.valueOf)
+    case UL => parseUL(bytes, bigEndian).map(BigInteger.valueOf)
+    case UV => parseUV(bytes, bigEndian)
+    case DS => parseDS(bytes).map(BigDecimal.valueOf).map(_.toBigInteger)
+    case IS => parseIS(bytes).map(BigInteger.valueOf)
     case _ => Seq.empty
   }
 
@@ -115,10 +144,12 @@ case class Value private[data](bytes: ByteString) {
   def toFloats(vr: VR, bigEndian: Boolean = false): Seq[Float] = vr match {
     case FL => parseFL(bytes, bigEndian)
     case FD => parseFD(bytes, bigEndian).map(_.toFloat)
-    case SL => parseSL(bytes, bigEndian).map(_.toFloat)
     case SS => parseSS(bytes, bigEndian).map(_.toFloat)
-    case UL => parseUL(bytes, bigEndian).map(_.toFloat)
+    case SL => parseSL(bytes, bigEndian).map(_.toFloat)
+    case SV => parseSV(bytes, bigEndian).map(_.toFloat)
     case US => parseUS(bytes, bigEndian).map(_.toFloat)
+    case UL => parseUL(bytes, bigEndian).map(_.toFloat)
+    case UV => parseUV(bytes, bigEndian).map(_.floatValue)
     case DS => parseDS(bytes).map(_.toFloat)
     case IS => parseIS(bytes).map(_.toFloat)
     case _ => Seq.empty
@@ -131,10 +162,12 @@ case class Value private[data](bytes: ByteString) {
   def toDoubles(vr: VR, bigEndian: Boolean = false): Seq[Double] = vr match {
     case FL => parseFL(bytes, bigEndian).map(_.toDouble)
     case FD => parseFD(bytes, bigEndian)
-    case SL => parseSL(bytes, bigEndian).map(_.toDouble)
     case SS => parseSS(bytes, bigEndian).map(_.toDouble)
-    case UL => parseUL(bytes, bigEndian).map(_.toDouble)
+    case SL => parseSL(bytes, bigEndian).map(_.toDouble)
+    case SV => parseSV(bytes, bigEndian).map(_.toDouble)
     case US => parseUS(bytes, bigEndian).map(_.toDouble)
+    case UL => parseUL(bytes, bigEndian).map(_.toDouble)
+    case UV => parseUV(bytes, bigEndian).map(_.doubleValue)
     case DS => parseDS(bytes)
     case IS => parseIS(bytes).map(_.toDouble)
     case _ => Seq.empty
@@ -226,6 +259,11 @@ case class Value private[data](bytes: ByteString) {
   def toLong(vr: VR, bigEndian: Boolean = false): Option[Long] = toLongs(vr, bigEndian).headOption
 
   /**
+    * @return the first long representation of this value, if any
+    */
+  def toVeryLong(vr: VR, bigEndian: Boolean = false): Option[BigInteger] = toVeryLongs(vr, bigEndian).headOption
+
+  /**
     * @return the first float representation of this value, if any
     */
   def toFloat(vr: VR, bigEndian: Boolean = false): Option[Float] = toFloats(vr, bigEndian).headOption
@@ -275,7 +313,7 @@ object Value {
   final val multiValueDelimiterRegex = """\\"""
 
   private def combine(vr: VR, values: Seq[ByteString]): ByteString = vr match {
-    case AT | FL | FD | SL | SS | UL | US | OB | OW | OL | OF | OD => values.reduce(_ ++ _)
+    case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD => values.reduce(_ ++ _)
     case _ => if (values.isEmpty) ByteString.empty else values.tail.foldLeft(values.head)((bytes, b) => bytes ++ ByteString('\\') ++ b)
   }
 
@@ -292,15 +330,23 @@ object Value {
     */
   def apply(vr: VR, bytes: ByteString): Value = Value(padToEvenLength(bytes, vr))
 
+  private def toBytes(bi: BigInteger, length: Int, bigEndian: Boolean): ByteString = {
+    val bytes = ByteString(bi.toByteArray)
+    val out = ByteString(new Array[Byte](Math.max(0, length - bytes.length))) ++ bytes.takeRight(length)
+    if (bigEndian) out else out.reverse
+  }
+
   private def stringBytes(vr: VR, value: String, bigEndian: Boolean): ByteString = vr match {
     case AT => tagToBytes(Integer.parseInt(value, 16), bigEndian)
     case FL => floatToBytes(java.lang.Float.parseFloat(value), bigEndian)
     case FD => doubleToBytes(java.lang.Double.parseDouble(value), bigEndian)
-    case SL => intToBytes(Integer.parseInt(value), bigEndian)
     case SS => shortToBytes(java.lang.Short.parseShort(value), bigEndian)
-    case UL => truncate(4, longToBytes(java.lang.Long.parseUnsignedLong(value), bigEndian), bigEndian)
+    case SL => intToBytes(Integer.parseInt(value), bigEndian)
+    case SV => longToBytes(java.lang.Long.parseLong(value), bigEndian)
     case US => truncate(2, intToBytes(java.lang.Integer.parseUnsignedInt(value), bigEndian), bigEndian)
-    case OB | OW | OL | OF | OD => throw new IllegalArgumentException("Cannot create binary array from string")
+    case UL => truncate(4, longToBytes(java.lang.Long.parseUnsignedLong(value), bigEndian), bigEndian)
+    case UV => toBytes(new BigInteger(value), 8, bigEndian)
+    case OB | OW | OL | OV | OF | OD => throw new IllegalArgumentException("Cannot create binary array from string")
     case _ => ByteString(value)
   }
   def fromString(vr: VR, value: String, bigEndian: Boolean = false): Value = apply(vr, stringBytes(vr, value, bigEndian))
@@ -309,11 +355,13 @@ object Value {
   private def shortBytes(vr: VR, value: Short, bigEndian: Boolean): ByteString = vr match {
     case FL => floatToBytes(value.toFloat, bigEndian)
     case FD => doubleToBytes(value.toDouble, bigEndian)
-    case SL => intToBytes(value.toInt, bigEndian)
     case SS => shortToBytes(value, bigEndian)
-    case UL => intToBytes(java.lang.Short.toUnsignedInt(value), bigEndian)
+    case SL => intToBytes(value.toInt, bigEndian)
+    case SV => longToBytes(value.toLong, bigEndian)
     case US => truncate(2, intToBytes(java.lang.Short.toUnsignedInt(value), bigEndian), bigEndian)
-    case OB | OW | OL | OF | OD | AT => throw new IllegalArgumentException(s"Cannot create value of VR $vr from short")
+    case UL => intToBytes(java.lang.Short.toUnsignedInt(value), bigEndian)
+    case UV => longToBytes(java.lang.Short.toUnsignedInt(value).toLong, bigEndian)
+    case OB | OW | OL | OV | OF | OD | AT => throw new IllegalArgumentException(s"Cannot create value of VR $vr from short")
     case _ => ByteString(value.toString)
   }
   def fromShort(vr: VR, value: Short, bigEndian: Boolean = false): Value = apply(vr, shortBytes(vr, value, bigEndian))
@@ -323,11 +371,13 @@ object Value {
     case AT => tagToBytes(value, bigEndian)
     case FL => floatToBytes(value.toFloat, bigEndian)
     case FD => doubleToBytes(value.toDouble, bigEndian)
-    case SL => intToBytes(value, bigEndian)
     case SS => shortToBytes(value.toShort, bigEndian)
-    case UL => truncate(4, longToBytes(Integer.toUnsignedLong(value), bigEndian), bigEndian)
+    case SL => intToBytes(value, bigEndian)
+    case SV => longToBytes(value.toLong, bigEndian)
     case US => truncate(6, longToBytes(Integer.toUnsignedLong(value), bigEndian), bigEndian)
-    case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from int")
+    case UL => truncate(4, longToBytes(Integer.toUnsignedLong(value), bigEndian), bigEndian)
+    case UV => longToBytes(Integer.toUnsignedLong(value), bigEndian)
+    case OB | OW | OL | OV | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from int")
     case _ => ByteString(value.toString)
   }
   def fromInt(vr: VR, value: Int, bigEndian: Boolean = false): Value = apply(vr, intBytes(vr, value, bigEndian))
@@ -337,24 +387,44 @@ object Value {
     case AT => tagToBytes(value.toInt, bigEndian)
     case FL => floatToBytes(value.toFloat, bigEndian)
     case FD => doubleToBytes(value.toDouble, bigEndian)
-    case SL => intToBytes(value.toInt, bigEndian)
     case SS => shortToBytes(value.toShort, bigEndian)
-    case UL => truncate(4, longToBytes(value, bigEndian), bigEndian)
+    case SL => intToBytes(value.toInt, bigEndian)
+    case SV => longToBytes(value, bigEndian)
     case US => truncate(6, longToBytes(value, bigEndian), bigEndian)
+    case UL => truncate(4, longToBytes(value, bigEndian), bigEndian)
+    case UV => toBytes(BigInteger.valueOf(value), 8, bigEndian)
     case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from long")
     case _ => ByteString(value.toString)
   }
   def fromLong(vr: VR, value: Long, bigEndian: Boolean = false): Value = apply(vr, longBytes(vr, value, bigEndian))
   def fromLongs(vr: VR, values: Seq[Long], bigEndian: Boolean = false): Value = apply(vr, combine(vr, values.map(longBytes(vr, _, bigEndian))))
 
+  private def veryLongBytes(vr: VR, value: BigInteger, bigEndian: Boolean): ByteString = vr match {
+    case AT => tagToBytes(value.intValue, bigEndian)
+    case FL => floatToBytes(value.floatValue, bigEndian)
+    case FD => doubleToBytes(value.doubleValue, bigEndian)
+    case SS => shortToBytes(value.shortValue, bigEndian)
+    case SL => intToBytes(value.intValue, bigEndian)
+    case SV => longToBytes(value.longValue, bigEndian)
+    case US => toBytes(value, 2, bigEndian)
+    case UL => toBytes(value, 4, bigEndian)
+    case UV => toBytes(value, 8, bigEndian)
+    case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from long")
+    case _ => ByteString(value.toString)
+  }
+  def fromVeryLong(vr: VR, value: BigInteger, bigEndian: Boolean = false): Value = apply(vr, veryLongBytes(vr, value, bigEndian))
+  def fromVeryLongs(vr: VR, values: Seq[BigInteger], bigEndian: Boolean = false): Value = apply(vr, combine(vr, values.map(veryLongBytes(vr, _, bigEndian))))
+
   private def floatBytes(vr: VR, value: Float, bigEndian: Boolean): ByteString = vr match {
     case AT => tagToBytes(value.toInt, bigEndian)
     case FL => floatToBytes(value, bigEndian)
     case FD => doubleToBytes(value.toDouble, bigEndian)
-    case SL => intToBytes(value.toInt, bigEndian)
     case SS => shortToBytes(value.toShort, bigEndian)
-    case UL => truncate(4, longToBytes(value.toLong, bigEndian), bigEndian)
+    case SL => intToBytes(value.toInt, bigEndian)
+    case SV => longToBytes(value.toLong, bigEndian)
     case US => truncate(6, longToBytes(value.toLong, bigEndian), bigEndian)
+    case UL => truncate(4, longToBytes(value.toLong, bigEndian), bigEndian)
+    case UV => toBytes(BigDecimal.valueOf(value).toBigInteger, 8, bigEndian)
     case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from float")
     case _ => ByteString(value.toString)
   }
@@ -365,10 +435,12 @@ object Value {
     case AT => tagToBytes(value.toInt, bigEndian)
     case FL => floatToBytes(value.toFloat, bigEndian)
     case FD => doubleToBytes(value, bigEndian)
-    case SL => intToBytes(value.toInt, bigEndian)
     case SS => shortToBytes(value.toShort, bigEndian)
-    case UL => truncate(4, longToBytes(value.toLong, bigEndian), bigEndian)
+    case SL => intToBytes(value.toInt, bigEndian)
+    case SV => longToBytes(value.toLong, bigEndian)
     case US => truncate(6, longToBytes(value.toLong, bigEndian), bigEndian)
+    case UL => truncate(4, longToBytes(value.toLong, bigEndian), bigEndian)
+    case UV => toBytes(BigDecimal.valueOf(value).toBigInteger, 8, bigEndian)
     case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from double")
     case _ => ByteString(value.toString)
   }
@@ -376,21 +448,21 @@ object Value {
   def fromDoubles(vr: VR, values: Seq[Double], bigEndian: Boolean = false): Value = apply(vr, combine(vr, values.map(doubleBytes(vr, _, bigEndian))))
 
   private def dateBytes(vr: VR, value: LocalDate): ByteString = vr match {
-    case AT | FL | FD | SL | SS | UL | US | OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from date")
+    case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from date")
     case _ => ByteString(formatDate(value))
   }
   def fromDate(vr: VR, value: LocalDate): Value = apply(vr, dateBytes(vr, value))
   def fromDates(vr: VR, values: Seq[LocalDate]): Value = apply(vr, combine(vr, values.map(dateBytes(vr, _))))
 
   private def timeBytes(vr: VR, value: LocalTime): ByteString = vr match {
-    case AT | FL | FD | SL | SS | UL | US | OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from time")
+    case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from time")
     case _ => ByteString(formatTime(value))
   }
   def fromTime(vr: VR, value: LocalTime): Value = apply(vr, timeBytes(vr, value))
   def fromTimes(vr: VR, values: Seq[LocalTime]): Value = apply(vr, combine(vr, values.map(timeBytes(vr, _))))
 
   private def dateTimeBytes(vr: VR, value: ZonedDateTime): ByteString = vr match {
-    case AT | FL | FD | SL | SS | UL | US | OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from date-time")
+    case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from date-time")
     case _ => ByteString(formatDateTime(value))
   }
   def fromDateTime(vr: VR, value: ZonedDateTime): Value = apply(vr, dateTimeBytes(vr, value))
@@ -425,7 +497,9 @@ object Value {
 
   def parseAT(value: ByteString, bigEndian: Boolean): Seq[Int] = split(value, 4).map(b => bytesToTag(b, bigEndian))
   def parseSL(value: ByteString, bigEndian: Boolean): Seq[Int] = split(value, 4).map(bytesToInt(_, bigEndian))
+  def parseSV(value: ByteString, bigEndian: Boolean): Seq[Long] = split(value, 8).map(bytesToLong(_, bigEndian))
   def parseUL(value: ByteString, bigEndian: Boolean): Seq[Long] = parseSL(value, bigEndian).map(intToUnsignedLong)
+  def parseUV(value: ByteString, bigEndian: Boolean): Seq[BigInteger] = split(value, 8).map(bytes => new BigInteger(1, if (bigEndian) bytes.toArray else bytes.reverse.toArray))
   def parseSS(value: ByteString, bigEndian: Boolean): Seq[Short] = split(value, 2).map(bytesToShort(_, bigEndian))
   def parseUS(value: ByteString, bigEndian: Boolean): Seq[Int] = parseSS(value, bigEndian).map(shortToUnsignedInt)
   def parseFL(value: ByteString, bigEndian: Boolean): Seq[Float] = split(value, 4).map(bytesToFloat(_, bigEndian))

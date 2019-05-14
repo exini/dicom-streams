@@ -78,14 +78,15 @@ package object data {
 
   def truncate(n: Int, bytes: ByteString, bigEndian: Boolean = false): ByteString = if (bigEndian) bytes.drop(n) else bytes.dropRight(n)
 
-  def tagToString(tag: Int): String = new String(Array('(',
-    hexDigits(tag >>> 28), hexDigits(tag >>> 24 & 15), hexDigits(tag >>> 20 & 15), hexDigits(tag >>> 16 & 15), ',',
-    hexDigits(tag >>> 12 & 15), hexDigits(tag >>> 8 & 15), hexDigits(tag >>> 4 & 15), hexDigits(tag >>> 0 & 15), ')'))
-  def byteToHexString(b: Byte) = new String(Array(hexDigits(b >>> 4 & 15), hexDigits(b >>> 0 & 15)))
-  def shortToHexString(s: Short): String = new String(Array(hexDigits(s >>> 12 & 15), hexDigits(s >>> 8 & 15), hexDigits(s >>> 4 & 15), hexDigits(s >>> 0 & 15)))
-  def intToHexString(i: Int): String = new String(Array(
-    hexDigits(i >>> 28), hexDigits(i >>> 24 & 15), hexDigits(i >>> 20 & 15), hexDigits(i >>> 16 & 15),
-    hexDigits(i >>> 12 & 15), hexDigits(i >>> 8 & 15), hexDigits(i >>> 4 & 15), hexDigits(i >>> 0 & 15)))
+  private def bytesToHexString(bytes: ByteString) = new String(bytes.flatMap(b => List(hexDigits(b >>> 4 & 0xF), hexDigits(b & 0xF))).toArray)
+  def tagToString(tag: Int): String = {
+    val s = bytesToHexString(tagToBytes(tag, bigEndian = true))
+    s"(${s.substring(0, 4)},${s.substring(4, 8)})"
+  }
+  def byteToHexString(b: Byte): String = bytesToHexString(ByteString(b))
+  def shortToHexString(s: Short): String = bytesToHexString(shortToBytes(s, bigEndian = true))
+  def intToHexString(i: Int): String = bytesToHexString(intToBytes(i, bigEndian = true))
+  def longToHexString(i: Long): String = bytesToHexString(longToBytes(i, bigEndian = true))
 
   def lengthToLong(length: Int): Long = if (length == indeterminateLength) -1L else intToUnsignedLong(length)
 
