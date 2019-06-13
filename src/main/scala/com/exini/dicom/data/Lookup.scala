@@ -22,9 +22,9 @@ object Lookup {
 
   def vrOf(tag: Int): VR = TagToVR.vrOf(tag)
 
-  def vmOf(tag: Int): Multiplicity = TagToVM.vmOf(tag)
+  def vmOf(tag: Int): Option[Multiplicity] = TagToVM.vmOf(tag)
 
-  def keywordOf(tag: Int): String = TagToKeyword.keywordOf(tag)
+  def keywordOf(tag: Int): Option[String] = TagToKeyword.keywordOf(tag)
 
   def tagOf(keyword: String): Int = KeywordToTag.tagOf(keyword)
 

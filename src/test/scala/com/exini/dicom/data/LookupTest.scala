@@ -9,11 +9,13 @@ class LookupTest extends FlatSpec with Matchers {
   }
 
   it should "support getting the multiplicity for a tag" in {
-    Lookup.vmOf(0x00041141) shouldBe Multiplicity.bounded(1, 8)
+    Lookup.vmOf(0x00041141) shouldBe Some(Multiplicity.bounded(1, 8))
+    Lookup.vmOf(0x00031141) shouldBe None
   }
 
   it should "support getting the keyword for a tag" in {
-    Lookup.keywordOf(Tag.PatientName) shouldBe "PatientName"
+    Lookup.keywordOf(Tag.PatientName) shouldBe Some("PatientName")
+    Lookup.keywordOf(0x00031141) shouldBe None
   }
 
   it should "support getting the tag for a keyword" in {

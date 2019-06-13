@@ -180,10 +180,8 @@ sealed trait TagTree extends TagPathLike {
   }
 
   def toString(lookup: Boolean): String = {
-    def toTagString(tag: Int): String = if (lookup) {
-      val keyword = Lookup.keywordOf(tag)
-      if (keyword.isEmpty) tagToString(tag) else keyword
-    }
+    def toTagString(tag: Int): String = if (lookup)
+      Lookup.keywordOf(tag).getOrElse(tagToString(tag))
     else
       tagToString(tag)
 
