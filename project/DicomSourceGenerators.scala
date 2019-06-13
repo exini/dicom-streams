@@ -175,15 +175,15 @@ object DicomSourceGenerators {
     
     s"""package com.exini.dicom.data
        |
-       |import scala.annotation.switch
+       |import scala.collection.mutable
        |
        |private[data] object TagToKeyword {
        |
-       |  def keywordOf(tag: Int): String = tag match {
-       |    case t if (t & 0x0000FFFF) == 0 && (t & 0xFFFD0000) != 0 => "GroupLength"
+       |  def keywordOf(tag: Int): Option[String] = tag match {
+       |    case t if (t & 0x0000FFFF) == 0 && (t & 0xFFFD0000) != 0 => Some("GroupLength")
        |    case t if (tag & 0x00010000) != 0 =>
-       |      if ((tag & 0x0000FF00) == 0 && (tag & 0x000000F0) != 0) "PrivateCreatorID" else ""
-       |    case t if (tag & 0xFFFFFF00) == Tag.SourceImageIDs => "SourceImageIDs"
+       |      if ((tag & 0x0000FF00) == 0 && (tag & 0x000000F0) != 0) Some("PrivateCreatorID") else None
+       |    case t if (tag & 0xFFFFFF00) == Tag.SourceImageIDs => Some("SourceImageIDs")
        |    case t =>
        |      val t2: Int =
        |        if ((tag & 0xFFE00000) == 0x50000000 || (tag & 0xFFE00000) == 0x60000000)
@@ -192,18 +192,21 @@ object DicomSourceGenerators {
        |          tag & 0xFF00FFFF
        |        else
        |          tag
-       |      if (t2 < $splitValue) keywordOfLow(t2) else keywordOfHigh(t2)
+       |      map.get(t2)
        |  }
        |
-       |  private def keywordOfLow(tag: Int) = (tag: @switch) match {
-       |${tagMappingsLow.map(p => s"""    case ${p.tag} => "${p.keyword}"""").mkString("\r\n")}
-       |    case _ => ""
+       |  private val map = mutable.Map[Int, String]()
+       |
+       |  def addLow(): Unit = {
+       |${tagMappingsLow.map(p => s"""    map(${p.tag}) = "${p.keyword}"""").mkString("\r\n")}
        |  }
        |
-       |  private def keywordOfHigh(tag: Int) = (tag: @switch) match {
-       |${tagMappingsHigh.map(p => s"""    case ${p.tag} => "${p.keyword}"""").mkString("\r\n")}
-       |    case _ => ""
+       |  def addHigh(): Unit = {
+       |${tagMappingsHigh.map(p => s"""    map(${p.tag}) = "${p.keyword}"""").mkString("\r\n")}
        |  }
+       |
+       |  addLow()
+       |  addHigh()
        |
        |}""".stripMargin
   }
@@ -214,31 +217,31 @@ object DicomSourceGenerators {
     s"""package com.exini.dicom.data
        |
        |import VR._
-       |import scala.annotation.switch
+       |import scala.collection.mutable
        |
        |private[data] object TagToVR {
        |
        |  def vrOf(tag: Int): VR = tag match {
-       |    case t if (t & 0x0000FFFF) == 0 => VR.UL // group length
+       |    case t if (t & 0x0000FFFF) == 0 => UL // group length
        |    case t if (t & 0x00010000) != 0 => // private creator ID
        |      if ((tag & 0x0000FF00) == 0 && (tag & 0x000000F0) != 0)
-       |        VR.LO // private creator data element
+       |        LO // private creator data element
        |      else
-       |        VR.UN // private tag
-       |    case t if (t & 0xFFFFFF00) == Tag.SourceImageIDs => VR.CS
+       |        UN // private tag
+       |    case t if (t & 0xFFFFFF00) == Tag.SourceImageIDs => CS
        |    case t =>
        |      val t2 = adjustTag(t)
-       |      if (t2 < $splitValue) vrOfLow(t2) else vrOfHigh(t2)
+       |      map.getOrElse(t2, UN)
        |  }
        |
-       |  private def vrOfLow(tag: Int) = (tag: @switch) match {
-       |    ${tagMappingsLow.map(p => s"""case ${p.tag} => ${p.vr}""").mkString("\r\n    ")}
-       |    case _ => UN
+       |  private val map = mutable.Map[Int, VR]()
+       |
+       |  private def addLow(): Unit = {
+       |${tagMappingsLow.map(p => s"""    map(${p.tag}) = ${p.vr}""").mkString("\r\n")}
        |  }
        |
-       |  private def vrOfHigh(tag: Int) = (tag: @switch) match {
-       |    ${tagMappingsHigh.map(p => s"""case ${p.tag} => ${p.vr}""").mkString("\r\n    ")}
-       |    case _ => UN
+       |  private def addHigh(): Unit = {
+       |${tagMappingsHigh.map(p => s"""    map(${p.tag}) = ${p.vr}""").mkString("\r\n")}
        |  }
        |
        |  private def adjustTag(tag: Int): Int = {
@@ -249,6 +252,9 @@ object DicomSourceGenerators {
        |    else
        |      tag
        |  }
+       |
+       |  addLow()
+       |  addHigh()
        |
        |}""".stripMargin
   }
@@ -258,34 +264,34 @@ object DicomSourceGenerators {
     
     s"""package com.exini.dicom.data
        |
-       |import scala.annotation.switch
+       |import scala.collection.mutable
        |
        |private[data] object TagToVM {
        |
-       |  def vmOf(tag: Int): Multiplicity = tag match {
-       |    case t if (t & 0x0000FFFF) == 0 => Multiplicity.single // group length
+       |  def vmOf(tag: Int): Option[Multiplicity] = tag match {
+       |    case t if (t & 0x0000FFFF) == 0 => Some(Multiplicity.single) // group length
        |    case t if (t & 0x00010000) != 0 => // private creator ID
        |      if ((tag & 0x0000FF00) == 0 && (tag & 0x000000F0) != 0)
-       |        Multiplicity.single // private creator data element
+       |        Some(Multiplicity.single) // private creator data element
        |      else
-       |        Multiplicity.oneToMany // private tag
-       |    case t if (t & 0xFFFFFF00) == Tag.SourceImageIDs => Multiplicity.oneToMany
+       |        None // private tag
+       |    case t if (t & 0xFFFFFF00) == Tag.SourceImageIDs => Some(Multiplicity.oneToMany)
        |    case t =>
        |      val t2 = adjustTag(t)
        |      Lookup.vrOf(t2) match {
-       |        case VR.SQ | VR.OF | VR.OD | VR.OW | VR.OB | VR.OL | VR.UR | VR.UN | VR.LT | VR.ST | VR.UT => Multiplicity.single
-       |        case _ => if (t2 < $splitValue) vmOfLow(t2) else vmOfHigh(t2)
+       |        case VR.SQ | VR.OF | VR.OD | VR.OW | VR.OB | VR.OL | VR.UR | VR.UN | VR.LT | VR.ST | VR.UT => Some(Multiplicity.single)
+       |        case _ => map.get(t2)
        |      }
        |  }
        |
-       |  private def vmOfLow(tag: Int) = (tag: @switch) match {
-       |    ${tagMappingsLow.map(p => s"""case ${p.tag} => ${p.vm}""").mkString("\r\n    ")}
-       |    case _ => Multiplicity.oneToMany
+       |  private val map = mutable.Map[Int, Multiplicity]()
+       |
+       |  private def addLow(): Unit = {
+       |${tagMappingsLow.map(p => s"""    map(${p.tag}) = ${p.vm}""").mkString("\r\n")}
        |  }
        |
-       |  private def vmOfHigh(tag: Int) = (tag: @switch) match {
-       |    ${tagMappingsHigh.map(p => s"""case ${p.tag} => ${p.vm}""").mkString("\r\n    ")}
-       |    case _ => Multiplicity.oneToMany
+       |  private def addHigh(): Unit = {
+       |${tagMappingsHigh.map(p => s"""    map(${p.tag}) = ${p.vm}""").mkString("\r\n")}
        |  }
        |
        |  private def adjustTag(tag: Int): Int = {
@@ -296,6 +302,9 @@ object DicomSourceGenerators {
        |    else
        |      tag
        |  }
+       |
+       |  addLow()
+       |  addHigh()
        |
        |}""".stripMargin
   }
