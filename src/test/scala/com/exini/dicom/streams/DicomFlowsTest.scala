@@ -8,7 +8,6 @@ import akka.stream.scaladsl.{FileIO, Source}
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 import com.exini.dicom.data.DicomParts.{DicomPart, MetaPart}
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
@@ -16,6 +15,7 @@ import com.exini.dicom.streams.DicomFlows._
 import com.exini.dicom.streams.ModifyFlow._
 import com.exini.dicom.streams.ParseFlow._
 import com.exini.dicom.streams.TestUtils._
+import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -40,6 +40,53 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with FlatSpe
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
       .expectValueChunk()
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectDicomComplete()
+  }
+
+  "The stop tag flow" should "stop reading data when a stop tag is reached" in {
+    val bytes = studyDate() ++ patientNameJohnDoe()
+
+    val source = Source.single(bytes)
+      .via(parseFlow)
+      .via(stopTagFlow(Tag.PatientName))
+
+    source.runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectDicomComplete()
+  }
+
+  it should "stop reading data when a tag number is higher than the stop tag" in {
+    val bytes = studyDate() ++ patientNameJohnDoe()
+
+    val source = Source.single(bytes)
+      .via(parseFlow)
+      .via(stopTagFlow(Tag.StudyDate + 1))
+
+    source.runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectDicomComplete()
+  }
+
+  it should "apply stop tag correctly also when preceded by sequence and ignore tags in sequences" in {
+    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ pixelData(10) ++ itemDelimitation() ++ sequenceDelimitation() ++ patientNameJohnDoe() ++ pixelData(100)
+
+    val source = Source.single(bytes)
+      .via(parseFlow)
+      .via(stopTagFlow(Tag.PatientName + 1))
+
+    source.runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectSequence(Tag.DerivationCodeSequence)
+      .expectItem(1)
+      .expectHeader(Tag.PixelData)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectDicomComplete()

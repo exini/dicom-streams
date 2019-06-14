@@ -49,6 +49,22 @@ object DicomFlows {
   }
 
   /**
+    * Flow for stopping processing early once a tag has been reached. Attributes in sequences are ignored.
+    *
+    * @param tag tag number referring to the root dataset at which the processing stop (exclusive)
+    * @return the associated flow
+    */
+  def stopTagFlow(tag: Int): PartFlow =
+    DicomFlowFactory.create(new IdentityFlow with InSequence[DicomPart] {
+      override def onHeader(part: HeaderPart): List[DicomPart] = {
+        if (!inSequence && part.tag >= tag)
+          DicomEndMarker :: Nil
+        else
+          super.onHeader(part)
+      }
+    }).takeWhile(_ != DicomEndMarker)
+
+  /**
     * Filter a stream of dicom parts such that all elements except those with tags in the white list are discarded.
     *
     * Note that it is up to the user of this function to make sure the modified DICOM data is valid.
@@ -351,13 +367,13 @@ object DicomFlows {
           Nil
 
         case p if !hasEmitted && p.bytes.nonEmpty =>
-            hasEmitted = true
-            p match {
-              case preamble: PreamblePart =>
-                preamble :: fmi
-              case _ =>
-                fmi ::: p :: Nil
-            }
+          hasEmitted = true
+          p match {
+            case preamble: PreamblePart =>
+              preamble :: fmi
+            case _ =>
+              fmi ::: p :: Nil
+          }
 
         case p =>
           p :: Nil
