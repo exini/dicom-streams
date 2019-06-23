@@ -418,8 +418,9 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def sorted(): Elements = copy(data = data.sortBy(_.tag))
 
   def toList: List[ElementSet] = data.toList
-  def toElements: List[Element] = toList.flatMap(_.toElements)
-  def toParts: List[DicomPart] = toElements.flatMap(_.toParts)
+  def toElements(withPreamble: Boolean = true): List[Element] =
+    if (withPreamble) PreambleElement :: toList.flatMap(_.toElements) else toList.flatMap(_.toElements)
+  def toParts(withPreamble: Boolean = true): List[DicomPart] = toElements(withPreamble).flatMap(_.toParts)
   def toBytes(withPreamble: Boolean = true): ByteString =
     data.map(_.toBytes).foldLeft(if (withPreamble) PreambleElement.toBytes else ByteString.empty)(_ ++ _)
 
@@ -541,7 +542,10 @@ object Elements {
     def setValue(value: Value): ValueElement = copy(value = value.ensurePadding(vr))
     override def toBytes: ByteString = toParts.map(_.bytes).reduce(_ ++ _)
     override def toParts: List[DicomPart] =
-      HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
+      if (length > 0)
+        HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
+      else
+        HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: Nil
     override def toElements: List[Element] = this :: Nil
     override def toString: String = {
       val strings = value.toStrings(vr, bigEndian, defaultCharacterSet)
@@ -563,6 +567,7 @@ object Elements {
   }
 
   case class SequenceElement(tag: Int, length: Long, bigEndian: Boolean = false, explicitVR: Boolean = true) extends Element {
+    def indeterminate: Boolean = length == indeterminateLength
     override def toBytes: ByteString = HeaderPart(tag, VR.SQ, length, isFmi = false, bigEndian, explicitVR).bytes
     override def toParts: List[DicomPart] = SequencePart(tag, length, bigEndian, explicitVR, toBytes) :: Nil
     override def toString: String = s"SequenceElement(${tagToString(tag)} SQ # $length ${Lookup.keywordOf(tag)})"
@@ -570,13 +575,18 @@ object Elements {
 
   case class FragmentsElement(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true) extends Element {
     override def toBytes: ByteString = toParts.head.bytes
-    override def toParts: List[DicomPart] = HeaderPart(tag, vr, indeterminateLength, isFmi = false, bigEndian, explicitVR) :: Nil
+    override def toParts: List[DicomPart] = FragmentsPart(tag, indeterminateLength, vr, bigEndian, explicitVR,
+      HeaderPart(this.tag, this.vr, indeterminateLength, isFmi = false, this.bigEndian, this.explicitVR).bytes) :: Nil
     override def toString: String = s"FragmentsElement(${tagToString(tag)} $vr # ${Lookup.keywordOf(tag)})"
   }
 
   case class FragmentElement(index: Int, length: Long, value: Value, bigEndian: Boolean = false) extends Element {
     override def toBytes: ByteString = toParts.map(_.bytes).reduce(_ ++ _)
-    override def toParts: List[DicomPart] = ItemElement(index, value.length, bigEndian).toParts ::: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
+    override def toParts: List[DicomPart] =
+      if (value.length > 0)
+        ItemElement(index, value.length, bigEndian).toParts ::: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
+      else
+        ItemElement(index, value.length, bigEndian).toParts ::: Nil
     override def toString: String = s"FragmentElement(index = $index, length = $length)"
   }
 
@@ -585,6 +595,7 @@ object Elements {
   }
 
   case class ItemElement(index: Int, length: Long, bigEndian: Boolean = false) extends Element {
+    def indeterminate: Boolean = length == indeterminateLength
     override def toBytes: ByteString = tagToBytes(Tag.Item, bigEndian) ++ intToBytes(length.toInt, bigEndian)
     override def toParts: List[DicomPart] = ItemPart(index, length, bigEndian, toBytes) :: Nil
     override def toString: String = s"ItemElement(index = $index, length = $length)"
@@ -640,7 +651,7 @@ object Elements {
 
   case class Item(elements: Elements, length: Long = indeterminateLength, bigEndian: Boolean = false) {
     val indeterminate: Boolean = length == indeterminateLength
-    def toElements(index: Int): List[Element] = ItemElement(index, length, bigEndian) :: elements.toElements :::
+    def toElements(index: Int): List[Element] = ItemElement(index, length, bigEndian) :: elements.toElements(false) :::
       ItemDelimitationElement(index, marker = !indeterminate, bigEndian) :: Nil
     def toBytes: ByteString = toElements(1).map(_.toBytes).reduce(_ ++ _)
     def setElements(elements: Elements): Item = {

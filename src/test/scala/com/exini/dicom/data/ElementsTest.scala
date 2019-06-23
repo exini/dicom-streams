@@ -499,7 +499,7 @@ class ElementsTest extends FlatSpec with Matchers {
 
   it should "provide a legible toString" in {
     val updated = elements.set(Fragments(Tag.PixelData, VR.OB, None, List(Fragment(4, Value(ByteString(1, 2, 3, 4))))))
-    updated.toString.count(_ == System.lineSeparator.charAt(0)) shouldBe updated.toElements.length - 1
+    updated.toString.count(_ == System.lineSeparator.charAt(0)) shouldBe updated.toElements(false).length - 1
   }
 
   it should "create file meta information" in {
