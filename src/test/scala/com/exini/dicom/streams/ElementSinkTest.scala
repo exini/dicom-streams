@@ -45,7 +45,7 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with FlatS
 
     val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
 
-    elements.toElements shouldBe elementList
+    elements.toElements(false) shouldBe elementList
   }
 
   it should "handle zero length values, fragments, sequences and items" in {
@@ -69,7 +69,7 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with FlatS
 
     val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
 
-    elements.toElements shouldBe elementList
+    elements.toElements(false) shouldBe elementList
   }
 
   it should "convert an empty offsets table item to an empty list of offsets" in {

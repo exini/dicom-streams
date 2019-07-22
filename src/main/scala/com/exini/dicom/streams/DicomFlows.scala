@@ -362,7 +362,7 @@ object DicomFlows {
             val length = fmiElementsNoLength.data.map(_.toBytes.length).sum
             val lengthHeader = HeaderPart(Tag.FileMetaInformationGroupLength, VR.UL, 4, isFmi = true, bigEndian, explicitVR)
             val lengthChunk = ValueChunk(bigEndian, intToBytes(length, bigEndian), last = true)
-            fmi = lengthHeader :: lengthChunk :: fmiElementsNoLength.toParts
+            fmi = lengthHeader :: lengthChunk :: fmiElementsNoLength.toParts(false)
           }
           Nil
 
