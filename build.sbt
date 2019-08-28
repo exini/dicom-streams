@@ -2,7 +2,7 @@ import sbt.IO
 import DicomSourceGenerators._
 
 name := "dicom-streams"
-version := "0.11-SNAPSHOT"
+version := "0.11"
 organization := "com.exini"
 //scalaVersion := "2.13.0"
 crossScalaVersions := Seq("2.12.2", "2.13.0")
