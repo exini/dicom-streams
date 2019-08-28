@@ -476,7 +476,7 @@ class ElementsTest extends FlatSpec with Matchers {
 
   it should "render an informative string representation" in {
     val s = elements.toString
-    s.count(_.toString == System.lineSeparator) shouldBe 9
+    (s.length - s.replace(System.lineSeparator, "").length) / System.lineSeparator.length shouldBe 9
   }
 
   it should "return the specified element based on tag path" in {
