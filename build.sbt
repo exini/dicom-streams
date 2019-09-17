@@ -5,7 +5,7 @@ name := "dicom-streams"
 version := "0.11"
 organization := "com.exini"
 //scalaVersion := "2.13.0"
-crossScalaVersions := Seq("2.12.2", "2.13.0")
+crossScalaVersions := Seq("2.12.10", "2.13.0")
 scalacOptions := Seq("-encoding", "UTF-8", "-Xlint", "-deprecation", "-unchecked", "-feature", "-target:jvm-1.8")
 scalacOptions in(Compile, doc) ++= Seq(
   "-no-link-warnings" // Suppresses problems with Scaladoc @throws links
@@ -20,7 +20,7 @@ buildInfoPackage := "com.exini.dicom"
 // repos
 
 resolvers ++= Seq(
-  "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/")
+  "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/")
 
 // deps
 
