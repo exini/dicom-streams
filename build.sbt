@@ -5,7 +5,7 @@ lazy val scala212 = "2.12.10"
 lazy val scala213 = "2.13.0"
 
 name := "dicom-streams"
-version := "0.11"
+version := "0.12-SNAPSHOT"
 organization := "com.exini"
 scalaVersion := scala212
 crossScalaVersions := Seq(scala212, scala213)
