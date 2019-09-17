@@ -76,8 +76,6 @@ licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.
 coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*"
 
 // publish
-useGpg := true
-
 publishMavenStyle := true
 
 publishArtifact in Test := false
