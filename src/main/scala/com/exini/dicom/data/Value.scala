@@ -484,7 +484,7 @@ object Value {
   // parsing of value bytes for various value representations to higher types
 
   def split(bytes: ByteString, size: Int): Seq[ByteString] = bytes.grouped(size).filter(_.length == size).toSeq
-  def split(s: String): Seq[String] = s.split(multiValueDelimiterRegex)
+  def split(s: String): Seq[String] = s.split(multiValueDelimiterRegex).toSeq
 
   def trim(s: String): String = s.trim
   def trimPadding(s: String, paddingByte: Byte): String = {
@@ -582,8 +582,8 @@ object Value {
   def parsePatientName(s: String): Option[PatientName] = {
     def ensureLength(ss: Seq[String], n: Int) = ss ++ Seq.fill(math.max(0, n - ss.length))("")
 
-    val comps = ensureLength(s.split("""\^"""), 5)
-      .map(s => ensureLength(s.split("="), 3).map(trim))
+    val comps = ensureLength(s.split("""\^""").toSeq, 5)
+      .map(s => ensureLength(s.split("=").toSeq, 3).map(trim))
       .map(c => ComponentGroup(c.head, c(1), c(2)))
 
     Option(PatientName(comps.head, comps(1), comps(2), comps(3), comps(4)))

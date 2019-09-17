@@ -76,7 +76,7 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with FlatS
     val elementList = List(
       FragmentsElement(Tag.PixelData, VR.OB),
       FragmentElement(1, 0, Value.empty),
-      FragmentElement(2, 0, Value(ByteString(1, 2, 3, 4l))),
+      FragmentElement(2, 0, Value(ByteString(1, 2, 3, 4))),
       SequenceDelimitationElement())
 
     val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)

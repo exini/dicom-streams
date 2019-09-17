@@ -48,34 +48,39 @@ sealed trait TagPath extends TagPathLike {
     val thisList: List[TagPath] = this.toList
     val thatList: List[TagPath] = that.toList
 
-    thisList.zip(thatList).foreach {
-      case (EmptyTagPath, thatPath) =>
-        return !thatPath.isEmpty
-      case (_, EmptyTagPath) =>
-        return false
-      case (thisPath, thatPath) if thisPath.tag != thatPath.tag =>
-        return intToUnsignedLong(thisPath.tag) < intToUnsignedLong(thatPath.tag)
-      case (_: TagPathSequence, _: TagPath with ItemIndex) => // tag numbers equal from here
-        return true
-      case (_: TagPathSequence, _: TagPathSequenceEnd) =>
-        return true
-      case (_: TagPathSequenceEnd, _: TagPath with ItemIndex) =>
-        return false
-      case (_: TagPathSequenceEnd, _: TagPathSequence) =>
-        return false
-      case (_: TagPath with ItemIndex, _: TagPathSequence) =>
-        return false
-      case (_: TagPath with ItemIndex, _: TagPathSequenceEnd) =>
-        return true
-      case (thisPath: TagPath with ItemIndex, thatPath: TagPath with ItemIndex) if thisPath.item != thatPath.item =>
-        return thisPath.item < thatPath.item
-      case (_: TagPathItem, _: TagPathItemEnd) => // tag and item numbers equal from here
-        return true
-      case (_: TagPathItemEnd, _: TagPathItem) => // tag and item numbers equal from here
-        return false
-      case _ => // tags and item numbers are equal, and same class -> check next
-    }
-    thisList.length < thatList.length
+    thisList.zip(thatList)
+      .view
+      .map {
+        case (EmptyTagPath, thatPath) =>
+          Some(!thatPath.isEmpty)
+        case (_, EmptyTagPath) =>
+          Some(false)
+        case (thisPath, thatPath) if thisPath.tag != thatPath.tag =>
+          Some(intToUnsignedLong(thisPath.tag) < intToUnsignedLong(thatPath.tag))
+        case (_: TagPathSequence, _: TagPath with ItemIndex) => // tag numbers equal from here
+          Some(true)
+        case (_: TagPathSequence, _: TagPathSequenceEnd) =>
+          Some(true)
+        case (_: TagPathSequenceEnd, _: TagPath with ItemIndex) =>
+          Some(false)
+        case (_: TagPathSequenceEnd, _: TagPathSequence) =>
+          Some(false)
+        case (_: TagPath with ItemIndex, _: TagPathSequence) =>
+          Some(false)
+        case (_: TagPath with ItemIndex, _: TagPathSequenceEnd) =>
+          Some(true)
+        case (thisPath: TagPath with ItemIndex, thatPath: TagPath with ItemIndex) if thisPath.item != thatPath.item =>
+          Some(thisPath.item < thatPath.item)
+        case (_: TagPathItem, _: TagPathItemEnd) => // tag and item numbers equal from here
+          Some(true)
+        case (_: TagPathItemEnd, _: TagPathItem) => // tag and item numbers equal from here
+          Some(false)
+        case _ => // tags and item numbers are equal, and same class -> check next
+          None
+      }
+      .find(_.isDefined)
+      .flatten
+      .getOrElse(thisList.length < thatList.length)
   }
 
   /**

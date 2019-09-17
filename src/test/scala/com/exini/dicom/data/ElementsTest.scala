@@ -5,11 +5,12 @@ import java.net.URI
 import java.time.{LocalDate, LocalTime, ZoneOffset}
 
 import akka.util.ByteString
-import org.scalatest._
 import com.exini.dicom.data.DicomParts.HeaderPart
 import com.exini.dicom.data.Elements._
+import com.exini.dicom.data.Tag
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TestData._
+import org.scalatest.{ FlatSpec, Matchers, Assertion }
 
 class ElementsTest extends FlatSpec with Matchers {
 
@@ -244,7 +245,7 @@ class ElementsTest extends FlatSpec with Matchers {
     elements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.PatientID)) shouldBe elements.copy(data = Vector(studyDate, updatedSeq1, patientName))
     elements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 3)) shouldBe elements
     elements.remove(TagPath.fromItem(Tag.DetectorInformationSequence, 1)) shouldBe elements
-    deepElements.remove(TagPath.fromItem(Tag.DerivationCodeSequence,2).thenItem(Tag.DerivationCodeSequence, 2)) shouldBe updatedDeepElements
+    deepElements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.DerivationCodeSequence, 2)) shouldBe updatedDeepElements
   }
 
   it should "set elements in the correct position" in {
@@ -295,7 +296,7 @@ class ElementsTest extends FlatSpec with Matchers {
   it should "add an item to a sequence" in {
     val newItem = Elements.empty().set(studyDate)
     val updated = elements.addItem(TagPath.fromSequence(Tag.DerivationCodeSequence), newItem)
-    updated.getNested(Tag.DerivationCodeSequence,3).get shouldBe newItem
+    updated.getNested(Tag.DerivationCodeSequence, 3).get shouldBe newItem
   }
 
   it should "not add new sequence when adding item to a sequence that does not exist" in {
@@ -306,14 +307,14 @@ class ElementsTest extends FlatSpec with Matchers {
 
   it should "add a new sequence" in {
     val updated = elements.setSequence(
-      TagPath.fromItem(Tag.DerivationCodeSequence,1),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 1),
       Sequence(
         Tag.DetectorInformationSequence,
         indeterminateLength,
         List(Item(Elements.empty().set(studyDate)))
       )
     )
-    updated(TagPath.fromItem(Tag.DerivationCodeSequence,1).thenItem(Tag.DetectorInformationSequence,1).thenTag(Tag.StudyDate)).get shouldBe studyDate
+    updated(TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenItem(Tag.DetectorInformationSequence, 1).thenTag(Tag.StudyDate)).get shouldBe studyDate
   }
 
   it should "overwrite element if already present" in {

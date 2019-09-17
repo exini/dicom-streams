@@ -1,11 +1,14 @@
 import sbt.IO
 import DicomSourceGenerators._
 
+lazy val scala212 = "2.12.10"
+lazy val scala213 = "2.13.0"
+
 name := "dicom-streams"
 version := "0.11"
 organization := "com.exini"
-//scalaVersion := "2.13.0"
-crossScalaVersions := Seq("2.12.10", "2.13.0")
+scalaVersion := scala212
+crossScalaVersions := Seq(scala212, scala213)
 scalacOptions := Seq("-encoding", "UTF-8", "-Xlint", "-deprecation", "-unchecked", "-feature", "-target:jvm-1.8")
 scalacOptions in(Compile, doc) ++= Seq(
   "-no-link-warnings" // Suppresses problems with Scaladoc @throws links
@@ -73,6 +76,8 @@ licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.
 coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*"
 
 // publish
+useGpg := true
+
 publishMavenStyle := true
 
 publishArtifact in Test := false

@@ -150,7 +150,7 @@ object CharacterSets {
   val utf8Charset: Charset = StandardCharsets.UTF_8
   val defaultCharset: Charset = StandardCharsets.ISO_8859_1
   val defaultCharsetObj = new CharsetObj(defaultCharset, 1, None)
-  val defaultOnly = new CharacterSets(Array[String](""))
+  val defaultOnly = new CharacterSets(Seq(""))
 
   def apply(specificCharacterSetValue: ValueElement): CharacterSets = {
     val s = specificCharacterSetValue.value.toStrings(specificCharacterSetValue.vr, specificCharacterSetValue.bigEndian, defaultOnly)
