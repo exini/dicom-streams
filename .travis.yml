@@ -3,7 +3,7 @@ dist: trusty
 language: scala
 
 jdk:
-  - oraclejdk8
+  - oraclejdk11
 
 notifications:
   email:
