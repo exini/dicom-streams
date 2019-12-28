@@ -1,17 +1,18 @@
 package com.exini.dicom.data
 
-import org.scalatest.{FlatSpec, Matchers}
 import com.exini.dicom.BuildInfo
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class ImplementationTest extends FlatSpec with Matchers {
+class ImplementationTest extends AnyFlatSpec with Matchers {
 
   "Name" should "be defined by the build" in {
     Implementation.name shouldBe BuildInfo.name
   }
 
   "Version name" should "be name follwed by version" in {
-    Implementation.versionName should startWith (Implementation.name)
-    Implementation.versionName should endWith (Implementation.version)
+    Implementation.versionName should startWith(Implementation.name)
+    Implementation.versionName should endWith(Implementation.version)
   }
 
   "Class UID" should "be a valid UID" in {

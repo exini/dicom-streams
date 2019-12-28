@@ -7,12 +7,13 @@ import java.time.{LocalDate, LocalTime, ZoneOffset}
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts.HeaderPart
 import com.exini.dicom.data.Elements._
-import com.exini.dicom.data.Tag
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TestData._
-import org.scalatest.{ FlatSpec, Matchers, Assertion }
+import org.scalatest.Assertion
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class ElementsTest extends FlatSpec with Matchers {
+class ElementsTest extends AnyFlatSpec with Matchers {
 
   def create(elements: ElementSet*): Elements = Elements(defaultCharacterSet, systemZone, elements.toVector)
 

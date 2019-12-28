@@ -1,17 +1,18 @@
 package com.exini.dicom.streams
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 import com.exini.dicom.data.{Tag, TagPath, VR, _}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContextExecutor
 
-class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with FlatSpecLike with Matchers with BeforeAndAfterAll {
+class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   import ModifyFlow._
   import ParseFlow.parseFlow
@@ -19,7 +20,6 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with FlatSpe
   import com.exini.dicom.data.DicomParts._
   import com.exini.dicom.data.TestData._
 
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override def afterAll(): Unit = system.terminate()

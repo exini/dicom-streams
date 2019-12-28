@@ -3,9 +3,10 @@ package com.exini.dicom.data
 import java.nio.ByteBuffer
 
 import akka.util.ByteString
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class dataTest extends FlatSpec with Matchers {
+class dataTest extends AnyFlatSpec with Matchers {
 
   "Converting an numbers to hex strings" should "convert the int 1194684 to 123ABC" in {
     intToHexString(1194684) shouldBe "00123ABC"

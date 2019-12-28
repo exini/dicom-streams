@@ -4,9 +4,10 @@ import java.math.BigInteger
 import java.time.{LocalDate, LocalTime, ZoneOffset, ZonedDateTime}
 
 import akka.util.ByteString
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class ValueTest extends FlatSpec with Matchers {
+class ValueTest extends AnyFlatSpec with Matchers {
   import Value._
 
   "Formatting bytes into multiple strings" should "return empty sequence for empty byte string" in {

@@ -1,14 +1,10 @@
 import sbt.IO
 import DicomSourceGenerators._
 
-lazy val scala212 = "2.12.10"
-lazy val scala213 = "2.13.0"
-
 name := "dicom-streams"
 version := "0.12-SNAPSHOT"
 organization := "com.exini"
-scalaVersion := scala212
-crossScalaVersions := Seq(scala212, scala213)
+scalaVersion := "2.13.1"
 scalacOptions := Seq("-encoding", "UTF-8", "-Xlint", "-deprecation", "-unchecked", "-feature", "-target:jvm-1.8")
 scalacOptions in(Compile, doc) ++= Seq(
   "-no-link-warnings" // Suppresses problems with Scaladoc @throws links
@@ -28,13 +24,13 @@ resolvers ++= Seq(
 // deps
 
 libraryDependencies ++= {
-  val akkaVersion = "2.5.25"
+  val akkaVersion = "2.6.1"
   Seq(
     "org.scala-lang.modules" %% "scala-xml" % "1.2.0",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    "org.slf4j" % "slf4j-simple" % "1.7.28",
-    "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+    "org.slf4j" % "slf4j-simple" % "1.7.30",
+    "org.scalatest" %% "scalatest" % "3.1.0" % "test",
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test"
   )
 }

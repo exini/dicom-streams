@@ -1,9 +1,10 @@
 package com.exini.dicom.data
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class KeywordToTagTest extends FlatSpec with Matchers {
+class KeywordToTagTest extends AnyFlatSpec with Matchers {
 
   "A keyword" should "be correctly mapped to its corresponding tag" in {
     val realTag = Tag.PatientName

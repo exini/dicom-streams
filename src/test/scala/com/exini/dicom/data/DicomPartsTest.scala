@@ -1,9 +1,10 @@
 package com.exini.dicom.data
 
-import org.scalatest.{FlatSpecLike, Matchers}
 import com.exini.dicom.data.TestData._
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 
-class DicomPartsTest extends FlatSpecLike with Matchers {
+class DicomPartsTest extends AnyFlatSpecLike with Matchers {
 
   import DicomParts._
 

@@ -17,7 +17,7 @@
 package com.exini.dicom
 
 import akka.NotUsed
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Source}
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts.DicomPart
@@ -34,13 +34,13 @@ package object streams {
 
   type PartFlow = Flow[DicomPart, DicomPart, NotUsed]
 
-  def toElements(source: Source[ByteString, Any])(implicit ec: ExecutionContext, mat: ActorMaterializer): Future[Elements] =
+  def toElements(source: Source[ByteString, Any])(implicit ec: ExecutionContext, mat: Materializer): Future[Elements] =
     source
       .via(parseFlow)
       .via(elementFlow)
       .runWith(elementSink)
 
-  def toElementsBlocking(source: Source[ByteString, Any], d: FiniteDuration = 10.seconds)(implicit ec: ExecutionContext, mat: ActorMaterializer): Elements =
+  def toElementsBlocking(source: Source[ByteString, Any], d: FiniteDuration = 10.seconds)(implicit ec: ExecutionContext, mat: Materializer): Elements =
     Await.result(toElements(source), d)
 
 }

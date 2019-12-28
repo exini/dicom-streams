@@ -1,9 +1,10 @@
 package com.exini.dicom.data
 
-import org.scalatest.{FlatSpec, Matchers}
 import com.exini.dicom.data.TagPath.EmptyTagPath
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TagPathTest extends FlatSpec with Matchers {
+class TagPathTest extends AnyFlatSpec with Matchers {
 
   import TagPath.TagPathTag
 
@@ -215,8 +216,8 @@ class TagPathTest extends FlatSpec with Matchers {
   }
 
   it should "support sequence and item end nodes" in {
-    TagPath.fromSequenceEnd(1 ).startsWith(TagPath.fromSequenceEnd(1)) shouldBe true
-    TagPath.fromSequenceEnd(1 ).startsWith(TagPath.fromSequence(1)) shouldBe false
+    TagPath.fromSequenceEnd(1).startsWith(TagPath.fromSequenceEnd(1)) shouldBe true
+    TagPath.fromSequenceEnd(1).startsWith(TagPath.fromSequence(1)) shouldBe false
     TagPath.fromItemEnd(1, 1).startsWith(TagPath.fromItemEnd(1, 1)) shouldBe true
     TagPath.fromItemEnd(1, 1).startsWith(TagPath.fromItem(1, 1)) shouldBe false
   }
@@ -268,10 +269,10 @@ class TagPathTest extends FlatSpec with Matchers {
   }
 
   it should "support sequence and item end nodes" in {
-    TagPath.fromItem(1,1).thenSequenceEnd(2).endsWith(TagPath.fromSequenceEnd(2)) shouldBe true
-    TagPath.fromItem(1,1).thenSequenceEnd(2).endsWith(TagPath.fromSequence(2)) shouldBe false
-    TagPath.fromItem(1,1).thenItemEnd(2,2).endsWith(TagPath.fromItemEnd(2, 2)) shouldBe true
-    TagPath.fromItem(1,1).thenItemEnd(2,2).endsWith(TagPath.fromItem(2, 12)) shouldBe false
+    TagPath.fromItem(1, 1).thenSequenceEnd(2).endsWith(TagPath.fromSequenceEnd(2)) shouldBe true
+    TagPath.fromItem(1, 1).thenSequenceEnd(2).endsWith(TagPath.fromSequence(2)) shouldBe false
+    TagPath.fromItem(1, 1).thenItemEnd(2, 2).endsWith(TagPath.fromItemEnd(2, 2)) shouldBe true
+    TagPath.fromItem(1, 1).thenItemEnd(2, 2).endsWith(TagPath.fromItem(2, 12)) shouldBe false
   }
 
   it should "support endsWith documentation examples" in {
@@ -321,7 +322,7 @@ class TagPathTest extends FlatSpec with Matchers {
   }
 
   it should "support sequence and item end nodes" in {
-    TagPath.fromItemEnd(1,1).drop(1) shouldBe EmptyTagPath
+    TagPath.fromItemEnd(1, 1).drop(1) shouldBe EmptyTagPath
     TagPath.fromSequenceEnd(1).drop(1) shouldBe EmptyTagPath
   }
 }

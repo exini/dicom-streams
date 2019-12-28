@@ -1,8 +1,10 @@
 package com.exini.dicom.data
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TagPathLikeTest extends FlatSpec with Matchers {
+
+class TagPathLikeTest extends AnyFlatSpec with Matchers {
 
   import TagPath._
 

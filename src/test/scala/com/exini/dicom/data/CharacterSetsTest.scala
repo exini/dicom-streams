@@ -1,9 +1,10 @@
 package com.exini.dicom.data
 
 import akka.util.ByteString
-import org.scalatest.{FlatSpecLike, Matchers}
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 
-class CharacterSetsTest extends FlatSpecLike with Matchers {
+class CharacterSetsTest extends AnyFlatSpecLike with Matchers {
 
   "Parsing a DICOM file" should "parse an Arab name correctly" in {
     val nameCodePoints = "قباني^لنزار".codePoints().toArray

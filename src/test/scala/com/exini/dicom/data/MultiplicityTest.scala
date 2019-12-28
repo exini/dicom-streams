@@ -1,8 +1,10 @@
 package com.exini.dicom.data
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MultiplicityTest extends FlatSpec with Matchers {
+
+class MultiplicityTest extends AnyFlatSpec with Matchers {
 
   "Multiplicity" should "support exactly 1" in {
     val m = Multiplicity.single

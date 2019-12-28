@@ -3,27 +3,27 @@ package com.exini.dicom.streams
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{FileIO, Flow, Sink, Source}
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.{Tag, TagPath, _}
 import com.exini.dicom.streams.ParseFlow.parseFlow
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
-class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with FlatSpecLike with Matchers with BeforeAndAfterAll {
+class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   import DicomFlows._
   import TestUtils._
   import com.exini.dicom.data.DicomParts._
   import com.exini.dicom.data.TestData._
 
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override def afterAll(): Unit = system.terminate()

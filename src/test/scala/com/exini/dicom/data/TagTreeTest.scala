@@ -1,10 +1,11 @@
 package com.exini.dicom.data
 
-import org.scalatest.{FlatSpec, Matchers}
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TagTree.EmptyTagTree
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TagTreeTest extends FlatSpec with Matchers {
+class TagTreeTest extends AnyFlatSpec with Matchers {
 
   "A tag tree" should "have a legible string representation" in {
     val tree = TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenItem(Tag.DerivationCodeSequence, 3).thenAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.PatientID)

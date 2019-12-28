@@ -1,22 +1,22 @@
 package com.exini.dicom.streams
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import akka.testkit.TestKit
 import akka.util.ByteString
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 import com.exini.dicom.data.Elements.{SequenceDelimitationElement, SequenceElement, _}
 import com.exini.dicom.data.TestData.pixeDataFragments
 import com.exini.dicom.data.{Tag, UID, _}
 import com.exini.dicom.streams.ElementSink.elementSink
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
-class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with FlatSpecLike with Matchers with BeforeAndAfterAll {
+class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override def afterAll(): Unit = system.terminate()
