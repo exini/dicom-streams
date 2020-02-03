@@ -2,7 +2,7 @@ import sbt.IO
 import DicomSourceGenerators._
 
 name := "dicom-streams"
-version := "0.13-SNAPSHOT"
+version := "0.13"
 organization := "com.exini"
 scalaVersion := "2.13.1"
 crossScalaVersions := Seq("2.12.10", "2.13.1")
@@ -25,7 +25,7 @@ resolvers ++= Seq(
 // deps
 
 libraryDependencies ++= {
-  val akkaVersion = "2.6.1"
+  val akkaVersion = "2.6.3"
   Seq(
     "org.scala-lang.modules" %% "scala-xml" % "1.2.0",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,

@@ -4,6 +4,8 @@
 
 # sbt specific
 .cache
+/.bloop
+.metals
 .history
 .lib/
 dist/*
@@ -11,6 +13,8 @@ target/
 lib_managed/
 src_managed/
 project/boot/
+project/metals.sbt
+project/.bloop
 project/plugins/project/
 
 # Scala-IDE specific
