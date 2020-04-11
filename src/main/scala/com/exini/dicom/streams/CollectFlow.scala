@@ -32,7 +32,7 @@ object CollectFlow {
     * elements can be processed correctly according to this information. As an example, an implementation may have
     * different graph paths for different modalities and the modality must be known before any elements are processed.
     *
-    * @param tagPaths      tag paths of data elements to collect. Collection (and hence buffering) will end when the
+    * @param whitelist     tag paths of data elements to collect. Collection (and hence buffering) will end when the
     *                      stream moves past the highest tag number
     * @param label         a tag for the resulting ElementsPart to separate this from other such elements in the same
     *                      flow
@@ -40,13 +40,10 @@ object CollectFlow {
     *                      if this limit is exceed. Set to 0 for an unlimited buffer size
     * @return A DicomPart Flow which will begin with a ElementsPart part followed by other parts in the flow
     */
-  def collectFlow(tagPaths: Set[_ <: TagPath], label: String, maxBufferSize: Int = 1000000): PartFlow = {
-    val maxTag = if (tagPaths.isEmpty) 0 else tagPaths.map(_.head.tag).map(intToUnsignedLong).max
-    val tagCondition = (tagPath: TagPath) => tagPaths.exists(tagPath.startsWith)
-    val stopCondition = if (tagPaths.isEmpty)
-      (_: TagPath) => true
-    else
-      (tagPath: TagPath) => tagPath.isRoot && intToUnsignedLong(tagPath.tag) > maxTag
+  def collectFlow(whitelist: Set[_ <: TagTree], label: String, maxBufferSize: Int = 1000000): PartFlow = {
+    val maxTag = if (whitelist.isEmpty) 0 else whitelist.map(_.head.tag).map(intToUnsignedLong).max
+    val tagCondition = (currentPath: TagPath) => whitelist.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath))
+    val stopCondition = (tagPath: TagPath) => whitelist.isEmpty || tagPath.isRoot && intToUnsignedLong(tagPath.tag) > maxTag
     collectFlow(tagCondition, stopCondition, label, maxBufferSize)
   }
 

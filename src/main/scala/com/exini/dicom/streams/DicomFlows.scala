@@ -197,7 +197,7 @@ object DicomFlows {
     * @return the flow unchanged unless interrupted by failing the context check
     */
   def validateContextFlow(contexts: Seq[ValidationContext]): PartFlow =
-    collectFlow(Set(TagPath.fromTag(Tag.MediaStorageSOPClassUID), TagPath.fromTag(Tag.TransferSyntaxUID), TagPath.fromTag(Tag.SOPClassUID)), "validatecontext")
+    collectFlow(Set(TagTree.fromTag(Tag.MediaStorageSOPClassUID), TagTree.fromTag(Tag.TransferSyntaxUID), TagTree.fromTag(Tag.SOPClassUID)), "validatecontext")
       .mapConcat {
         case e: ElementsPart if e.label == "validatecontext" =>
           val scuid = e.elements.getString(Tag.MediaStorageSOPClassUID).orElse(e.elements.getString(Tag.SOPClassUID)).getOrElse("<empty>")
@@ -431,7 +431,7 @@ object DicomFlows {
     * @return the associated DicomPart Flow
     */
   def toUtf8Flow: PartFlow = Flow[DicomPart]
-    .via(collectFlow(Set(TagPath.fromTag(Tag.SpecificCharacterSet)), "toutf8"))
+    .via(collectFlow(Set(TagTree.fromTag(Tag.SpecificCharacterSet)), "toutf8"))
     .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.SpecificCharacterSet), _ => ByteString("ISO_IR 192")))))
     .statefulMapConcat {
 

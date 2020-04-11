@@ -7,7 +7,7 @@ import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts.{DicomPart, ElementsPart}
 import com.exini.dicom.data.TestData._
-import com.exini.dicom.data.{Tag, TagPath}
+import com.exini.dicom.data.{Tag, TagTree}
 import com.exini.dicom.streams.CollectFlow._
 import com.exini.dicom.streams.ParseFlow.parseFlow
 import com.exini.dicom.streams.TestUtils._
@@ -25,7 +25,7 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
 
   "A collect elements flow" should "first produce an elements part followed by the input dicom parts" in {
     val bytes = studyDate() ++ patientNameJohnDoe()
-    val tags = Set(Tag.StudyDate, Tag.PatientName).map(TagPath.fromTag)
+    val tags = Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag)
     val source = Source.single(bytes)
       .via(parseFlow)
       .via(collectFlow(tags, "tag"))
@@ -66,7 +66,7 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
 
     val source = Source.single(bytes)
       .via(parseFlow)
-      .via(collectFlow(Set(Tag.Modality, Tag.SeriesInstanceUID).map(TagPath.fromTag), "tag"))
+      .via(collectFlow(Set(Tag.Modality, Tag.SeriesInstanceUID).map(TagTree.fromTag), "tag"))
 
     source.runWith(TestSink.probe[DicomPart])
       .request(1)
@@ -85,7 +85,7 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
 
     val source = Source.single(bytes)
       .via(ParseFlow(chunkSize = 500))
-      .via(collectFlow(Set(Tag.StudyDate, Tag.PatientName).map(TagPath.fromTag), "tag", maxBufferSize = 1000))
+      .via(collectFlow(Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag), "tag", maxBufferSize = 1000))
 
     source.runWith(TestSink.probe[DicomPart])
       .request(1)
