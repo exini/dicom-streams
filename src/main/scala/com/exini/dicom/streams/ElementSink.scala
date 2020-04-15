@@ -72,11 +72,14 @@ object ElementSink {
             sinkData.updated(None)
 
           case sequenceElement: SequenceElement =>
-            sinkData.pushSequence(Sequence.empty(sequenceElement))
+            sinkData.pushSequence(Sequence.empty(sequenceElement)
+              .copy(length = if (sequenceElement.indeterminate) sequenceElement.length else 0)
+            )
 
           case itemElement: ItemElement if sinkData.hasSequence =>
             val builder = sinkData.builderStack.head
             val sequence = sinkData.sequenceStack.head + Item.empty(itemElement)
+                .copy(length = if (itemElement.indeterminate) itemElement.length else 0)
             sinkData.pushBuilder(Elements.newBuilder(builder.characterSets, builder.zoneOffset)).updated(sequence)
 
           case _: ItemDelimitationElement if sinkData.hasSequence =>
@@ -89,8 +92,9 @@ object ElementSink {
 
           case _: SequenceDelimitationElement if sinkData.hasSequence =>
             val sequence = sinkData.sequenceStack.head
+            val sequenceLength = if (sequence.indeterminate) sequence.length else sequence.toBytes.length - 12
             val builder = sinkData.builderStack.head
-            builder += sequence
+            builder += sequence.copy(length = sequenceLength)
             sinkData.popSequence()
 
           case _ =>
