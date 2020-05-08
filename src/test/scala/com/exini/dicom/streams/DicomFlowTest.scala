@@ -30,7 +30,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
 
   "The dicom flow" should "call the correct events for streamed dicom parts" in {
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++
-      patientNameJohnDoe() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation() ++
+      personNameJohnDoe() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation() ++
       pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
@@ -84,7 +84,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
       sequence(Tag.EnergyWindowInformationSequence) ++ item() ++ studyDate() ++ itemDelimitation() ++ item() ++ // sequence
       sequence(Tag.EnergyWindowRangeSequence, 24) ++ item(16) ++ studyDate() ++ // nested sequence (determinate length)
       itemDelimitation() ++ sequenceDelimitation() ++
-      patientNameJohnDoe() // attribute
+      personNameJohnDoe() // attribute
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -166,7 +166,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
 
   it should "work in datasets with nested sequences" in {
     val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence, 60) ++ item(52) ++ studyDate() ++
-      sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate() ++ patientNameJohnDoe()
+      sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -240,7 +240,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
   }
 
   it should "call event only once when used twice in flow" in {
-    val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ patientNameJohnDoe()
+    val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ personNameJohnDoe()
 
     var nItemDelims = 0
     var nSeqDelims = 0
@@ -266,7 +266,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
   }
 
   "The guaranteed value flow" should "call onValueChunk callback also after length zero headers" in {
-    val bytes = patientNameJohnDoe() ++ emptyPatientName()
+    val bytes = personNameJohnDoe() ++ emptyPatientName()
 
     var expectedChunkLengths = List(8, 0)
 
@@ -307,7 +307,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
   }
 
   "The start event flow" should "notify when dicom stream starts" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val startEventTestFlow: PartFlow =
       DicomFlowFactory.create(new IdentityFlow with StartEvent[DicomPart] {
@@ -375,7 +375,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
   }
 
   "The end event flow" should "notify when dicom stream ends" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val endEventTestFlow: PartFlow =
       DicomFlowFactory.create(new IdentityFlow with EndEvent[DicomPart] {
@@ -402,7 +402,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
       sequence(Tag.EnergyWindowInformationSequence) ++ item() ++ studyDate() ++ itemDelimitation() ++ item() ++ // sequence
       sequence(Tag.EnergyWindowRangeSequence, 24) ++ item(16) ++ studyDate() ++ // nested sequence (determinate length)
       itemDelimitation() ++ sequenceDelimitation() ++
-      patientNameJohnDoe() ++ // attribute
+      personNameJohnDoe() ++ // attribute
       pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
 
     var expectedPaths = List(
@@ -455,7 +455,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
   }
 
   it should "support using tracking more than once within a flow" in {
-    val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ patientNameJohnDoe()
+    val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ personNameJohnDoe()
 
     // must be def, not val
     def flow = DicomFlowFactory.create(new IdentityFlow with TagPathTracking[DicomPart])
@@ -474,7 +474,7 @@ class DicomFlowTest extends TestKit(ActorSystem("DicomFlowSpec")) with AnyFlatSp
   }
 
   it should "support sequences and items with explicit length" in {
-    val bytes = patientNameJohnDoe() ++
+    val bytes = personNameJohnDoe() ++
       sequence(Tag.DigitalSignaturesSequence, 680) ++
       item(672) ++
       element(Tag.MACIDNumber, ByteString(1, 1), bigEndian = false, explicitVR = true) ++

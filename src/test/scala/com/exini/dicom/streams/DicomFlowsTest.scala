@@ -28,7 +28,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   override def afterAll(): Unit = system.terminate()
 
   "A print flow" should "not change incoming elements" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe()
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -46,7 +46,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   "The stop tag flow" should "stop reading data when a stop tag is reached" in {
-    val bytes = studyDate() ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -59,7 +59,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "stop reading data when a tag number is higher than the stop tag" in {
-    val bytes = studyDate() ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -72,7 +72,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "apply stop tag correctly also when preceded by sequence and ignore tags in sequences" in {
-    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ pixelData(10) ++ itemDelimitation() ++ sequenceDelimitation() ++ patientNameJohnDoe() ++ pixelData(100)
+    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ pixelData(10) ++ itemDelimitation() ++ sequenceDelimitation() ++ personNameJohnDoe() ++ pixelData(100)
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -125,7 +125,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   "The DICOM file meta information discard filter" should "discard file meta informaton" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe() ++ studyDate()
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -152,7 +152,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   "The tag filter" should "filter elements in sequences" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -169,7 +169,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "filter elements not matching the condition" in {
-    val bytes = preamble ++ fmiGroupLength(fmiVersion(), transferSyntaxUID()) ++ fmiVersion() ++ transferSyntaxUID() ++ patientNameJohnDoe() ++ studyDate()
+    val bytes = preamble ++ fmiGroupLength(fmiVersion(), transferSyntaxUID()) ++ fmiVersion() ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -235,7 +235,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   "The whitelist filter" should "block all elements not on the white list" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe() ++ studyDate()
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -248,7 +248,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "only apply to elements in the root dataset when filter points to root dataset" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -270,7 +270,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "preserve sequences and items in nested structures when using wildcards" in {
-    val bytes = patientNameJohnDoe() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = personNameJohnDoe() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -287,7 +287,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "preserve sequences and items in nested structures when using item indices" in {
-    val bytes = patientNameJohnDoe() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = personNameJohnDoe() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -305,10 +305,10 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
 
   "The blacklist filter" should "block the entire sequence when a sequence tag is on the black list" in {
     val bytes = studyDate() ++
-      (sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++
-        (sequence(Tag.AbstractPriorCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()) ++
+      (sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++
+        (sequence(Tag.AbstractPriorCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()) ++
         itemDelimitation() ++ sequenceDelimitation()) ++
-      patientNameJohnDoe()
+      personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -324,7 +324,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
 
   it should "block a single item inside a sequence" in {
     val bytes = studyDate() ++
-      sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+      sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -342,7 +342,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
 
   it should "block an element in an item in a sequence" in {
     val bytes = studyDate() ++
-      sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+      sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -365,8 +365,8 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   "The header part filter" should "discard elements based on its header part" in {
-    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++
-      item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation() ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++
+      item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -490,7 +490,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   "The deflate flow" should "recreate the dicom parts of a dataset which has been deflated and inflated again" in {
-    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe() ++ studyDate()
+    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -515,7 +515,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "not deflate meta information" in {
-    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe() ++ studyDate()
+    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -534,7 +534,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "not deflate data with non-deflated transfer syntax" in {
-    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe() ++ studyDate()
+    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -564,7 +564,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   "The bulk data filter flow" should "remove pixel data" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe() ++ pixelData(1000)
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ pixelData(1000)
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -582,7 +582,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "not remove pixel data in sequences" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ pixelData(100) ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ pixelData(100) ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -601,7 +601,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "only remove waveform data when inside waveform sequence" in {
-    val bytes = waveformSeqStart() ++ item() ++ patientNameJohnDoe() ++ waveformData(100) ++ itemDelimitation() ++ sequenceDelimitation() ++ patientNameJohnDoe() ++ waveformData(100)
+    val bytes = waveformSeqStart() ++ item() ++ personNameJohnDoe() ++ waveformData(100) ++ itemDelimitation() ++ sequenceDelimitation() ++ personNameJohnDoe() ++ waveformData(100)
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -623,7 +623,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
 
   "The FMI group length flow" should "calculate and emit the correct group length attribute" in {
     val correctLength = transferSyntaxUID().length
-    val bytes = preamble ++ fmiGroupLength(fmiVersion(), transferSyntaxUID()) ++ fmiVersion() ++ transferSyntaxUID() ++ patientNameJohnDoe()
+    val bytes = preamble ++ fmiGroupLength(fmiVersion(), transferSyntaxUID()) ++ fmiVersion() ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -660,7 +660,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
 
   it should "work in flows without preamble" in {
     val correctLength = transferSyntaxUID().length
-    val bytes = transferSyntaxUID() ++ patientNameJohnDoe()
+    val bytes = transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -688,7 +688,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "not emit a group length attribute when there is no FMI" in {
-    val bytes = preamble ++ patientNameJohnDoe()
+    val bytes = preamble ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -702,7 +702,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "keep a zero length group length attribute" in {
-    val bytes = fmiGroupLength(ByteString.empty) ++ patientNameJohnDoe()
+    val bytes = fmiGroupLength(ByteString.empty) ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -819,7 +819,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
 
   it should "work in datasets with nested sequences" in {
     val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence, 60) ++ item(52) ++ studyDate() ++
-      sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate() ++ patientNameJohnDoe()
+      sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -910,7 +910,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "transform data without the specific character set attribute, decoding using the default character set" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -920,7 +920,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk(ByteString("ISO_IR 192"))
       .expectHeader(Tag.PatientName)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectDicomComplete()
   }
 
@@ -1000,7 +1000,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   "The explicit VR little endian flow" should "convert explicit VR big endian to explicit VR little endian" in {
     val bigEndian = true
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(UID.ExplicitVRBigEndianRetired)) ++ transferSyntaxUID(UID.ExplicitVRBigEndianRetired) ++
-      patientNameJohnDoe(bigEndian) ++ rows(bigEndian) ++ dataPointRows(bigEndian) ++ apexPosition(bigEndian) ++
+      personNameJohnDoe(bigEndian) ++ rows(bigEndian) ++ dataPointRows(bigEndian) ++ apexPosition(bigEndian) ++
       sequence(Tag.DerivationCodeSequence, bigEndian) ++ item(bigEndian) ++ studyDate(bigEndian) ++
       itemDelimitation(bigEndian) ++ sequenceDelimitation(bigEndian) ++ pixeDataFragments(bigEndian) ++ item(1000, bigEndian) ++
       (1 to 500).map(_.toShort).map(shortToBytesBE).reduce(_ ++ _) ++ sequenceDelimitation(bigEndian)
@@ -1016,7 +1016,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
       .expectHeader(Tag.TransferSyntaxUID)
       .expectValueChunk(transferSyntaxUID().drop(8))
       .expectHeader(Tag.PatientName)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectHeader(Tag.Rows)
       .expectValueChunk(rows().drop(8))
       .expectHeader(Tag.DataPointRows)
@@ -1037,7 +1037,7 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
   }
 
   it should "convert implicit VR little endian to explicit VR little endian" in {
-    val bytes = patientNameJohnDoe(explicitVR = false)
+    val bytes = personNameJohnDoe(explicitVR = false)
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -1047,13 +1047,13 @@ class DicomFlowsTest extends TestKit(ActorSystem("DicomFlowsSpec")) with AnyFlat
 
     source.runWith(TestSink.probe[ByteString])
       .request(1)
-      .expectNextChainingPF { case newBytes: ByteString => newBytes shouldBe patientNameJohnDoe() }
+      .expectNextChainingPF { case newBytes: ByteString => newBytes shouldBe personNameJohnDoe() }
       .expectComplete()
   }
 
   it should "not change a file already encoded with explicit VR little endian" in {
     val bigEndian = false
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe(bigEndian) ++
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe(bigEndian) ++
       rows(bigEndian) ++ dataPointRows(bigEndian) ++ apexPosition(bigEndian) ++
       sequence(Tag.DerivationCodeSequence, bigEndian) ++ item(bigEndian) ++ studyDate(bigEndian) ++
       itemDelimitation(bigEndian) ++ sequenceDelimitation(bigEndian) ++ pixeDataFragments(bigEndian) ++ item(1000, bigEndian) ++

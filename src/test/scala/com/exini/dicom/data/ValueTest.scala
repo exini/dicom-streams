@@ -420,7 +420,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
 
   "Parsing a patient name" should "divide into parts and components" in {
     Value(ByteString("aFamily=iFamily=pFamily^aGiven=iGiven=pGiven^aMiddle=iMiddle=pMiddle^aPrefix=iPrefix=pPrefix^aSuffix=iSuffix=pSuffix"))
-      .toPatientNames() shouldBe Seq(PatientName(
+      .toPersonNames() shouldBe Seq(PersonName(
       ComponentGroup("aFamily", "iFamily", "pFamily"),
       ComponentGroup("aGiven", "iGiven", "pGiven"),
       ComponentGroup("aMiddle", "iMiddle", "pMiddle"),
@@ -430,7 +430,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
 
   it should "handle null components" in {
     Value(ByteString("=iFamily=pFamily^^aMiddle^aPrefix==pPrefix^==pSuffix"))
-      .toPatientNames() shouldBe Seq(PatientName(
+      .toPersonNames() shouldBe Seq(PersonName(
       ComponentGroup("", "iFamily", "pFamily"),
       ComponentGroup("", "", ""),
       ComponentGroup("aMiddle", "", ""),
@@ -438,7 +438,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
       ComponentGroup("", "", "pSuffix")))
 
     Value(ByteString("aFamily=iFamily^^aMiddle"))
-      .toPatientNames() shouldBe Seq(PatientName(
+      .toPersonNames() shouldBe Seq(PersonName(
       ComponentGroup("aFamily", "iFamily", ""),
       ComponentGroup("", "", ""),
       ComponentGroup("aMiddle", "", ""),
@@ -448,7 +448,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
 
   it should "trim whitespace within each component" in {
     Value(ByteString("   aFamily   =   iFamily   ^^   aMiddle   "))
-      .toPatientNames() shouldBe Seq(PatientName(
+      .toPersonNames() shouldBe Seq(PersonName(
       ComponentGroup("aFamily", "iFamily", ""),
       ComponentGroup("", "", ""),
       ComponentGroup("aMiddle", "", ""),
@@ -624,12 +624,12 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "produce the expected bytes from patient name(s)" in {
-    val pn1 = PatientName(ComponentGroup("family", "i", "p"), ComponentGroup("given", "i", "p"), ComponentGroup("middle", "i", "p"), ComponentGroup("prefix", "i", "p"), ComponentGroup("suffix", "i", "p"))
+    val pn1 = PersonName(ComponentGroup("family", "i", "p"), ComponentGroup("given", "i", "p"), ComponentGroup("middle", "i", "p"), ComponentGroup("prefix", "i", "p"), ComponentGroup("suffix", "i", "p"))
     val pn2 = pn1.copy(familyName = ComponentGroup("otherfamily", "i", "p"))
-    Value.fromPatientName(VR.PN, pn1).toPatientName().get shouldBe pn1
-    Value.fromPatientNames(VR.PN, Seq(pn1, pn2)).toPatientNames() shouldBe Seq(pn1, pn2)
+    Value.fromPersonName(VR.PN, pn1).toPersonName().get shouldBe pn1
+    Value.fromPersonNames(VR.PN, Seq(pn1, pn2)).toPersonNames() shouldBe Seq(pn1, pn2)
 
-    Value.fromPatientName(VR.PN, pn1).toString(VR.PN) shouldBe Some("family=i=p^given=i=p^middle=i=p^prefix=i=p^suffix=i=p")
+    Value.fromPersonName(VR.PN, pn1).toString(VR.PN) shouldBe Some("family=i=p^given=i=p^middle=i=p^prefix=i=p^suffix=i=p")
   }
 
   "PatientName" should "be parsed from strings" in {

@@ -207,7 +207,7 @@ case class Value private[data](bytes: ByteString) {
     * @return this value as a sequence of 'PatientName`s. Casting is performed if necessary. If the value has no
     *         `PatientName`` representation, an empty sequence is returned.
     */
-  def toPatientNames(vr: VR = VR.PN, characterSets: CharacterSets = defaultCharacterSet): Seq[PatientName] = vr match {
+  def toPersonNames(vr: VR = VR.PN, characterSets: CharacterSets = defaultCharacterSet): Seq[PersonName] = vr match {
     case PN => parsePN(bytes, characterSets)
     case _ => Seq.empty
   }
@@ -289,9 +289,9 @@ case class Value private[data](bytes: ByteString) {
   def toDateTime(vr: VR = VR.DT, zoneOffset: ZoneOffset = systemZone): Option[ZonedDateTime] = toDateTimes(vr, zoneOffset).headOption
 
   /**
-    * @return the first `PatientName` representation of this value, if any
+    * @return the first `PersonName` representation of this value, if any
     */
-  def toPatientName(vr: VR = VR.PN, characterSets: CharacterSets = defaultCharacterSet): Option[PatientName] = toPatientNames(vr, characterSets).headOption
+  def toPersonName(vr: VR = VR.PN, characterSets: CharacterSets = defaultCharacterSet): Option[PersonName] = toPersonNames(vr, characterSets).headOption
 
   override def toString: String =
     s"Value [${bytes.length} bytes]"
@@ -468,12 +468,12 @@ object Value {
   def fromDateTime(vr: VR, value: ZonedDateTime): Value = apply(vr, dateTimeBytes(vr, value))
   def fromDateTimes(vr: VR, values: Seq[ZonedDateTime]): Value = apply(vr, combine(vr, values.map(dateTimeBytes(vr, _))))
 
-  private def patientNameBytes(vr: VR, value: PatientName): ByteString = vr match {
+  private def personNameBytes(vr: VR, value: PersonName): ByteString = vr match {
     case PN => ByteString(value.toString)
-    case _ => throw new IllegalArgumentException(s"Cannot create value of VR $vr from date-time")
+    case _ => throw new IllegalArgumentException(s"Cannot create value of VR $vr from person name")
   }
-  def fromPatientName(vr: VR, value: PatientName): Value = apply(vr, patientNameBytes(vr, value))
-  def fromPatientNames(vr: VR, values: Seq[PatientName]): Value = apply(vr, combine(vr, values.map(patientNameBytes(vr, _))))
+  def fromPersonName(vr: VR, value: PersonName): Value = apply(vr, personNameBytes(vr, value))
+  def fromPersonNames(vr: VR, values: Seq[PersonName]): Value = apply(vr, combine(vr, values.map(personNameBytes(vr, _))))
 
   private def uriBytes(vr: VR, value: URI): ByteString = vr match {
     case UR => ByteString(value.toString)
@@ -513,8 +513,8 @@ object Value {
   def parseDA(value: ByteString): Seq[LocalDate] = split(value.utf8String).flatMap(parseDate)
   def parseTM(value: ByteString): Seq[LocalTime] = split(value.utf8String).flatMap(parseTime)
   def parseDT(value: ByteString, zoneOffset: ZoneOffset): Seq[ZonedDateTime] = split(value.utf8String).flatMap(parseDateTime(_, zoneOffset))
-  def parsePN(string: String): Seq[PatientName] = split(string).map(trimPadding(_, VR.PN.paddingByte)).flatMap(parsePatientName)
-  def parsePN(value: ByteString, characterSets: CharacterSets): Seq[PatientName] = parsePN(characterSets.decode(VR.PN, value))
+  def parsePN(string: String): Seq[PersonName] = split(string).map(trimPadding(_, VR.PN.paddingByte)).flatMap(parsePersonName)
+  def parsePN(value: ByteString, characterSets: CharacterSets): Seq[PersonName] = parsePN(characterSets.decode(VR.PN, value))
   def parseUR(string: String): Option[URI] = parseURI(string)
   def parseUR(value: ByteString): Option[URI] = parseUR(trimPadding(value.utf8String, VR.UR.paddingByte))
 
@@ -579,14 +579,14 @@ object Value {
     }
   }
 
-  def parsePatientName(s: String): Option[PatientName] = {
+  def parsePersonName(s: String): Option[PersonName] = {
     def ensureLength(ss: Seq[String], n: Int) = ss ++ Seq.fill(math.max(0, n - ss.length))("")
 
     val comps = ensureLength(s.split("""\^""").toSeq, 5)
       .map(s => ensureLength(s.split("=").toSeq, 3).map(trim))
       .map(c => ComponentGroup(c.head, c(1), c(2)))
 
-    Option(PatientName(comps.head, comps(1), comps(2), comps(3), comps(4)))
+    Option(PersonName(comps.head, comps(1), comps(2), comps(3), comps(4)))
   }
 
   def parseURI(s: String): Option[URI] = try Option(new URI(s)) catch { case _: Throwable => None }

@@ -25,7 +25,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   override def afterAll(): Unit = system.terminate()
 
   "The modify flow" should "modify the value of the specified elements" in {
-    val bytes = studyDate() ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ personNameJohnDoe()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
@@ -43,7 +43,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "not modify elements in datasets other than the dataset the tag path points to" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
@@ -54,8 +54,8 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
     source.runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem(1)
-      .expectHeader(Tag.PatientName, VR.PN, patientNameJohnDoe().length - 8)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectItemDelimitation()
@@ -64,7 +64,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "insert elements if not present" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -73,8 +73,8 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
     source.runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.PatientName, VR.PN, patientNameJohnDoe().length - 8)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectDicomComplete()
   }
 
@@ -83,13 +83,13 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val source = Source.single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => patientNameJohnDoe().drop(8)))))
+      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8)))))
 
     source.runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.PatientName, VR.PN, patientNameJohnDoe().length - 8)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectDicomComplete()
   }
 
@@ -112,13 +112,13 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val source = Source.single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => patientNameJohnDoe().drop(8)))))
+      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8)))))
 
     source.runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.PatientName, VR.PN, patientNameJohnDoe().length - 8)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectSequence(Tag.AbstractPriorCodeSequence)
       .expectSequenceDelimitation()
       .expectDicomComplete()
@@ -129,13 +129,13 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val source = Source.single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => patientNameJohnDoe().drop(8)))))
+      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8)))))
 
     source.runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectSequenceDelimitation()
-      .expectHeader(Tag.PatientName, VR.PN, patientNameJohnDoe().length - 8)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectHeader(Tag.PatientID, VR.LO, patientID().length - 8)
       .expectValueChunk(patientID().drop(8))
       .expectDicomComplete()
@@ -146,20 +146,20 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val source = Source.single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => patientNameJohnDoe().drop(8)))))
+      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8)))))
 
     source.runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectSequenceDelimitation()
-      .expectHeader(Tag.PatientName, VR.PN, patientNameJohnDoe().length - 8)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectSequence(Tag.AbstractPriorCodeSequence)
       .expectSequenceDelimitation()
       .expectDicomComplete()
   }
 
   it should "modify, not insert, when 'insert' elements are already present" in {
-    val bytes = studyDate() ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ personNameJohnDoe()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
@@ -177,7 +177,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "modify based on current value, when 'insert' elements are already present" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
@@ -193,7 +193,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "insert all relevant elements below the current tag number" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -206,8 +206,8 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
       .expectValueChunk(studyDate().drop(8))
       .expectHeader(Tag.SeriesDate, VR.DA, studyDate().length - 8)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.PatientName, VR.PN, patientNameJohnDoe().length - 8)
-      .expectValueChunk(patientNameJohnDoe().drop(8))
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectValueChunk(personNameJohnDoe().drop(8))
       .expectDicomComplete()
   }
 
@@ -221,7 +221,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "insert elements in sequences if sequence is present but element is not present" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -240,7 +240,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "skip inserting elements in missing sequences" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -255,7 +255,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "not insert unknown elements" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -268,7 +268,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "not insert sequences" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -279,7 +279,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "insert into the correct sequence item" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -302,7 +302,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "modify the correct sequence item" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
@@ -314,7 +314,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
     source.runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem(1)
-      .expectHeader(Tag.PatientName, VR.PN, patientNameJohnDoe().drop(8).length)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().drop(8).length)
       .expectValueChunk()
       .expectItemDelimitation()
       .expectItem(2)
@@ -326,7 +326,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "modify all sequence items" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
     val tagTree = TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.PatientName)
@@ -372,7 +372,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "work also with the endsWith modification matcher" in {
-    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val studyBytes = ByteString("2012-01-01")
 
@@ -395,7 +395,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "pick up tag modifications from the stream" in {
-    val bytes = studyDate() ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ personNameJohnDoe()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
@@ -413,7 +413,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "pick up tag modifications and replace old modifications" in {
-    val bytes = studyDate() ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ personNameJohnDoe()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
@@ -432,7 +432,7 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "not emit sequence and item delimiters for data with explicit length sequences and items" in {
-    val bytes = patientNameJohnDoe() ++
+    val bytes = personNameJohnDoe() ++
       sequence(Tag.DerivationCodeSequence, 24) ++
       item(16) ++ studyDate()
 

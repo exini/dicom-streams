@@ -20,10 +20,10 @@ case class ComponentGroup(alphabetic: String, ideographic: String, phonetic: Str
   override def toString: String = s"$alphabetic=$ideographic=$phonetic".replaceAll("=+$", "")
 }
 
-case class PatientName(familyName: ComponentGroup, givenName: ComponentGroup, middleName: ComponentGroup, prefix: ComponentGroup, suffix: ComponentGroup) {
+case class PersonName(familyName: ComponentGroup, givenName: ComponentGroup, middleName: ComponentGroup, prefix: ComponentGroup, suffix: ComponentGroup) {
   override def toString: String = s"$familyName^$givenName^$middleName^$prefix^$suffix".replaceAll("\\^+$", "")
 }
 
-object PatientName {
-  def parse(s: String): Seq[PatientName] = Value.parsePN(s)
+object PersonName {
+  def parse(s: String): Seq[PersonName] = Value.parsePN(s)
 }

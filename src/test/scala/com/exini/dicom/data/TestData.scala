@@ -31,7 +31,7 @@ object TestData {
 
   def characterSetsJis(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = element(Tag.SpecificCharacterSet, "ISO 2022 IR 13\\ISO 2022 IR 87", bigEndian, explicitVR)
 
-  def patientNameJohnDoe(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = element(Tag.PatientName, "John^Doe", bigEndian, explicitVR)
+  def personNameJohnDoe(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = element(Tag.PatientName, "John^Doe", bigEndian, explicitVR)
   def emptyPatientName(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = element(Tag.PatientName, "", bigEndian, explicitVR)
 
   def patientID(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString = element(Tag.PatientID, "12345678", bigEndian, explicitVR)

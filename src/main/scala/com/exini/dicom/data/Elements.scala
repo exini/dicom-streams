@@ -127,10 +127,10 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def getDateTimes(tagPath: TagPathTag): Seq[ZonedDateTime] = getAllPath(tagPath, v => v.value.toDateTimes(v.vr, zoneOffset))
   def getDateTime(tag: Int): Option[ZonedDateTime] = get(tag, v => v.value.toDateTime(v.vr, zoneOffset))
   def getDateTime(tagPath: TagPathTag): Option[ZonedDateTime] = getPath(tagPath, v => v.value.toDateTime(v.vr, zoneOffset))
-  def getPatientNames(tag: Int): Seq[PatientName] = getAll(tag, v => v.value.toPatientNames(v.vr, characterSets))
-  def getPatientNames(tagPath: TagPathTag): Seq[PatientName] = getAllPath(tagPath, v => v.value.toPatientNames(v.vr, characterSets))
-  def getPatientName(tag: Int): Option[PatientName] = get(tag, v => v.value.toPatientName(v.vr, characterSets))
-  def getPatientName(tagPath: TagPathTag): Option[PatientName] = getPath(tagPath, v => v.value.toPatientName(v.vr, characterSets))
+  def getPersonNames(tag: Int): Seq[PersonName] = getAll(tag, v => v.value.toPersonNames(v.vr, characterSets))
+  def getPersonNames(tagPath: TagPathTag): Seq[PersonName] = getAllPath(tagPath, v => v.value.toPersonNames(v.vr, characterSets))
+  def getPersonName(tag: Int): Option[PersonName] = get(tag, v => v.value.toPersonName(v.vr, characterSets))
+  def getPersonName(tagPath: TagPathTag): Option[PersonName] = getPath(tagPath, v => v.value.toPersonName(v.vr, characterSets))
   def getURI(tag: Int): Option[URI] = get(tag, v => v.value.toURI(v.vr))
   def getURI(tagPath: TagPathTag): Option[URI] = getPath(tagPath, v => v.value.toURI(v.vr))
 
@@ -373,14 +373,14 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def setDateTime(tag: Int, value: ZonedDateTime, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
     setDateTime(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
-  def setPatientNames(tag: Int, vr: VR, values: Seq[PatientName], bigEndian: Boolean, explicitVR: Boolean): Elements =
-    setValue(tag, vr, Value.fromPatientNames(vr, values), bigEndian, explicitVR)
-  def setPatientNames(tag: Int, values: Seq[PatientName], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setPatientNames(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
-  def setPatientName(tag: Int, vr: VR, value: PatientName, bigEndian: Boolean, explicitVR: Boolean): Elements =
-    setValue(tag, vr, Value.fromPatientName(vr, value), bigEndian, explicitVR)
-  def setPatientName(tag: Int, value: PatientName, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
-    setPatientName(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
+  def setPersonNames(tag: Int, vr: VR, values: Seq[PersonName], bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setValue(tag, vr, Value.fromPersonNames(vr, values), bigEndian, explicitVR)
+  def setPersonNames(tag: Int, values: Seq[PersonName], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setPersonNames(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
+  def setPersonName(tag: Int, vr: VR, value: PersonName, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setValue(tag, vr, Value.fromPersonName(vr, value), bigEndian, explicitVR)
+  def setPersonName(tag: Int, value: PersonName, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setPersonName(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setURI(tag: Int, vr: VR, value: URI, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromURI(vr, value), bigEndian, explicitVR)
@@ -482,7 +482,7 @@ object Elements {
   /**
     * @return an Elements with no data and default character set only and the system's time zone
     */
-  def empty(characterSets: CharacterSets = defaultCharacterSet, zoneOffset: ZoneOffset = systemZone) =
+  def empty(characterSets: CharacterSets = defaultCharacterSet, zoneOffset: ZoneOffset = systemZone): Elements =
     Elements(characterSets, zoneOffset, Vector.empty)
 
   /**
@@ -591,7 +591,7 @@ object Elements {
   }
 
   object FragmentElement {
-    def empty(index: Int, length: Long, bigEndian: Boolean = false) = FragmentElement(index, length, Value.empty, bigEndian)
+    def empty(index: Int, length: Long, bigEndian: Boolean = false): FragmentElement = FragmentElement(index, length, Value.empty, bigEndian)
   }
 
   case class ItemElement(index: Int, length: Long, bigEndian: Boolean = false) extends Element {

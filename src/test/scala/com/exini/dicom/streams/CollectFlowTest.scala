@@ -24,7 +24,7 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
   override def afterAll(): Unit = system.terminate()
 
   "A collect elements flow" should "first produce an elements part followed by the input dicom parts" in {
-    val bytes = studyDate() ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ personNameJohnDoe()
     val tags = Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag)
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -62,7 +62,7 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
   }
 
   it should "produce an empty elements part when no relevant data elements are present" in {
-    val bytes = patientNameJohnDoe() ++ studyDate()
+    val bytes = personNameJohnDoe() ++ studyDate()
 
     val source = Source.single(bytes)
       .via(parseFlow)
@@ -81,7 +81,7 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
   }
 
   it should "apply the stop tag appropriately" in {
-    val bytes = studyDate() ++ patientNameJohnDoe() ++ pixelData(2000)
+    val bytes = studyDate() ++ personNameJohnDoe() ++ pixelData(2000)
 
     val source = Source.single(bytes)
       .via(ParseFlow(chunkSize = 500))
@@ -109,7 +109,7 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
   }
 
   it should "fail if max buffer size is exceeded" in {
-    val bytes = studyDate() ++ patientNameJohnDoe() ++ pixelData(2000)
+    val bytes = studyDate() ++ personNameJohnDoe() ++ pixelData(2000)
 
     val source = Source.single(bytes)
       .via(ParseFlow(chunkSize = 500))

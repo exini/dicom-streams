@@ -176,14 +176,14 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     elements.getDateTime(TagPath.fromTag(Tag.InstanceCoercionDateTime)) shouldBe dateTimes.headOption
   }
 
-  it should "return patient names" in {
+  it should "return person names" in {
     val names = Seq("Doe^John", "Doe^Jane")
-    val patientNames = names.flatMap(PatientName.parse)
+    val personNames = names.flatMap(PersonName.parse)
     val elements = create(ValueElement.fromString(Tag.PatientName, names.mkString("\\")))
-    elements.getPatientNames(Tag.PatientName) shouldBe patientNames
-    elements.getPatientName(Tag.PatientName) shouldBe patientNames.headOption
-    elements.getPatientNames(TagPath.fromTag(Tag.PatientName)) shouldBe patientNames
-    elements.getPatientName(TagPath.fromTag(Tag.PatientName)) shouldBe patientNames.headOption
+    elements.getPersonNames(Tag.PatientName) shouldBe personNames
+    elements.getPersonName(Tag.PatientName) shouldBe personNames.headOption
+    elements.getPersonNames(TagPath.fromTag(Tag.PatientName)) shouldBe personNames
+    elements.getPersonName(TagPath.fromTag(Tag.PatientName)) shouldBe personNames.headOption
   }
 
   it should "return sequences" in {
@@ -413,11 +413,11 @@ class ElementsTest extends AnyFlatSpec with Matchers {
 
   it should "set patient names" in {
     val names = Seq("Doe^John", "Doe^Jane")
-    val patientNames = names.flatMap(PatientName.parse)
-    elements.setPatientNames(Tag.PatientName, patientNames)
-      .getPatientNames(Tag.PatientName) shouldBe patientNames
-    elements.setPatientName(Tag.PatientName, patientNames.head)
-      .getPatientNames(Tag.PatientName) shouldBe Seq(patientNames.head)
+    val patientNames = names.flatMap(PersonName.parse)
+    elements.setPersonNames(Tag.PatientName, patientNames)
+      .getPersonNames(Tag.PatientName) shouldBe patientNames
+    elements.setPersonName(Tag.PatientName, patientNames.head)
+      .getPersonNames(Tag.PatientName) shouldBe Seq(patientNames.head)
   }
 
   it should "set URI" in {

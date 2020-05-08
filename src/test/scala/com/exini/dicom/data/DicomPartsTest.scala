@@ -58,17 +58,17 @@ class DicomPartsTest extends AnyFlatSpecLike with Matchers {
 
   it should "create a valid explicit VR little endian byte sequence representation when constructed without explicit bytes" in {
     val bytes = HeaderPart(Tag.PatientName, VR.PN, 8).bytes
-    bytes shouldBe patientNameJohnDoe().take(8)
+    bytes shouldBe personNameJohnDoe().take(8)
   }
 
   it should "create a valid implicit VR little endian byte sequence representation when constructed without explicit bytes" in {
     val bytes = HeaderPart(Tag.PatientName, VR.PN, 8, explicitVR = false).bytes
-    bytes shouldBe patientNameJohnDoe(explicitVR = false).take(8)
+    bytes shouldBe personNameJohnDoe(explicitVR = false).take(8)
   }
 
   it should "create a valid explicit VR big endian byte sequence representation when constructed without explicit bytes" in {
     val bytes = HeaderPart(Tag.PatientName, VR.PN, 8, bigEndian = true).bytes
-    bytes shouldBe patientNameJohnDoe(bigEndian = true).take(8)
+    bytes shouldBe personNameJohnDoe(bigEndian = true).take(8)
   }
 
   it should "create a valid explicit VR little endian 12-byte representation when constructed without explicit bytes" in {

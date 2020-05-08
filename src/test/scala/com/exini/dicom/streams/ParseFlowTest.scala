@@ -23,7 +23,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   override def afterAll(): Unit = system.terminate()
 
   "The parse flow" should "produce a preamble, FMI tags and dataset tags for a complete DICOM file" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe()
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -40,7 +40,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "read files without preamble but with FMI" in {
-    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe()
+    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -71,7 +71,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "read a file with neither FMI nor preamble" in {
-    val bytes = patientNameJohnDoe()
+    val bytes = personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -122,7 +122,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
 
   it should "skip very long (and obviously erroneous) transfer syntaxes (see warning log message)" in {
     val malformedTsuid = transferSyntaxUID().take(6) ++ ByteString(20, 8) ++ transferSyntaxUID().takeRight(20) ++ ByteString.fromArray(new Array[Byte](2048))
-    val bytes = fmiGroupLength(malformedTsuid) ++ malformedTsuid ++ patientNameJohnDoe()
+    val bytes = fmiGroupLength(malformedTsuid) ++ malformedTsuid ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -138,7 +138,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "fail reading a truncated DICOM file" in {
-    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe().dropRight(2)
+    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe().dropRight(2)
 
     val source = Source.single(bytes)
       .via(ParseFlow(inflate = false))
@@ -153,7 +153,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "inflate deflated datasets" in {
-    val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ deflate(patientNameJohnDoe() ++ studyDate())
+    val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ deflate(personNameJohnDoe() ++ studyDate())
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -171,7 +171,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "inflate gzip deflated datasets (with warning message)" in {
-    val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ deflate(patientNameJohnDoe() ++ studyDate(), gzip = true)
+    val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ deflate(personNameJohnDoe() ++ studyDate(), gzip = true)
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -189,7 +189,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "pass through deflated data when asked not to inflate" in {
-    val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ deflate(patientNameJohnDoe() ++ studyDate())
+    val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ deflate(personNameJohnDoe() ++ studyDate())
 
     val source = Source.single(bytes)
       .via(ParseFlow(inflate = false))
@@ -253,7 +253,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "read DICOM data containing a sequence" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -271,7 +271,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "read DICOM data containing a sequence in a sequence" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -293,7 +293,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "read a valid DICOM file correctly when data chunks are very small" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe()
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(new Chunker(chunkSize = 1))
@@ -321,7 +321,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "read DICOM files with explicit VR big-endian transfer syntax" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(UID.ExplicitVRBigEndianRetired)) ++ transferSyntaxUID(UID.ExplicitVRBigEndianRetired) ++ patientNameJohnDoe(bigEndian = true)
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(UID.ExplicitVRBigEndianRetired)) ++ transferSyntaxUID(UID.ExplicitVRBigEndianRetired) ++ personNameJohnDoe(bigEndian = true)
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -338,7 +338,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "read DICOM files with implicit VR little endian transfer syntax" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(UID.ImplicitVRLittleEndian)) ++ transferSyntaxUID(UID.ImplicitVRLittleEndian) ++ patientNameJohnDoe(explicitVR = false)
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(UID.ImplicitVRLittleEndian)) ++ transferSyntaxUID(UID.ImplicitVRLittleEndian) ++ personNameJohnDoe(explicitVR = false)
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -355,7 +355,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "chunk value data according to max chunk size" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ patientNameJohnDoe()
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow(chunkSize = 5))
@@ -376,7 +376,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "chunk deflated data according to max chunk size" in {
-    val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ deflate(patientNameJohnDoe() ++ studyDate())
+    val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ deflate(personNameJohnDoe() ++ studyDate())
 
     val source = Source.single(bytes)
       .via(ParseFlow(chunkSize = 25, inflate = false))
@@ -392,7 +392,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "accept meta information encoded with implicit VR" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(explicitVR = false)) ++ transferSyntaxUID(explicitVR = false) ++ patientNameJohnDoe()
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(explicitVR = false)) ++ transferSyntaxUID(explicitVR = false) ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -422,7 +422,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
   }
 
   it should "handle sequences and items of determinate length" in {
-    val bytes = studyDate() ++ (sequence(Tag.DerivationCodeSequence, 8 + 18 + 16) ++ item(18 + 16) ++ studyDate() ++ patientNameJohnDoe()) ++ patientNameJohnDoe()
+    val bytes = studyDate() ++ (sequence(Tag.DerivationCodeSequence, 8 + 18 + 16) ++ item(18 + 16) ++ studyDate() ++ personNameJohnDoe()) ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -458,7 +458,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
 
   it should "parse sequences with VR UN as a block of bytes" in {
     val unSequence = tagToBytes(Tag.CTExposureSequence) ++ ByteString('U', 'N', 0, 0) ++ intToBytes(24)
-    val bytes = patientNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate()
+    val bytes = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -473,7 +473,7 @@ class ParseFlowTest extends TestKit(ActorSystem("ParseFlowSpec")) with AnyFlatSp
 
   it should "parse sequences with VR UN, and where the nested data set(s) have implicit VR, as a block of bytes" in {
     val unSequence = tagToBytes(Tag.CTExposureSequence) ++ ByteString('U', 'N', 0, 0) ++ intToBytes(24)
-    val bytes = patientNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate(explicitVR = false)
+    val bytes = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate(explicitVR = false)
 
     val source = Source.single(bytes)
       .via(ParseFlow())

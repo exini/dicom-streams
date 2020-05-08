@@ -24,7 +24,7 @@ class ElementFlowsTest extends TestKit(ActorSystem("ElementFlowsSpec")) with Any
   override def afterAll(): Unit = system.terminate()
 
   "A DICOM elements flow" should "combine headers and value chunks into elements" in {
-    val bytes = patientNameJohnDoe() ++ studyDate()
+    val bytes = personNameJohnDoe() ++ studyDate()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -52,7 +52,7 @@ class ElementFlowsTest extends TestKit(ActorSystem("ElementFlowsSpec")) with Any
   }
 
   it should "handle elements and fragments of zero length" in {
-    val bytes = ByteString(8, 0, 32, 0, 68, 65, 0, 0) ++ patientNameJohnDoe() ++
+    val bytes = ByteString(8, 0, 32, 0, 68, 65, 0, 0) ++ personNameJohnDoe() ++
       pixeDataFragments() ++ item(0) ++ item(4) ++ ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
@@ -71,7 +71,7 @@ class ElementFlowsTest extends TestKit(ActorSystem("ElementFlowsSpec")) with Any
 
   it should "handle determinate length sequences and items" in {
     val bytes =
-      sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ patientNameJohnDoe()
+      sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
@@ -89,7 +89,7 @@ class ElementFlowsTest extends TestKit(ActorSystem("ElementFlowsSpec")) with Any
   "The tag path flow" should "pair elements with their respective tag paths" in {
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++
       studyDate() ++
-      sequence(Tag.DerivationCodeSequence) ++ item() ++ patientNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation() ++
+      sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation() ++
       pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
 
     val source = Source.single(bytes)
@@ -152,7 +152,7 @@ class ElementFlowsTest extends TestKit(ActorSystem("ElementFlowsSpec")) with Any
 
   it should "handle determinate length sequences and items" in {
     val bytes =
-      sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ patientNameJohnDoe()
+      sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ personNameJohnDoe()
 
     val source = Source.single(bytes)
       .via(ParseFlow())
