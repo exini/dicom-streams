@@ -20,14 +20,12 @@ stages:
 jobs:
   include:
     # stage="test" if no stage is specified
-    - name: compile
-      script: sbt compile
     - name: formatting
-      script: ./bin/scalafmt --test
+      script: sbt scalafmtCheckAll test
+    - name: coverage
+      script: "sbt clean coverage test"
+      after_success: "sbt coverageReport coveralls"
     # run ci-release only if previous stages passed
     - stage: release
       script: sbt ci-release
-
-script: "sbt clean coverage test"
-after_success: "sbt coverageReport coveralls"
 
