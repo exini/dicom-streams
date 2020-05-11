@@ -3,7 +3,6 @@ package com.exini.dicom.data
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-
 class LookupTest extends AnyFlatSpec with Matchers {
 
   "The DICOM dictionary" should "support getting the value representation for a tag" in {

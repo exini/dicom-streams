@@ -8,13 +8,23 @@ import org.scalatest.matchers.should.Matchers
 class TagTreeTest extends AnyFlatSpec with Matchers {
 
   "A tag tree" should "have a legible string representation" in {
-    val tree = TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenItem(Tag.DerivationCodeSequence, 3).thenAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.PatientID)
+    val tree = TagTree
+      .fromAnyItem(Tag.DerivationCodeSequence)
+      .thenItem(Tag.DerivationCodeSequence, 3)
+      .thenAnyItem(Tag.DerivationCodeSequence)
+      .thenTag(Tag.PatientID)
     tree.toString(lookup = false) shouldBe "(0008,9215)[*].(0008,9215)[3].(0008,9215)[*].(0010,0020)"
   }
 
   it should "support string representations with keywords instead of tag numbers where possible" in {
-    val tree = TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenItem(0x11110100, 3).thenAnyItem(Tag.DetectorInformationSequence).thenTag(Tag.PatientID)
-    tree.toString(lookup = true) shouldBe "DerivationCodeSequence[*].(1111,0100)[3].DetectorInformationSequence[*].PatientID"
+    val tree = TagTree
+      .fromAnyItem(Tag.DerivationCodeSequence)
+      .thenItem(0x11110100, 3)
+      .thenAnyItem(Tag.DetectorInformationSequence)
+      .thenTag(Tag.PatientID)
+    tree.toString(lookup =
+      true
+    ) shouldBe "DerivationCodeSequence[*].(1111,0100)[3].DetectorInformationSequence[*].PatientID"
   }
 
   it should "be root when pointing to root dataset" in {
@@ -65,7 +75,9 @@ class TagTreeTest extends AnyFlatSpec with Matchers {
     TagTree.fromTag(0x00100010) shouldEqual TagTree.fromTag(0x00100010)
     TagTree.fromTag(0x00100010) should not equal TagTree.fromTag(0x00100020)
     TagTree.fromTag(0x00100010) should not equal TagTree.fromItem(0x00089215, 1).thenTag(0x00100010)
-    TagTree.fromAnyItem(0x00089215).thenTag(0x00100010) should not equal TagTree.fromItem(0x00089215, 1).thenTag(0x00100010)
+    TagTree.fromAnyItem(0x00089215).thenTag(0x00100010) should not equal TagTree
+      .fromItem(0x00089215, 1)
+      .thenTag(0x00100010)
     TagTree.fromItem(0x00089215, 3).thenTag(0x00100010) shouldEqual TagTree.fromItem(0x00089215, 3).thenTag(0x00100010)
   }
 
@@ -76,8 +88,12 @@ class TagTreeTest extends AnyFlatSpec with Matchers {
   }
 
   "The hasPath test" should "return true for a path extending from root to leaf" in {
-    TagTree.fromAnyItem(1).thenAnyItem(2).thenItem(3, 3).thenTag(4).hasPath(
-      TagPath.fromItem(1, 1).thenItem(2, 2).thenItem(3, 3).thenTag(4)) shouldBe true
+    TagTree
+      .fromAnyItem(1)
+      .thenAnyItem(2)
+      .thenItem(3, 3)
+      .thenTag(4)
+      .hasPath(TagPath.fromItem(1, 1).thenItem(2, 2).thenItem(3, 3).thenTag(4)) shouldBe true
   }
 
   it should "return false for path not beginning at root" in {
@@ -96,7 +112,10 @@ class TagTreeTest extends AnyFlatSpec with Matchers {
   }
 
   it should "support documentation examples" in {
-    TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).hasPath(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
+    TagTree
+      .fromAnyItem(0x00089215)
+      .thenTag(0x00100010)
+      .hasPath(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
     TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).hasPath(TagPath.fromItem(0x00089215, 1)) shouldBe false
     EmptyTagTree.hasPath(EmptyTagPath) shouldBe true
   }
@@ -149,7 +168,10 @@ class TagTreeTest extends AnyFlatSpec with Matchers {
   }
 
   it should "support documentation examples" in {
-    TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).hasTrunk(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
+    TagTree
+      .fromAnyItem(0x00089215)
+      .thenTag(0x00100010)
+      .hasTrunk(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
     TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).hasTrunk(TagPath.fromItem(0x00089215, 1)) shouldBe true
     TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).hasTrunk(TagPath.fromTag(0x00100010)) shouldBe false
   }
@@ -181,8 +203,14 @@ class TagTreeTest extends AnyFlatSpec with Matchers {
   }
 
   it should "support documentation examples" in {
-    TagTree.fromItem(0x00089215, 1).thenTag(0x00100010).isTrunkOf(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
-    TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).isTrunkOf(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
+    TagTree
+      .fromItem(0x00089215, 1)
+      .thenTag(0x00100010)
+      .isTrunkOf(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
+    TagTree
+      .fromAnyItem(0x00089215)
+      .thenTag(0x00100010)
+      .isTrunkOf(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
     TagTree.fromAnyItem(0x00089215).isTrunkOf(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
     TagTree.fromItem(0x00089215, 3).isTrunkOf(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe false
     TagTree.fromTag(0x00100010).isTrunkOf(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe false
@@ -234,7 +262,10 @@ class TagTreeTest extends AnyFlatSpec with Matchers {
   }
 
   it should "support documentation examples" in {
-    TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).hasTwig(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
+    TagTree
+      .fromAnyItem(0x00089215)
+      .thenTag(0x00100010)
+      .hasTwig(TagPath.fromItem(0x00089215, 1).thenTag(0x00100010)) shouldBe true
     TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).hasTwig(TagPath.fromTag(0x00100010)) shouldBe true
     TagTree.fromAnyItem(0x00089215).thenTag(0x00100010).hasTwig(TagPath.fromItem(0x00089215, 1)) shouldBe false
   }
@@ -248,7 +279,10 @@ class TagTreeTest extends AnyFlatSpec with Matchers {
   }
 
   it should "handle deep paths" in {
-    TagTree.fromPath(TagPath.fromItem(1, 1).thenItem(2, 2).thenTag(3)) shouldBe TagTree.fromItem(1, 1).thenItem(2, 2).thenTag(3)
+    TagTree.fromPath(TagPath.fromItem(1, 1).thenItem(2, 2).thenTag(3)) shouldBe TagTree
+      .fromItem(1, 1)
+      .thenItem(2, 2)
+      .thenTag(3)
   }
 
   it should "handle sequence and item start and end nodes" in {
@@ -262,7 +296,10 @@ class TagTreeTest extends AnyFlatSpec with Matchers {
   }
 
   it should "work for deep tag trees" in {
-    TagTree.parse("(0008,9215)[*].(0008,9215)[666].(0010,0010)") shouldBe TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenItem(Tag.DerivationCodeSequence, 666).thenTag(Tag.PatientName)
+    TagTree.parse("(0008,9215)[*].(0008,9215)[666].(0010,0010)") shouldBe TagTree
+      .fromAnyItem(Tag.DerivationCodeSequence)
+      .thenItem(Tag.DerivationCodeSequence, 666)
+      .thenTag(Tag.PatientName)
   }
 
   it should "throw an exception for malformed strings" in {

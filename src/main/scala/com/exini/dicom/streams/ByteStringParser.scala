@@ -21,7 +21,7 @@ import akka.stream.stage._
 import akka.util.ByteString
 
 import scala.annotation.tailrec
-import scala.util.control.{NoStackTrace, NonFatal}
+import scala.util.control.{ NoStackTrace, NonFatal }
 
 /**
   * This class is borrowed (with minor modifications) from the
@@ -35,23 +35,24 @@ abstract class ByteStringParser[T] extends GraphStage[FlowShape[ByteString, T]] 
   import ByteStringParser._
 
   protected val bytesIn: Inlet[ByteString] = Inlet[ByteString]("bytesIn")
-  protected val objOut: Outlet[T] = Outlet[T]("objOut")
+  protected val objOut: Outlet[T]          = Outlet[T]("objOut")
 
   override def initialAttributes: Attributes = Attributes.name("ByteStringParser")
 
   final override val shape = FlowShape(bytesIn, objOut)
 
   class ParsingLogic extends GraphStageLogic(shape) with InHandler with OutHandler {
-    private var buffer = ByteString.empty
-    private var current: ParseStep[T] = FinishedParser
+    private var buffer                        = ByteString.empty
+    private var current: ParseStep[T]         = FinishedParser
     private var acceptUpstreamFinish: Boolean = true
-    private var untilCompact = CompactionThreshold
+    private var untilCompact                  = CompactionThreshold
 
     final protected def startWith(step: ParseStep[T]): Unit = current = step
 
     protected def recursionLimit: Int = 100000
 
     protected def isUpstreamClosed: Boolean = isClosed(bytesIn)
+
     /**
       * doParse() is the main driver for the parser. It can be called from onPush, onPull and onUpstreamFinish.
       * The general logic is that invocation of this method either results in an emitted parsed element, or an indication
@@ -66,7 +67,7 @@ abstract class ByteStringParser[T] extends GraphStage[FlowShape[ByteString, T]] 
       *
       * If the return value is true the method must be called another time to continue processing.
       */
-    private def doParseInner(): Boolean = {
+    private def doParseInner(): Boolean =
       if (buffer.nonEmpty) {
         val reader = new ByteReader(buffer)
         try {
@@ -103,23 +104,24 @@ abstract class ByteStringParser[T] extends GraphStage[FlowShape[ByteString, T]] 
             DontRecurse
         }
       } else {
-        if (isUpstreamClosed) {
+        if (isUpstreamClosed)
           // Buffer is empty and upstream is done. If the current phase accepts completion we are done,
           // otherwise report truncation.
           if (acceptUpstreamFinish) completeStage()
           else current.onTruncation(new ByteReader(ByteString.empty))
-        } else pull(bytesIn)
+        else pull(bytesIn)
 
         DontRecurse
       }
-    }
 
     @tailrec private def doParse(remainingRecursions: Int = recursionLimit): Unit =
       if (remainingRecursions == 0)
         failStage(
-          new IllegalStateException(s"Parsing logic didn't produce result after $recursionLimit steps. " +
-            "Aborting processing to avoid infinite cycles. In the unlikely case that the parsing logic " +
-            "needs more recursion, override ParsingLogic.recursionLimit.")
+          new IllegalStateException(
+            s"Parsing logic didn't produce result after $recursionLimit steps. " +
+              "Aborting processing to avoid infinite cycles. In the unlikely case that the parsing logic " +
+              "needs more recursion, override ParsingLogic.recursionLimit."
+          )
         )
       else {
         val recurse = doParseInner()
@@ -147,12 +149,11 @@ abstract class ByteStringParser[T] extends GraphStage[FlowShape[ByteString, T]] 
       doParse()
     }
 
-    override def onUpstreamFinish(): Unit = {
+    override def onUpstreamFinish(): Unit =
       // If we have no pending pull from downstream, attempt to invoke the parser again. This will handle
       // truncation if necessary, or complete the stage (and maybe a final emit).
       if (isAvailable(objOut)) doParse()
-      // Otherwise the pending pull will kick of doParse()
-    }
+    // Otherwise the pending pull will kick of doParse()
 
     setHandlers(bytesIn, objOut, this)
   }
@@ -163,7 +164,7 @@ object ByteStringParser {
 
   val CompactionThreshold = 16
 
-  private final val Recurse = true
+  private final val Recurse     = true
   private final val DontRecurse = false
 
   /**
@@ -173,12 +174,10 @@ object ByteStringParser {
     * @param acceptUpstreamFinish - if true - stream will complete when received `onUpstreamFinish`, if "false"
     *                             - onTruncation will be called
     */
-  case class ParseResult[+T](
-                              result: Option[T],
-                              nextStep: ParseStep[T],
-                              acceptUpstreamFinish: Boolean = true)
+  case class ParseResult[+T](result: Option[T], nextStep: ParseStep[T], acceptUpstreamFinish: Boolean = true)
 
   trait ParseStep[+T] {
+
     /**
       * Must return true when NeedMoreData will clean buffer. If returns false - next pulled
       * data will be appended to existing data in buffer

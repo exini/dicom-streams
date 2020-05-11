@@ -9,7 +9,7 @@ class DicomPartsTest extends AnyFlatSpecLike with Matchers {
   import DicomParts._
 
   HeaderPart.getClass.getSimpleName should "should return a new header with modified length for explicitVR, LE" in {
-    val header = HeaderPart(Tag.PatientName, VR.PN, 8)
+    val header        = HeaderPart(Tag.PatientName, VR.PN, 8)
     val updatedHeader = header.withUpdatedLength(5)
 
     updatedHeader.length shouldEqual 5
@@ -19,7 +19,7 @@ class DicomPartsTest extends AnyFlatSpecLike with Matchers {
   }
 
   it should "should return a new header with modified length for explicitVR, BE" in {
-    val header = HeaderPart(Tag.PatientName, VR.PN, 8, bigEndian = true)
+    val header        = HeaderPart(Tag.PatientName, VR.PN, 8, bigEndian = true)
     val updatedHeader = header.withUpdatedLength(5)
 
     updatedHeader.length shouldEqual 5
@@ -29,7 +29,7 @@ class DicomPartsTest extends AnyFlatSpecLike with Matchers {
   }
 
   it should "should return a new header with modified length for explicitVR, LE with 12-byte headers" in {
-    val header = HeaderPart(Tag.PixelData, VR.OW, 100)
+    val header        = HeaderPart(Tag.PixelData, VR.OW, 100)
     val updatedHeader = header.withUpdatedLength(200)
 
     updatedHeader.length shouldEqual 200
@@ -38,7 +38,7 @@ class DicomPartsTest extends AnyFlatSpecLike with Matchers {
   }
 
   it should "should return a new header with modified length for explicitVR, BE with 12-byte headers" in {
-    val header = HeaderPart(Tag.PixelData, VR.OW, 100, bigEndian = true)
+    val header        = HeaderPart(Tag.PixelData, VR.OW, 100, bigEndian = true)
     val updatedHeader = header.withUpdatedLength(200)
 
     updatedHeader.length shouldEqual 200
@@ -47,7 +47,7 @@ class DicomPartsTest extends AnyFlatSpecLike with Matchers {
   }
 
   it should "should return a new header with modified length for implicitVR, LE" in {
-    val header = HeaderPart(Tag.PatientName, VR.PN, 8, explicitVR = false)
+    val header        = HeaderPart(Tag.PatientName, VR.PN, 8, explicitVR = false)
     val updatedHeader = header.withUpdatedLength(5)
 
     updatedHeader.length shouldEqual 5

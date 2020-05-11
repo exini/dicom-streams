@@ -5,9 +5,9 @@ import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.DicomParts.{DicomPart, ElementsPart}
+import com.exini.dicom.data.DicomParts.{ DicomPart, ElementsPart }
 import com.exini.dicom.data.TestData._
-import com.exini.dicom.data.{Tag, TagTree}
+import com.exini.dicom.data.{ Tag, TagTree }
 import com.exini.dicom.streams.CollectFlow._
 import com.exini.dicom.streams.ParseFlow.parseFlow
 import com.exini.dicom.streams.TestUtils._
@@ -17,7 +17,11 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContextExecutor
 
-class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
+class CollectFlowTest
+    extends TestKit(ActorSystem("CollectFlowSpec"))
+    with AnyFlatSpecLike
+    with Matchers
+    with BeforeAndAfterAll {
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -25,12 +29,14 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
 
   "A collect elements flow" should "first produce an elements part followed by the input dicom parts" in {
     val bytes = studyDate() ++ personNameJohnDoe()
-    val tags = Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag)
-    val source = Source.single(bytes)
+    val tags  = Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(collectFlow(tags, "tag"))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart =>
@@ -49,11 +55,13 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
   it should "produce an empty elements part when stream is empty" in {
     val bytes = ByteString.empty
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(collectFlow(Set.empty, "tag"))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart => e.elements.isEmpty shouldBe true
@@ -64,11 +72,13 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
   it should "produce an empty elements part when no relevant data elements are present" in {
     val bytes = personNameJohnDoe() ++ studyDate()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(collectFlow(Set(Tag.Modality, Tag.SeriesInstanceUID).map(TagTree.fromTag), "tag"))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart => e.elements.isEmpty shouldBe true
@@ -83,11 +93,13 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
   it should "apply the stop tag appropriately" in {
     val bytes = studyDate() ++ personNameJohnDoe() ++ pixelData(2000)
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(ParseFlow(chunkSize = 500))
       .via(collectFlow(Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag), "tag", maxBufferSize = 1000))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart =>
@@ -111,11 +123,13 @@ class CollectFlowTest extends TestKit(ActorSystem("CollectFlowSpec")) with AnyFl
   it should "fail if max buffer size is exceeded" in {
     val bytes = studyDate() ++ personNameJohnDoe() ++ pixelData(2000)
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(ParseFlow(chunkSize = 500))
       .via(collectFlow(_.tag == Tag.PatientName, _.tag > Tag.PixelData, "tag", maxBufferSize = 1000))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectDicomError()
   }
 

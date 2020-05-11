@@ -4,18 +4,22 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.Elements.{SequenceDelimitationElement, SequenceElement, _}
+import com.exini.dicom.data.Elements.{ SequenceDelimitationElement, SequenceElement, _ }
 import com.exini.dicom.data.TestData.pixeDataFragments
-import com.exini.dicom.data.{Tag, UID, _}
+import com.exini.dicom.data.{ Tag, UID, _ }
 import com.exini.dicom.streams.ElementSink.elementSink
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{ Await, ExecutionContextExecutor }
 
-class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
+class ElementSinkTest
+    extends TestKit(ActorSystem("ElementSinkSpec"))
+    with AnyFlatSpecLike
+    with Matchers
+    with BeforeAndAfterAll {
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -41,7 +45,8 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with AnyFl
       FragmentsElement(Tag.PixelData, VR.OB),
       FragmentElement(1, 4, Value(ByteString(1, 2, 3, 4))),
       FragmentElement(2, 4, Value(ByteString(1, 2, 3, 4))),
-      SequenceDelimitationElement())
+      SequenceDelimitationElement()
+    )
 
     val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
 
@@ -71,7 +76,8 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with AnyFl
       FragmentElement(1, 0, Value.empty),
       SequenceDelimitationElement(),
       FragmentsElement(Tag.PixelData, VR.OB),
-      SequenceDelimitationElement())
+      SequenceDelimitationElement()
+    )
 
     val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
 
@@ -83,9 +89,10 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with AnyFl
       FragmentsElement(Tag.PixelData, VR.OB),
       FragmentElement(1, 0, Value.empty),
       FragmentElement(2, 0, Value(ByteString(1, 2, 3, 4))),
-      SequenceDelimitationElement())
+      SequenceDelimitationElement()
+    )
 
-    val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
+    val elements  = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
     val fragments = elements.getFragments(Tag.PixelData).get
 
     fragments.offsets shouldBe defined
@@ -96,9 +103,10 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with AnyFl
     val elementList = List(
       FragmentsElement(Tag.PixelData, VR.OB),
       FragmentElement(1, 0, Value(intToBytesLE(1) ++ intToBytesLE(2) ++ intToBytesLE(3) ++ intToBytesLE(4))),
-      SequenceDelimitationElement())
+      SequenceDelimitationElement()
+    )
 
-    val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
+    val elements  = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
     val fragments = elements.getFragments(Tag.PixelData).get
 
     fragments.offsets shouldBe defined
@@ -167,7 +175,10 @@ class ElementSinkTest extends TestKit(ActorSystem("ElementSinkSpec")) with AnyFl
     val bytes1 = pixeDataFragments() ++ item(12) ++ List(0, 2, 3).map(intToBytesLE).reduce(_ ++ _) ++ item(4) ++
       ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
     val bytes2 = pixeDataFragments() ++ item(0) ++ item(2) ++ ByteString(1, 2) ++
-      item(2) ++ ByteString(1, 2) ++ item(2) ++ ByteString(1, 2) ++ item(2) ++ ByteString(1, 2) ++ sequenceDelimitation()
+      item(2) ++ ByteString(1, 2) ++ item(2) ++ ByteString(1, 2) ++ item(2) ++ ByteString(
+      1,
+      2
+    ) ++ sequenceDelimitation()
 
     val iter1 = toElementsBlocking(Source.single(bytes1)).getFragments(Tag.PixelData).get.frameIterator
     val iter2 = toElementsBlocking(Source.single(bytes2)).getFragments(Tag.PixelData).get.frameIterator

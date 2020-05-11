@@ -3,7 +3,6 @@ package com.exini.dicom.data
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-
 class TagPathLikeTest extends AnyFlatSpec with Matchers {
 
   import TagPath._
@@ -18,7 +17,11 @@ class TagPathLikeTest extends AnyFlatSpec with Matchers {
   }
 
   it should "be 4 when pointing to a tag in three levels of sequences" in {
-    val path = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenItem(Tag.DerivationCodeSequence, 3).thenItem(Tag.DerivationCodeSequence, 5).thenTag(Tag.PatientID)
+    val path = TagPath
+      .fromItem(Tag.DerivationCodeSequence, 1)
+      .thenItem(Tag.DerivationCodeSequence, 3)
+      .thenItem(Tag.DerivationCodeSequence, 5)
+      .thenTag(Tag.PatientID)
     path.depth shouldBe 4
   }
 
@@ -38,7 +41,11 @@ class TagPathLikeTest extends AnyFlatSpec with Matchers {
   }
 
   it should "contain four entries for a path of depth 3" in {
-    val path = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenItem(Tag.DerivationCodeSequence, 3).thenItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.PatientID)
+    val path = TagPath
+      .fromItem(Tag.DerivationCodeSequence, 1)
+      .thenItem(Tag.DerivationCodeSequence, 3)
+      .thenItem(Tag.DerivationCodeSequence, 2)
+      .thenTag(Tag.PatientID)
     path.toList shouldBe path.previous.previous.previous :: path.previous.previous :: path.previous :: path :: Nil
   }
 

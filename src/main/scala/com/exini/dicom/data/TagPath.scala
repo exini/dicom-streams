@@ -48,7 +48,8 @@ sealed trait TagPath extends TagPathLike {
     val thisList: List[TagPath] = this.toList
     val thatList: List[TagPath] = that.toList
 
-    thisList.zip(thatList)
+    thisList
+      .zip(thatList)
       .view
       .map {
         case (EmptyTagPath, thatPath) =>
@@ -93,15 +94,17 @@ sealed trait TagPath extends TagPathLike {
     * @example (0010,0010) != (0008,9215)[1].(0010,0010)
     * @example (0008,9215)[3].(0010,0010) == (0008,9215)[3].(0010,0010)
     */
-  override def equals(that: Any): Boolean = (this, that) match {
-    case (p1: TagPath, p2: TagPath) if p1.isEmpty && p2.isEmpty => true
-    case (p1: TagPathTag, p2: TagPathTag) => p1.tag == p2.tag && p1.previous == p2.previous
-    case (p1: TagPathSequence, p2: TagPathSequence) => p1.tag == p2.tag && p1.previous == p2.previous
-    case (p1: TagPathSequenceEnd, p2: TagPathSequenceEnd) => p1.tag == p2.tag && p1.previous == p2.previous
-    case (p1: TagPathItem, p2: TagPathItem) => p1.tag == p2.tag && p1.item == p2.item && p1.previous == p2.previous
-    case (p1: TagPathItemEnd, p2: TagPathItemEnd) => p1.tag == p2.tag && p1.item == p2.item && p1.previous == p2.previous
-    case _ => false
-  }
+  override def equals(that: Any): Boolean =
+    (this, that) match {
+      case (p1: TagPath, p2: TagPath) if p1.isEmpty && p2.isEmpty => true
+      case (p1: TagPathTag, p2: TagPathTag)                       => p1.tag == p2.tag && p1.previous == p2.previous
+      case (p1: TagPathSequence, p2: TagPathSequence)             => p1.tag == p2.tag && p1.previous == p2.previous
+      case (p1: TagPathSequenceEnd, p2: TagPathSequenceEnd)       => p1.tag == p2.tag && p1.previous == p2.previous
+      case (p1: TagPathItem, p2: TagPathItem)                     => p1.tag == p2.tag && p1.item == p2.item && p1.previous == p2.previous
+      case (p1: TagPathItemEnd, p2: TagPathItemEnd) =>
+        p1.tag == p2.tag && p1.item == p2.item && p1.previous == p2.previous
+      case _ => false
+    }
 
   /**
     * @param that tag path to test
@@ -144,23 +147,24 @@ sealed trait TagPath extends TagPathLike {
         EmptyTagPath
       else if (i == 0)
         path match {
-          case EmptyTagPath => EmptyTagPath
-          case p: TagPathItem => TagPath.fromItem(p.tag, p.item)
-          case p: TagPathItemEnd => TagPath.fromItemEnd(p.tag, p.item)
-          case p: TagPathSequence => TagPath.fromSequence(p.tag)
+          case EmptyTagPath          => EmptyTagPath
+          case p: TagPathItem        => TagPath.fromItem(p.tag, p.item)
+          case p: TagPathItemEnd     => TagPath.fromItemEnd(p.tag, p.item)
+          case p: TagPathSequence    => TagPath.fromSequence(p.tag)
           case p: TagPathSequenceEnd => TagPath.fromSequenceEnd(p.tag)
-          case p => TagPath.fromTag(p.tag)
+          case p                     => TagPath.fromTag(p.tag)
         }
       else
         drop(path.previous, i - 1) match {
-          case p: TagPathTrunk => path match {
-            case pi: TagPathItem => p.thenItem(pi.tag, pi.item)
-            case pi: TagPathItemEnd => p.thenItemEnd(pi.tag, pi.item)
-            case pi: TagPathSequence => p.thenSequence(pi.tag)
-            case pi: TagPathSequenceEnd => p.thenSequenceEnd(pi.tag)
-            case pt: TagPathTag => p.thenTag(pt.tag)
-            case _ => EmptyTagPath
-          }
+          case p: TagPathTrunk =>
+            path match {
+              case pi: TagPathItem        => p.thenItem(pi.tag, pi.item)
+              case pi: TagPathItemEnd     => p.thenItemEnd(pi.tag, pi.item)
+              case pi: TagPathSequence    => p.thenSequence(pi.tag)
+              case pi: TagPathSequenceEnd => p.thenSequenceEnd(pi.tag)
+              case pt: TagPathTag         => p.thenTag(pt.tag)
+              case _                      => EmptyTagPath
+            }
           case _ => EmptyTagPath // cannot happen
         }
 
@@ -168,17 +172,18 @@ sealed trait TagPath extends TagPathLike {
   }
 
   def toString(lookup: Boolean): String = {
-    def toTagString(tag: Int): String = if (lookup)
-      Lookup.keywordOf(tag).getOrElse(tagToString(tag))
-    else
-      tagToString(tag)
+    def toTagString(tag: Int): String =
+      if (lookup)
+        Lookup.keywordOf(tag).getOrElse(tagToString(tag))
+      else
+        tagToString(tag)
 
     @tailrec
     def toTagPathString(path: TagPath, tail: String): String = {
       val itemIndexSuffix = path match {
-        case s: TagPathItem => s"[${s.item}]"
+        case s: TagPathItem    => s"[${s.item}]"
         case s: TagPathItemEnd => s"[${s.item}]"
-        case _ => ""
+        case _                 => ""
       }
       val head = toTagString(path.tag) + itemIndexSuffix
       val part = head + tail
@@ -188,16 +193,16 @@ sealed trait TagPath extends TagPathLike {
     if (isEmpty) "<empty path>" else toTagPathString(path = this, tail = "")
   }
 
-  override def hashCode(): Int = this match {
-    case EmptyTagPath => 0
-    case s: TagPathItem => 31 * (31 * (31 * previous.hashCode() + tag.hashCode()) * s.item.hashCode())
-    case s: TagPathItemEnd => 31 * (31 * (31 * previous.hashCode() + tag.hashCode()) * s.item.hashCode())
-    case _ => 31 * (31 * previous.hashCode() + tag.hashCode())
-  }
+  override def hashCode(): Int =
+    this match {
+      case EmptyTagPath      => 0
+      case s: TagPathItem    => 31 * (31 * (31 * previous.hashCode() + tag.hashCode()) * s.item.hashCode())
+      case s: TagPathItemEnd => 31 * (31 * (31 * previous.hashCode() + tag.hashCode()) * s.item.hashCode())
+      case _                 => 31 * (31 * previous.hashCode() + tag.hashCode())
+    }
 }
 
 object TagPath {
-
 
   /**
     * Common trait for tag path nodes with an item index
@@ -212,7 +217,7 @@ object TagPath {
     * @param tag      the tag number
     * @param previous a link to the part of this tag path to the left of this tag
     */
-  class TagPathTag private[TagPath](val tag: Int, val previous: TagPathTrunk) extends TagPath
+  class TagPathTag private[TagPath] (val tag: Int, val previous: TagPathTrunk) extends TagPath
 
   object TagPathTag {
 
@@ -232,10 +237,12 @@ object TagPath {
 
       def tagPart(s: String): String = s.substring(0, s.indexOf('['))
 
-      def parseTag(s: String): Int = try Integer.parseInt(s.substring(1, 5) + s.substring(6, 10), 16) catch {
-        case _: Throwable =>
-          Lookup.tagOf(s)
-      }
+      def parseTag(s: String): Int =
+        try Integer.parseInt(s.substring(1, 5) + s.substring(6, 10), 16)
+        catch {
+          case _: Throwable =>
+            Lookup.tagOf(s)
+        }
 
       def parseIndex(s: String): Int = Integer.parseInt(s)
 
@@ -245,16 +252,16 @@ object TagPath {
 
       def createSeq(s: String): TagPathTrunk = TagPath.fromItem(parseTag(tagPart(s)), parseIndex(indexPart(s)))
 
-      def addSeq(s: String, path: TagPathTrunk): TagPathTrunk = path.thenItem(parseTag(tagPart(s)), parseIndex(indexPart(s)))
+      def addSeq(s: String, path: TagPathTrunk): TagPathTrunk =
+        path.thenItem(parseTag(tagPart(s)), parseIndex(indexPart(s)))
 
-      val tags = if (s.indexOf('.') > 0) s.split("\\.").toList else List(s)
+      val tags    = if (s.indexOf('.') > 0) s.split("\\.").toList else List(s)
       val seqTags = if (tags.length > 1) tags.init else Nil // list of sequence tags, if any
-      val lastTag = tags.last // tag or sequence
-      try
-        seqTags.headOption
-          .map(first => seqTags.tail.foldLeft(createSeq(first))((path, tag) => addSeq(tag, path)))
-          .map(path => addTag(lastTag, path))
-          .getOrElse(createTag(lastTag))
+      val lastTag = tags.last                               // tag or sequence
+      try seqTags.headOption
+        .map(first => seqTags.tail.foldLeft(createSeq(first))((path, tag) => addSeq(tag, path)))
+        .map(path => addTag(lastTag, path))
+        .getOrElse(createTag(lastTag))
       catch {
         case e: Exception => throw new IllegalArgumentException("Tag path could not be parsed", e)
       }
@@ -264,22 +271,26 @@ object TagPath {
   /**
     * Representation of the start of a sequence
     */
-  class TagPathSequence private[TagPath](val tag: Int, val previous: TagPathTrunk) extends TagPath
+  class TagPathSequence private[TagPath] (val tag: Int, val previous: TagPathTrunk) extends TagPath
 
   /**
     * Representation of the end of a sequence
     */
-  class TagPathSequenceEnd private[TagPath](val tag: Int, val previous: TagPathTrunk) extends TagPath
+  class TagPathSequenceEnd private[TagPath] (val tag: Int, val previous: TagPathTrunk) extends TagPath
 
   /**
     * Representation of the start or body of an item
     */
-  class TagPathItem private[TagPath](val tag: Int, val item: Int, val previous: TagPathTrunk) extends TagPathTrunk with ItemIndex
+  class TagPathItem private[TagPath] (val tag: Int, val item: Int, val previous: TagPathTrunk)
+      extends TagPathTrunk
+      with ItemIndex
 
   /**
     * Representation of the end of an item
     */
-  class TagPathItemEnd private[TagPath](val tag: Int, val item: Int, val previous: TagPathTrunk) extends TagPath with ItemIndex
+  class TagPathItemEnd private[TagPath] (val tag: Int, val item: Int, val previous: TagPathTrunk)
+      extends TagPath
+      with ItemIndex
 
   /**
     * A tag path that points to a node that may be non-terminal, i.e. an item or the empty tag path. All other types end
@@ -334,7 +345,7 @@ object TagPath {
     * Empty tag path
     */
   object EmptyTagPath extends TagPathTrunk {
-    def tag: Int = throw new NoSuchElementException("Empty tag path")
+    def tag: Int               = throw new NoSuchElementException("Empty tag path")
     val previous: TagPathTrunk = EmptyTagPath
   }
 

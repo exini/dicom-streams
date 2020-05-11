@@ -2,7 +2,7 @@ package com.exini.dicom.data
 
 import java.math.BigInteger
 import java.net.URI
-import java.time.{LocalDate, LocalTime, ZoneOffset}
+import java.time.{ LocalDate, LocalTime, ZoneOffset }
 
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts.HeaderPart
@@ -17,15 +17,18 @@ class ElementsTest extends AnyFlatSpec with Matchers {
 
   def create(elements: ElementSet*): Elements = Elements(defaultCharacterSet, systemZone, elements.toVector)
 
-  val studyDate: ValueElement = ValueElement.fromString(Tag.StudyDate, "20041230")
+  val studyDate: ValueElement   = ValueElement.fromString(Tag.StudyDate, "20041230")
   val patientName: ValueElement = ValueElement.fromString(Tag.PatientName, "John^Doe")
-  val patientID1: ValueElement = ValueElement.fromString(Tag.PatientID, "12345678")
-  val patientID2: ValueElement = ValueElement.fromString(Tag.PatientID, "87654321")
-  val patientID3: ValueElement = ValueElement.fromString(Tag.PatientID, "18273645")
-  val seq: Sequence = Sequence.fromElements(Tag.DerivationCodeSequence, List(
-    Elements.empty().set(patientID1),
-    Elements.empty().set(patientID2)
-  ))
+  val patientID1: ValueElement  = ValueElement.fromString(Tag.PatientID, "12345678")
+  val patientID2: ValueElement  = ValueElement.fromString(Tag.PatientID, "87654321")
+  val patientID3: ValueElement  = ValueElement.fromString(Tag.PatientID, "18273645")
+  val seq: Sequence = Sequence.fromElements(
+    Tag.DerivationCodeSequence,
+    List(
+      Elements.empty().set(patientID1),
+      Elements.empty().set(patientID2)
+    )
+  )
 
   val elements: Elements = create(studyDate, seq, patientName)
 
@@ -80,7 +83,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
 
   it should "return all strings in value with VM > 1" in {
     val elements = create(ValueElement.fromString(Tag.ImageType, """ORIGINAL\RECON TOMO"""), seq)
-    val strings = elements.getStrings(Tag.ImageType)
+    val strings  = elements.getStrings(Tag.ImageType)
     strings should have length 2
     strings(1) shouldBe "RECON TOMO"
     elements.getStrings(TagPath.fromTag(Tag.ImageType)) should have length 2
@@ -125,7 +128,15 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return very longs" in {
-    val elements = create(new ValueElement(0x44550010, VR.UV, Value.fromVeryLong(VR.UV, BigInteger.valueOf(1)), bigEndian = false, explicitVR = true))
+    val elements = create(
+      new ValueElement(
+        0x44550010,
+        VR.UV,
+        Value.fromVeryLong(VR.UV, BigInteger.valueOf(1)),
+        bigEndian = false,
+        explicitVR = true
+      )
+    )
     elements.getVeryLongs(0x44550010) shouldBe Seq(BigInteger.valueOf(1))
     elements.getVeryLong(0x44550010) shouldBe Some(BigInteger.valueOf(1))
     elements.getVeryLongs(TagPath.fromTag(0x44550010)) shouldBe Seq(BigInteger.valueOf(1))
@@ -149,7 +160,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return dates" in {
-    val dates = Seq(LocalDate.parse("2005-01-01"), LocalDate.parse("2010-01-01"))
+    val dates    = Seq(LocalDate.parse("2005-01-01"), LocalDate.parse("2010-01-01"))
     val elements = create(ValueElement(Tag.StudyDate, Value.fromDates(VR.DA, dates)))
     elements.getDates(Tag.StudyDate) shouldBe dates
     elements.getDate(Tag.StudyDate) shouldBe dates.headOption
@@ -158,7 +169,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return times" in {
-    val times = Seq(LocalTime.parse("22:30:10"), LocalTime.parse("12:00:00"))
+    val times    = Seq(LocalTime.parse("22:30:10"), LocalTime.parse("12:00:00"))
     val elements = create(ValueElement(Tag.AcquisitionTime, Value.fromTimes(VR.TM, times)))
     elements.getTimes(Tag.AcquisitionTime) shouldBe times
     elements.getTime(Tag.AcquisitionTime) shouldBe times.headOption
@@ -177,9 +188,9 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return person names" in {
-    val names = Seq("Doe^John", "Doe^Jane")
+    val names       = Seq("Doe^John", "Doe^Jane")
     val personNames = names.flatMap(PersonName.parse)
-    val elements = create(ValueElement.fromString(Tag.PatientName, names.mkString("\\")))
+    val elements    = create(ValueElement.fromString(Tag.PatientName, names.mkString("\\")))
     elements.getPersonNames(Tag.PatientName) shouldBe personNames
     elements.getPersonName(Tag.PatientName) shouldBe personNames.headOption
     elements.getPersonNames(TagPath.fromTag(Tag.PatientName)) shouldBe personNames
@@ -205,19 +216,25 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   it should "return nested elements" in {
     elements.getNested(TagPath.fromItem(Tag.DerivationCodeSequence, 1)).get shouldBe create(patientID1)
     elements.getNested(TagPath.fromItem(Tag.DerivationCodeSequence, 2)).get shouldBe create(patientID2)
-    elements.getNested(Tag.DerivationCodeSequence, 1) shouldBe elements.getNested(TagPath.fromItem(Tag.DerivationCodeSequence, 1))
+    elements.getNested(Tag.DerivationCodeSequence, 1) shouldBe elements.getNested(
+      TagPath.fromItem(Tag.DerivationCodeSequence, 1)
+    )
   }
 
   it should "return deeply nested elements" in {
     val elements = create(seq + Item(create(seq)))
-    elements.getNested(TagPath
-      .fromItem(Tag.DerivationCodeSequence, 3)
-      .thenItem(Tag.DerivationCodeSequence, 1)).get shouldBe create(patientID1)
+    elements
+      .getNested(
+        TagPath
+          .fromItem(Tag.DerivationCodeSequence, 3)
+          .thenItem(Tag.DerivationCodeSequence, 1)
+      )
+      .get shouldBe create(patientID1)
   }
 
   it should "return fragments" in {
-    val elements = create(studyDate, Fragments(Tag.PixelData, VR.OB, Some(Nil),
-      List(Fragment(4, Value(ByteString(1, 2, 3, 4))))))
+    val elements =
+      create(studyDate, Fragments(Tag.PixelData, VR.OB, Some(Nil), List(Fragment(4, Value(ByteString(1, 2, 3, 4))))))
     elements.getFragments(Tag.PixelData) shouldBe defined
     elements.getFragments(Tag.SeriesDate) shouldBe empty
     elements.getFragments(Tag.StudyDate) shouldBe empty
@@ -225,15 +242,21 @@ class ElementsTest extends AnyFlatSpec with Matchers {
 
   it should "return elements based on tag condition" in {
     val elements2 = elements.set(patientID3)
-    elements2.filter(_.tag == Tag.PatientID) shouldBe Elements(elements.characterSets, elements.zoneOffset, Vector(patientID3))
+    elements2
+      .filter(_.tag == Tag.PatientID) shouldBe Elements(elements.characterSets, elements.zoneOffset, Vector(patientID3))
   }
 
   it should "remove element if present" in {
     val updatedSeq1 = seq.copy(items = seq.items.head :: seq.items(1).copy(elements = Elements.empty()) :: Nil)
     val updatedSeq2 = seq.copy(items = seq.items.head :: Nil)
-    val deepSeq: Sequence = Sequence.fromElements(Tag.DerivationCodeSequence, List(Elements.empty().set(patientID1), Elements.empty().set(seq)))
+    val deepSeq: Sequence = Sequence.fromElements(
+      Tag.DerivationCodeSequence,
+      List(Elements.empty().set(patientID1), Elements.empty().set(seq))
+    )
     val deepElements = create(studyDate, deepSeq, patientName)
-    val updatedDeepSeq = deepSeq.copy(items = deepSeq.items.head :: deepSeq.items(1).copy(elements = Elements.empty().set(updatedSeq2)) :: Nil)
+    val updatedDeepSeq = deepSeq.copy(items =
+      deepSeq.items.head :: deepSeq.items(1).copy(elements = Elements.empty().set(updatedSeq2)) :: Nil
+    )
     val updatedDeepElements = create(studyDate, updatedDeepSeq, patientName)
 
     elements.remove(Tag.DerivationCodeSequence) shouldBe elements.copy(data = Vector(studyDate, patientName))
@@ -242,23 +265,29 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     elements.remove(Tag.Modality) shouldBe elements
     elements.remove(EmptyTagPath) shouldBe elements
     elements.remove(TagPath.fromTag(Tag.StudyDate)) shouldBe elements.copy(data = Vector(seq, patientName))
-    elements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 1)) shouldBe elements.copy(data = Vector(studyDate, seq.copy(items = seq.items.tail), patientName))
-    elements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.PatientID)) shouldBe elements.copy(data = Vector(studyDate, updatedSeq1, patientName))
+    elements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 1)) shouldBe elements.copy(data =
+      Vector(studyDate, seq.copy(items = seq.items.tail), patientName)
+    )
+    elements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.PatientID)) shouldBe elements
+      .copy(data = Vector(studyDate, updatedSeq1, patientName))
     elements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 3)) shouldBe elements
     elements.remove(TagPath.fromItem(Tag.DetectorInformationSequence, 1)) shouldBe elements
-    deepElements.remove(TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.DerivationCodeSequence, 2)) shouldBe updatedDeepElements
+    deepElements.remove(
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.DerivationCodeSequence, 2)
+    ) shouldBe updatedDeepElements
   }
 
   it should "set elements in the correct position" in {
     val characterSets = ValueElement.fromString(Tag.SpecificCharacterSet, "CS1 ")
-    val modality = ValueElement.fromString(Tag.Modality, "NM")
+    val modality      = ValueElement.fromString(Tag.Modality, "NM")
     elements.set(patientID3).data shouldBe Vector(studyDate, seq, patientName, patientID3)
     elements.set(characterSets).data shouldBe Vector(characterSets, studyDate, seq, patientName)
     elements.set(modality).data shouldBe Vector(studyDate, modality, seq, patientName)
   }
 
   it should "not create duplicate elements if inserted twice" in {
-    val e = Elements.empty()
+    val e = Elements
+      .empty()
       .setString(Tag.PatientName, "John")
       .setString(Tag.PatientName, "John")
     e.size shouldBe 1
@@ -276,20 +305,20 @@ class ElementsTest extends AnyFlatSpec with Matchers {
 
   it should "replace items in sequences" in {
     val newElements = Elements.empty().set(studyDate)
-    val updated = elements.setNested(TagPath.fromItem(Tag.DerivationCodeSequence, 2), newElements)
+    val updated     = elements.setNested(TagPath.fromItem(Tag.DerivationCodeSequence, 2), newElements)
     updated.getNested(Tag.DerivationCodeSequence, 2) shouldBe Some(newElements)
   }
 
   it should "not add items when trying to replace item at specified index" in {
     val newElements = Elements.empty().set(studyDate)
-    val updated = elements.setNested(TagPath.fromItem(Tag.DerivationCodeSequence, 3), newElements)
+    val updated     = elements.setNested(TagPath.fromItem(Tag.DerivationCodeSequence, 3), newElements)
     updated shouldBe elements
     updated.getNested(Tag.DerivationCodeSequence, 3) shouldBe None
   }
 
   it should "not add new sequences" in {
     val newElements = Elements.empty().set(studyDate)
-    val updated = elements.setNested(TagPath.fromItem(Tag.DetectorInformationSequence, 1), newElements)
+    val updated     = elements.setNested(TagPath.fromItem(Tag.DetectorInformationSequence, 1), newElements)
     updated shouldBe elements
     updated.getNested(Tag.DetectorInformationSequence, 1) shouldBe None
   }
@@ -315,12 +344,17 @@ class ElementsTest extends AnyFlatSpec with Matchers {
         List(Item(Elements.empty().set(studyDate)))
       )
     )
-    updated(TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenItem(Tag.DetectorInformationSequence, 1).thenTag(Tag.StudyDate)).get shouldBe studyDate
+    updated(
+      TagPath
+        .fromItem(Tag.DerivationCodeSequence, 1)
+        .thenItem(Tag.DetectorInformationSequence, 1)
+        .thenTag(Tag.StudyDate)
+    ).get shouldBe studyDate
   }
 
   it should "overwrite element if already present" in {
     val newPatientName = patientName.setValue(Value(ByteString("Jane^Doe")))
-    val updated = elements.set(newPatientName)
+    val updated        = elements.set(newPatientName)
 
     updated.size shouldBe elements.size
     updated.getValueElement(Tag.PatientName).get.value.bytes.utf8String shouldBe "Jane^Doe"
@@ -338,85 +372,113 @@ class ElementsTest extends AnyFlatSpec with Matchers {
 
   it should "set strings" in {
     val names = Seq("Smith^Dr", "Jones^Dr")
-    elements.setStrings(Tag.ReferringPhysicianName, names)
+    elements
+      .setStrings(Tag.ReferringPhysicianName, names)
       .getStrings(Tag.ReferringPhysicianName) shouldBe names
-    elements.setString(Tag.ReferringPhysicianName, names.head)
+    elements
+      .setString(Tag.ReferringPhysicianName, names.head)
       .getStrings(Tag.ReferringPhysicianName) shouldBe Seq(names.head)
   }
 
   it should "set shorts" in {
-    elements.setShorts(Tag.ReferencedFrameNumber, Seq(1, 2, 3))
+    elements
+      .setShorts(Tag.ReferencedFrameNumber, Seq(1, 2, 3))
       .getShorts(Tag.ReferencedFrameNumber) shouldBe Seq(1, 2, 3)
-    elements.setShort(Tag.ReferencedFrameNumber, 42)
+    elements
+      .setShort(Tag.ReferencedFrameNumber, 42)
       .getShorts(Tag.ReferencedFrameNumber) shouldBe Seq(42)
   }
 
   it should "set ints" in {
-    elements.setInts(Tag.ReferencePixelX0, Seq(1, 2, 3))
+    elements
+      .setInts(Tag.ReferencePixelX0, Seq(1, 2, 3))
       .getInts(Tag.ReferencePixelX0) shouldBe Seq(1, 2, 3)
-    elements.setInt(Tag.ReferencePixelX0, 42)
+    elements
+      .setInt(Tag.ReferencePixelX0, 42)
       .getInts(Tag.ReferencePixelX0) shouldBe Seq(42)
   }
 
   it should "set longs" in {
-    elements.setLongs(Tag.SimpleFrameList, Seq(1, 2, 3))
+    elements
+      .setLongs(Tag.SimpleFrameList, Seq(1, 2, 3))
       .getLongs(Tag.SimpleFrameList) shouldBe Seq(1, 2, 3)
-    elements.setLong(Tag.SimpleFrameList, 42)
+    elements
+      .setLong(Tag.SimpleFrameList, 42)
       .getLongs(Tag.SimpleFrameList) shouldBe Seq(42)
   }
 
   it should "set very longs" in {
-    elements.setVeryLongs(0x44550010, VR.UV, Seq(BigInteger.valueOf(1), BigInteger.valueOf(2)), bigEndian = false, explicitVR = true)
+    elements
+      .setVeryLongs(
+        0x44550010,
+        VR.UV,
+        Seq(BigInteger.valueOf(1), BigInteger.valueOf(2)),
+        bigEndian = false,
+        explicitVR = true
+      )
       .getVeryLongs(0x44550010) shouldBe Seq(BigInteger.valueOf(1), BigInteger.valueOf(2))
-    elements.setVeryLong(0x44550010, VR.UV, BigInteger.valueOf(1), bigEndian = false, explicitVR = true)
+    elements
+      .setVeryLong(0x44550010, VR.UV, BigInteger.valueOf(1), bigEndian = false, explicitVR = true)
       .getVeryLongs(0x44550010) shouldBe Seq(BigInteger.valueOf(1))
   }
 
   it should "set floats" in {
-    elements.setFloats(Tag.RecommendedDisplayFrameRateInFloat, Seq(1f, 2f, 3f))
+    elements
+      .setFloats(Tag.RecommendedDisplayFrameRateInFloat, Seq(1f, 2f, 3f))
       .getFloats(Tag.RecommendedDisplayFrameRateInFloat) shouldBe Seq(1f, 2f, 3f)
-    elements.setFloat(Tag.RecommendedDisplayFrameRateInFloat, 42f)
+    elements
+      .setFloat(Tag.RecommendedDisplayFrameRateInFloat, 42f)
       .getFloats(Tag.RecommendedDisplayFrameRateInFloat) shouldBe Seq(42f)
   }
 
   it should "set doubles" in {
-    elements.setDoubles(Tag.TimeRange, Seq(1.0, 2.0, 3.0))
+    elements
+      .setDoubles(Tag.TimeRange, Seq(1.0, 2.0, 3.0))
       .getDoubles(Tag.TimeRange) shouldBe Seq(1.0, 2.0, 3.0)
-    elements.setDouble(Tag.TimeRange, 42.0)
+    elements
+      .setDouble(Tag.TimeRange, 42.0)
       .getDoubles(Tag.TimeRange) shouldBe Seq(42.0)
   }
 
   it should "set dates" in {
     val dates = Seq(LocalDate.parse("2005-01-01"), LocalDate.parse("2010-01-01"))
-    elements.setDates(Tag.StudyDate, dates)
+    elements
+      .setDates(Tag.StudyDate, dates)
       .getDates(Tag.StudyDate) shouldBe dates
-    elements.setDate(Tag.StudyDate, dates.head)
+    elements
+      .setDate(Tag.StudyDate, dates.head)
       .getDates(Tag.StudyDate) shouldBe Seq(dates.head)
   }
 
   it should "set times" in {
     val times = Seq(LocalTime.parse("23:30:10"), LocalTime.parse("12:00:00"))
-    elements.setTimes(Tag.AcquisitionTime, times)
+    elements
+      .setTimes(Tag.AcquisitionTime, times)
       .getTimes(Tag.AcquisitionTime) shouldBe times
-    elements.setTime(Tag.AcquisitionTime, times.head)
+    elements
+      .setTime(Tag.AcquisitionTime, times.head)
       .getTimes(Tag.AcquisitionTime) shouldBe Seq(times.head)
   }
 
   it should "set date times" in {
     val dateTimes = Seq(LocalDate.parse("2005-01-01"), LocalDate.parse("2010-01-01"))
       .map(_.atStartOfDay(ZoneOffset.of("+04:00")))
-    elements.setDateTimes(Tag.InstanceCoercionDateTime, dateTimes)
+    elements
+      .setDateTimes(Tag.InstanceCoercionDateTime, dateTimes)
       .getDateTimes(Tag.InstanceCoercionDateTime) shouldBe dateTimes
-    elements.setDateTime(Tag.InstanceCoercionDateTime, dateTimes.head)
+    elements
+      .setDateTime(Tag.InstanceCoercionDateTime, dateTimes.head)
       .getDateTimes(Tag.InstanceCoercionDateTime) shouldBe Seq(dateTimes.head)
   }
 
   it should "set patient names" in {
-    val names = Seq("Doe^John", "Doe^Jane")
+    val names        = Seq("Doe^John", "Doe^Jane")
     val patientNames = names.flatMap(PersonName.parse)
-    elements.setPersonNames(Tag.PatientName, patientNames)
+    elements
+      .setPersonNames(Tag.PatientName, patientNames)
       .getPersonNames(Tag.PatientName) shouldBe patientNames
-    elements.setPersonName(Tag.PatientName, patientNames.head)
+    elements
+      .setPersonName(Tag.PatientName, patientNames.head)
       .getPersonNames(Tag.PatientName) shouldBe Seq(patientNames.head)
   }
 
@@ -437,7 +499,8 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     updatedZo1.toString shouldBe "-06:00"
     val updatedZo2 = elements.set(ValueElement.fromString(Tag.TimezoneOffsetFromUTC, "+04:00")).zoneOffset
     updatedZo2.toString shouldBe "+04:00"
-    val updatedZo3 = elements.set(ValueElement.fromString(Tag.TimezoneOffsetFromUTC, "bad zone offset string")).zoneOffset
+    val updatedZo3 =
+      elements.set(ValueElement.fromString(Tag.TimezoneOffsetFromUTC, "bad zone offset string")).zoneOffset
     updatedZo3 shouldBe elements.zoneOffset
   }
 
@@ -446,7 +509,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     val e2 = Elements.empty().setString(Tag.PatientName, "Last2^First2")
     val i1 = Item.fromElements(e1)
     val i2 = Item.fromElements(e2)
-    val s = Sequence(Tag.DerivationCodeSequence, indeterminateLength, List(i1, i2))
+    val s  = Sequence(Tag.DerivationCodeSequence, indeterminateLength, List(i1, i2))
 
     s shouldBe Sequence.fromItems(Tag.DerivationCodeSequence, List(i1, i2))
     s shouldBe Sequence.fromElements(Tag.DerivationCodeSequence, List(e1, e2))
@@ -506,7 +569,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
 
   it should "create file meta information" in {
     val fmiList = Elements.fileMetaInformationElements("iuid", "cuid", "ts")
-    val fmi = Elements.empty().set(fmiList)
+    val fmi     = Elements.empty().set(fmiList)
     fmi.getInt(Tag.FileMetaInformationGroupLength).get shouldBe
       (12 + 5 * 8 + 2 + 4 + 4 + 2 +
         padToEvenLength(ByteString(Implementation.classUid), Tag.ImplementationClassUID).length +
@@ -522,15 +585,26 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   "Elements data classes" should "return the correct byte representation" in {
     PreambleElement.toBytes should have length (128 + 4)
     PreambleElement.toBytes.takeRight(4).utf8String shouldBe "DICM"
-    ValueElement(Tag.StudyDate, Value.fromString(VR.DA, "20010101")).toBytes shouldBe HeaderPart(Tag.StudyDate, VR.DA, 8).bytes ++ ByteString("20010101")
+    ValueElement(Tag.StudyDate, Value.fromString(VR.DA, "20010101")).toBytes shouldBe HeaderPart(
+      Tag.StudyDate,
+      VR.DA,
+      8
+    ).bytes ++ ByteString("20010101")
     SequenceElement(Tag.DerivationCodeSequence, 10).toBytes shouldBe sequence(Tag.DerivationCodeSequence, 10)
     FragmentsElement(Tag.PixelData, VR.OW).toBytes shouldBe pixeDataFragments()
     FragmentElement(1, 4, Value(ByteString(1, 2, 3, 4))).toBytes shouldBe item(4) ++ ByteString(1, 2, 3, 4)
     ItemElement(1, 10).toBytes shouldBe item(10)
     ItemDelimitationElement(1).toBytes shouldBe itemDelimitation()
     SequenceDelimitationElement().toBytes shouldBe sequenceDelimitation()
-    Sequence(Tag.DerivationCodeSequence, indeterminateLength, List(Item(Elements.empty()))).toBytes shouldBe sequence(Tag.DerivationCodeSequence) ++ item(indeterminateLength) ++ itemDelimitation() ++ sequenceDelimitation()
-    Fragments(Tag.PixelData, VR.OW, Some(Nil), List(Fragment(4, Value(ByteString(1, 2, 3, 4))))).toBytes shouldBe pixeDataFragments() ++ item(0) ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+    Sequence(Tag.DerivationCodeSequence, indeterminateLength, List(Item(Elements.empty()))).toBytes shouldBe sequence(
+      Tag.DerivationCodeSequence
+    ) ++ item(indeterminateLength) ++ itemDelimitation() ++ sequenceDelimitation()
+    Fragments(
+      Tag.PixelData,
+      VR.OW,
+      Some(Nil),
+      List(Fragment(4, Value(ByteString(1, 2, 3, 4))))
+    ).toBytes shouldBe pixeDataFragments() ++ item(0) ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
   }
 
   it should "have expected string representations in terms of number of lines" in {
@@ -545,7 +619,10 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     checkString(ItemDelimitationElement(1).toString, 1)
     checkString(SequenceDelimitationElement().toString, 1)
     checkString(Sequence(Tag.DerivationCodeSequence, indeterminateLength, List(Item(Elements.empty()))).toString, 1)
-    checkString(Fragments(Tag.PixelData, VR.OW, Some(Nil), List(Fragment(4, Value(ByteString(1, 2, 3, 4))))).toString, 1)
+    checkString(
+      Fragments(Tag.PixelData, VR.OW, Some(Nil), List(Fragment(4, Value(ByteString(1, 2, 3, 4))))).toString,
+      1
+    )
   }
 
 }
