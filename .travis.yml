@@ -1,5 +1,7 @@
 dist: trusty
 
+os: linux
+
 language: scala
 
 jdk:
@@ -19,13 +21,12 @@ stages:
 
 jobs:
   include:
-    # stage="test" if no stage is specified
-    - name: formatting
-      script: sbt scalafmtCheckAll test
-    - name: coverage
+    - stage: test
+    - name: linting
+      script: sbt scalafmtCheckAll
+    - name: "test with coverage"
       script: "sbt clean coverage test"
       after_success: "sbt coverageReport coveralls"
-    # run ci-release only if previous stages passed
     - stage: release
       script: sbt ci-release
 
