@@ -16,7 +16,7 @@
 
 package com.exini.dicom.data
 
-import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.charset.{ Charset, StandardCharsets }
 
 import akka.util.ByteString
 import com.exini.dicom.data.Elements.ValueElement
@@ -36,9 +36,9 @@ class CharacterSets(val charsetNames: Seq[String]) {
 
   private val charsetObjs =
     (if (charsetNames.nonEmpty && charsetNames.head.isEmpty) // first item may be empty -> default charset
-      Seq(defaultCharsetObj)
-    else
-      Seq.empty) ++ charsetNames.flatMap(s => charsetObjsMap.get(s))
+       Seq(defaultCharsetObj)
+     else
+       Seq.empty) ++ charsetNames.flatMap(s => charsetObjsMap.get(s))
 
   private val initialCharsetObj =
     if (charsetObjs.nonEmpty)
@@ -60,9 +60,9 @@ class CharacterSets(val charsetNames: Seq[String]) {
 
   private def decodeWithExtensions(b: ByteString) = {
     var charsetObj = initialCharsetObj
-    var off = 0
-    var cur = 0
-    val sb = new StringBuilder(b.length)
+    var off        = 0
+    var cur        = 0
+    val sb         = new StringBuilder(b.length)
 
     while (cur < b.length)
       if (b(cur) == 0x1b) {
@@ -90,10 +90,11 @@ class CharacterSets(val charsetNames: Seq[String]) {
 
   override def toString: String = s"${getClass.getSimpleName} [${charsetObjs.map(_.charset.toString).mkString(",")}]"
 
-  override def equals(that: Any): Boolean = that match {
-    case thatCharSets: CharacterSets => charsetNames == thatCharSets.charsetNames
-    case _ => this == that
-  }
+  override def equals(that: Any): Boolean =
+    that match {
+      case thatCharSets: CharacterSets => charsetNames == thatCharSets.charsetNames
+      case _                           => this == that
+    }
 
   override def hashCode(): Int = charsetNames.hashCode
 }
@@ -111,10 +112,10 @@ object CharacterSets {
     "ISO_IR 126" -> CharsetObj("ISO-8859-7"),
     "ISO_IR 138" -> CharsetObj("ISO-8859-8"),
     "ISO_IR 148" -> CharsetObj("ISO-8859-9"),
-    "ISO_IR 13" -> CharsetObj("JIS_X0201"),
+    "ISO_IR 13"  -> CharsetObj("JIS_X0201"),
     "ISO_IR 166" -> CharsetObj("TIS-620"),
     // Single-Byte Character Sets with Code Extensions
-    "ISO 2022 IR 6" -> CharsetObj("ISO-8859-1", 1, Some(ByteString(0x28, 0x42))),
+    "ISO 2022 IR 6"   -> CharsetObj("ISO-8859-1", 1, Some(ByteString(0x28, 0x42))),
     "ISO 2022 IR 100" -> CharsetObj("ISO-8859-1", 1, Some(ByteString(0x2d, 0x41))),
     "ISO 2022 IR 101" -> CharsetObj("ISO-8859-2", 1, Some(ByteString(0x2d, 0x42))),
     "ISO 2022 IR 109" -> CharsetObj("ISO-8859-3", 1, Some(ByteString(0x2d, 0x43))),
@@ -124,17 +125,17 @@ object CharacterSets {
     "ISO 2022 IR 126" -> CharsetObj("ISO-8859-7", 1, Some(ByteString(0x2d, 0x46))),
     "ISO 2022 IR 138" -> CharsetObj("ISO-8859-8", 1, Some(ByteString(0x28, 0x48))),
     "ISO 2022 IR 148" -> CharsetObj("ISO-8859-9", 1, Some(ByteString(0x28, 0x4d))),
-    "ISO 2022 IR 13" -> CharsetObj("JIS_X0201", 1, Some(ByteString(0x29, 0x49))),
+    "ISO 2022 IR 13"  -> CharsetObj("JIS_X0201", 1, Some(ByteString(0x29, 0x49))),
     "ISO 2022 IR 166" -> CharsetObj("TIS-620", 1, Some(ByteString(0x2d, 0x54))),
     // Multi-Byte Character Sets with Code Extensions
-    "ISO 2022 IR 87" -> CharsetObj("X-JIS0208", 2, Some(ByteString(0x24, 0x42))),
+    "ISO 2022 IR 87"  -> CharsetObj("X-JIS0208", 2, Some(ByteString(0x24, 0x42))),
     "ISO 2022 IR 159" -> CharsetObj("JIS_X0212-1990", 2, Some(ByteString(0x24, 0x28, 0x44))),
     "ISO 2022 IR 149" -> CharsetObj("EUC-KR", -1, Some(ByteString(0x24, 0x29, 0x43))),
-    "ISO 2022 IR 58" -> CharsetObj("GB2312", -1, Some(ByteString(0x24, 0x29, 0x41))),
+    "ISO 2022 IR 58"  -> CharsetObj("GB2312", -1, Some(ByteString(0x24, 0x29, 0x41))),
     // Multi-Byte Character Sets Without Code Extensions
     "ISO_IR 192" -> CharsetObj("UTF-8", -1, None),
-    "GB18030" -> CharsetObj("GB18030", -1, None),
-    "GBK" -> CharsetObj("GBK", -1, None)
+    "GB18030"    -> CharsetObj("GB18030", -1, None),
+    "GBK"        -> CharsetObj("GBK", -1, None)
   )
 
   private val escToCharset: Map[Int, CharsetObj] = {
@@ -147,18 +148,30 @@ object CharacterSets {
     map + (0x284a -> map(0x2949))
   }
 
-  val utf8Charset: Charset = StandardCharsets.UTF_8
+  val utf8Charset: Charset    = StandardCharsets.UTF_8
   val defaultCharset: Charset = StandardCharsets.ISO_8859_1
-  val defaultCharsetObj = new CharsetObj(defaultCharset, 1, None)
-  val defaultOnly = new CharacterSets(Seq(""))
+  val defaultCharsetObj       = new CharsetObj(defaultCharset, 1, None)
+  val defaultOnly             = new CharacterSets(Seq(""))
 
   def apply(specificCharacterSetValue: ValueElement): CharacterSets = {
-    val s = specificCharacterSetValue.value.toStrings(specificCharacterSetValue.vr, specificCharacterSetValue.bigEndian, defaultOnly)
+    val s = specificCharacterSetValue.value.toStrings(
+      specificCharacterSetValue.vr,
+      specificCharacterSetValue.bigEndian,
+      defaultOnly
+    )
     if (s.isEmpty || s.length == 1 && s.head.isEmpty) defaultOnly else new CharacterSets(s)
   }
 
   def apply(specificCharacterSetBytes: ByteString): CharacterSets =
-    apply(ValueElement(Tag.SpecificCharacterSet, VR.CS, Value(specificCharacterSetBytes), bigEndian = false, explicitVR = true))
+    apply(
+      ValueElement(
+        Tag.SpecificCharacterSet,
+        VR.CS,
+        Value(specificCharacterSetBytes),
+        bigEndian = false,
+        explicitVR = true
+      )
+    )
 
   def isVrAffectedBySpecificCharacterSet(vr: VR): Boolean =
     vr match {
@@ -168,7 +181,7 @@ object CharacterSets {
       case VR.SH => true
       case VR.ST => true
       case VR.UT => true
-      case _ => false
+      case _     => false
     }
 
   def encode(s: String) = ByteString(s.getBytes(utf8Charset))

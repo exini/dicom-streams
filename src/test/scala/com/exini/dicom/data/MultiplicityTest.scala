@@ -3,7 +3,6 @@ package com.exini.dicom.data
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-
 class MultiplicityTest extends AnyFlatSpec with Matchers {
 
   "Multiplicity" should "support exactly 1" in {

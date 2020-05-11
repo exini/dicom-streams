@@ -48,13 +48,14 @@ sealed trait TagTree extends TagPathLike {
     * @example (0008,9215)[*].(0010,0010) != (0008,9215)[1].(0010,0010)
     * @example (0008,9215)[3].(0010,0010) == (0008,9215)[3].(0010,0010)
     */
-  override def equals(that: Any): Boolean = (this, that) match {
-    case (t: TagTree, p: TagTree) if t.isEmpty && p.isEmpty => true
-    case (t: TagTreeTag, p: TagTreeTag) => t.tag == p.tag && t.previous == p.previous
-    case (t: TagTreeItem, p: TagTreeItem) => t.tag == p.tag && t.item == p.item && t.previous == p.previous
-    case (t: TagTreeAnyItem, p: TagTreeAnyItem) => t.tag == p.tag && t.previous == p.previous
-    case _ => false
-  }
+  override def equals(that: Any): Boolean =
+    (this, that) match {
+      case (t: TagTree, p: TagTree) if t.isEmpty && p.isEmpty => true
+      case (t: TagTreeTag, p: TagTreeTag)                     => t.tag == p.tag && t.previous == p.previous
+      case (t: TagTreeItem, p: TagTreeItem)                   => t.tag == p.tag && t.item == p.item && t.previous == p.previous
+      case (t: TagTreeAnyItem, p: TagTreeAnyItem)             => t.tag == p.tag && t.previous == p.previous
+      case _                                                  => false
+    }
 
   /**
     * @return `true` if this tree does not contain any wildcard (all-items) pointers and is thus structurally equivalent
@@ -63,11 +64,12 @@ sealed trait TagTree extends TagPathLike {
     * @example (0008,9215)[*].(0010,0010) is not a path
     * @example the empty tag tree is a path
     */
-  def isPath: Boolean = this match {
-    case EmptyTagTree => true
-    case _: TagTreeAnyItem => false
-    case t => t.previous.isPath
-  }
+  def isPath: Boolean =
+    this match {
+      case EmptyTagTree      => true
+      case _: TagTreeAnyItem => false
+      case t                 => t.previous.isPath
+    }
 
   /**
     * @param tagPath tag path to test
@@ -76,15 +78,17 @@ sealed trait TagTree extends TagPathLike {
     * @example (0008,9215)[1] is not a path in (0008,9215)[*].(0010,0010)
     * @example the empty tag path is a path in the empty tag tree
     */
-  def hasPath(tagPath: TagPath): Boolean = (this, tagPath) match {
-    case (EmptyTagTree, EmptyTagPath) => true
-    case (t: TagTreeTag, p: TagPathTag) => t.tag == p.tag && t.previous.hasPath(p.previous)
-    case (t: TagTreeItem, p: TagPath with ItemIndex) => t.item == p.item && t.tag == p.tag && t.previous.hasPath(p.previous)
-    case (t: TagTreeAnyItem, p: TagPath with ItemIndex) => t.tag == p.tag && t.previous.hasPath(p.previous)
-    case (t: TagTreeAnyItem, p: TagPathSequence) => t.tag == p.tag && t.previous.hasPath(p.previous)
-    case (t: TagTreeAnyItem, p: TagPathSequenceEnd) => t.tag == p.tag && t.previous.hasPath(p.previous)
-    case _ => false
-  }
+  def hasPath(tagPath: TagPath): Boolean =
+    (this, tagPath) match {
+      case (EmptyTagTree, EmptyTagPath)   => true
+      case (t: TagTreeTag, p: TagPathTag) => t.tag == p.tag && t.previous.hasPath(p.previous)
+      case (t: TagTreeItem, p: TagPath with ItemIndex) =>
+        t.item == p.item && t.tag == p.tag && t.previous.hasPath(p.previous)
+      case (t: TagTreeAnyItem, p: TagPath with ItemIndex) => t.tag == p.tag && t.previous.hasPath(p.previous)
+      case (t: TagTreeAnyItem, p: TagPathSequence)        => t.tag == p.tag && t.previous.hasPath(p.previous)
+      case (t: TagTreeAnyItem, p: TagPathSequenceEnd)     => t.tag == p.tag && t.previous.hasPath(p.previous)
+      case _                                              => false
+    }
 
   /**
     * @param tagPath tag path to test
@@ -96,15 +100,15 @@ sealed trait TagTree extends TagPathLike {
   def hasTrunk(tagPath: TagPath): Boolean =
     if (this.depth >= tagPath.depth)
       this.toList.zip(tagPath.toList).forall {
-        case (_, EmptyTagPath) => true
-        case (t: TagTreeItem, p: TagPath with ItemIndex) => t.tag == p.tag && t.item == p.item
-        case (t: TagTreeItem, p: TagPathSequence) => t.tag == p.tag
-        case (t: TagTreeItem, p: TagPathSequenceEnd) => t.tag == p.tag
+        case (_, EmptyTagPath)                              => true
+        case (t: TagTreeItem, p: TagPath with ItemIndex)    => t.tag == p.tag && t.item == p.item
+        case (t: TagTreeItem, p: TagPathSequence)           => t.tag == p.tag
+        case (t: TagTreeItem, p: TagPathSequenceEnd)        => t.tag == p.tag
         case (t: TagTreeAnyItem, p: TagPath with ItemIndex) => t.tag == p.tag
-        case (t: TagTreeAnyItem, p: TagPathSequence) => t.tag == p.tag
-        case (t: TagTreeAnyItem, p: TagPathSequenceEnd) => t.tag == p.tag
-        case (t: TagTreeTag, p: TagPathTag) => t.tag == p.tag
-        case _ => false
+        case (t: TagTreeAnyItem, p: TagPathSequence)        => t.tag == p.tag
+        case (t: TagTreeAnyItem, p: TagPathSequenceEnd)     => t.tag == p.tag
+        case (t: TagTreeTag, p: TagPathTag)                 => t.tag == p.tag
+        case _                                              => false
       }
     else
       false
@@ -121,13 +125,13 @@ sealed trait TagTree extends TagPathLike {
   def isTrunkOf(tagPath: TagPath): Boolean =
     if (this.depth <= tagPath.depth)
       this.toList.zip(tagPath.toList).forall {
-        case (_, EmptyTagPath) => true
-        case (t: TagTreeItem, p: TagPath with ItemIndex) => t.tag == p.tag && t.item == p.item
+        case (_, EmptyTagPath)                              => true
+        case (t: TagTreeItem, p: TagPath with ItemIndex)    => t.tag == p.tag && t.item == p.item
         case (t: TagTreeAnyItem, p: TagPath with ItemIndex) => t.tag == p.tag
-        case (t: TagTreeAnyItem, p: TagPathSequence) => t.tag == p.tag
-        case (t: TagTreeAnyItem, p: TagPathSequenceEnd) => t.tag == p.tag
-        case (t: TagTreeTag, p: TagPathTag) => t.tag == p.tag
-        case _ => false
+        case (t: TagTreeAnyItem, p: TagPathSequence)        => t.tag == p.tag
+        case (t: TagTreeAnyItem, p: TagPathSequenceEnd)     => t.tag == p.tag
+        case (t: TagTreeTag, p: TagPathTag)                 => t.tag == p.tag
+        case _                                              => false
       }
     else
       false
@@ -141,16 +145,16 @@ sealed trait TagTree extends TagPathLike {
     */
   def hasTwig(tagPath: TagPath): Boolean =
     ((this, tagPath) match {
-      case (EmptyTagTree, EmptyTagPath) => true
+      case (EmptyTagTree, EmptyTagPath)                   => true
       case (t: TagTreeAnyItem, p: TagPath with ItemIndex) => t.tag == p.tag
-      case (t: TagTreeAnyItem, p: TagPathSequence) => t.tag == p.tag
-      case (t: TagTreeAnyItem, p: TagPathSequenceEnd) => t.tag == p.tag
-      case (t: TagTreeItem, p: TagPath with ItemIndex) => t.tag == p.tag && t.item == p.item
-      case (t: TagTreeTag, p: TagPathTag) => t.tag == p.tag
-      case _ => false
+      case (t: TagTreeAnyItem, p: TagPathSequence)        => t.tag == p.tag
+      case (t: TagTreeAnyItem, p: TagPathSequenceEnd)     => t.tag == p.tag
+      case (t: TagTreeItem, p: TagPath with ItemIndex)    => t.tag == p.tag && t.item == p.item
+      case (t: TagTreeTag, p: TagPathTag)                 => t.tag == p.tag
+      case _                                              => false
     }) && ((this.previous, tagPath.previous) match {
-      case (_, EmptyTagPath) => true
-      case (EmptyTagTree, _) => false
+      case (_, EmptyTagPath)    => true
+      case (EmptyTagTree, _)    => false
       case (thisPrev, thatPrev) => thisPrev.hasTwig(thatPrev)
     })
 
@@ -160,19 +164,20 @@ sealed trait TagTree extends TagPathLike {
         EmptyTagTree
       else if (i == 0)
         tree match {
-          case EmptyTagTree => EmptyTagTree
-          case p: TagTreeItem => TagTree.fromItem(p.tag, p.item)
+          case EmptyTagTree      => EmptyTagTree
+          case p: TagTreeItem    => TagTree.fromItem(p.tag, p.item)
           case p: TagTreeAnyItem => TagTree.fromAnyItem(p.tag)
-          case p => TagTree.fromTag(p.tag)
+          case p                 => TagTree.fromTag(p.tag)
         }
       else
         drop(tree.previous, i - 1) match {
-          case p: TagTreeTrunk => tree match {
-            case pi: TagTreeItem => p.thenItem(pi.tag, pi.item)
-            case pi: TagTreeAnyItem => p.thenAnyItem(pi.tag)
-            case pt: TagTreeTag => p.thenTag(pt.tag)
-            case _ => EmptyTagTree
-          }
+          case p: TagTreeTrunk =>
+            tree match {
+              case pi: TagTreeItem    => p.thenItem(pi.tag, pi.item)
+              case pi: TagTreeAnyItem => p.thenAnyItem(pi.tag)
+              case pt: TagTreeTag     => p.thenTag(pt.tag)
+              case _                  => EmptyTagTree
+            }
           case _ => EmptyTagTree // cannot happen
         }
 
@@ -180,19 +185,18 @@ sealed trait TagTree extends TagPathLike {
   }
 
   def toString(lookup: Boolean): String = {
-    def toTagString(tag: Int): String = if (lookup)
-      Lookup.keywordOf(tag).getOrElse(tagToString(tag))
-    else
-      tagToString(tag)
+    def toTagString(tag: Int): String =
+      if (lookup)
+        Lookup.keywordOf(tag).getOrElse(tagToString(tag))
+      else
+        tagToString(tag)
 
     @tailrec
     def toTagTreeString(tree: TagTree, tail: String): String = {
       val itemIndexSuffix = tree match {
         case _: TagTreeAnyItem => "[*]"
-        case s: TagTreeItem => s"[${
-          s.item
-        }]"
-        case _ => ""
+        case s: TagTreeItem    => s"[${s.item}]"
+        case _                 => ""
       }
       val head = toTagString(tree.tag) + itemIndexSuffix
       val part = head + tail
@@ -202,11 +206,12 @@ sealed trait TagTree extends TagPathLike {
     if (isEmpty) "<empty tree>" else toTagTreeString(tree = this, tail = "")
   }
 
-  override def hashCode(): Int = this match {
-    case EmptyTagTree => 0
-    case s: TagTreeItem => 31 * (31 * (31 * previous.hashCode() + tag.hashCode()) * s.item.hashCode())
-    case _ => 31 * (31 * previous.hashCode() + tag.hashCode())
-  }
+  override def hashCode(): Int =
+    this match {
+      case EmptyTagTree   => 0
+      case s: TagTreeItem => 31 * (31 * (31 * previous.hashCode() + tag.hashCode()) * s.item.hashCode())
+      case _              => 31 * (31 * previous.hashCode() + tag.hashCode())
+    }
 }
 
 object TagTree {
@@ -214,7 +219,7 @@ object TagTree {
   /**
     * A tag tree that points to a non-sequence tag (terminal)
     */
-  class TagTreeTag private[TagTree](val tag: Int, val previous: TagTreeTrunk) extends TagTree
+  class TagTreeTag private[TagTree] (val tag: Int, val previous: TagTreeTrunk) extends TagTree
 
   /**
     * A tag tree that points to a node that may be non-terminal, i.e. an item or the empty tag tree. All other types end
@@ -250,18 +255,18 @@ object TagTree {
   /**
     * A tag tree node that points to all items of a sequence (non-terminal)
     */
-  class TagTreeAnyItem private[TagTree](val tag: Int, val previous: TagTreeTrunk) extends TagTreeTrunk
+  class TagTreeAnyItem private[TagTree] (val tag: Int, val previous: TagTreeTrunk) extends TagTreeTrunk
 
   /**
     * A tag tree that points to an item in a sequence (non-terminal)
     */
-  class TagTreeItem private[TagTree](val tag: Int, val item: Int, val previous: TagTreeTrunk) extends TagTreeTrunk
+  class TagTreeItem private[TagTree] (val tag: Int, val item: Int, val previous: TagTreeTrunk) extends TagTreeTrunk
 
   /**
     * Empty tag tree
     */
   object EmptyTagTree extends TagTreeTrunk {
-    def tag: Int = throw new NoSuchElementException("Empty tag tree")
+    def tag: Int               = throw new NoSuchElementException("Empty tag tree")
     val previous: TagTreeTrunk = EmptyTagTree
   }
 
@@ -298,20 +303,20 @@ object TagTree {
     */
   def fromPath(tagPath: TagPath): TagTree = {
     val root = tagPath.head match {
-      case p: TagPathTag => TagTree.fromTag(p.tag)
-      case p: TagPathItem => TagTree.fromItem(p.tag, p.item)
-      case p: TagPathItemEnd => TagTree.fromItem(p.tag, p.item)
-      case p: TagPathSequence => TagTree.fromAnyItem(p.tag)
+      case p: TagPathTag         => TagTree.fromTag(p.tag)
+      case p: TagPathItem        => TagTree.fromItem(p.tag, p.item)
+      case p: TagPathItemEnd     => TagTree.fromItem(p.tag, p.item)
+      case p: TagPathSequence    => TagTree.fromAnyItem(p.tag)
       case p: TagPathSequenceEnd => TagTree.fromAnyItem(p.tag)
-      case _ => EmptyTagTree
+      case _                     => EmptyTagTree
     }
     tagPath.drop(1).toList.foldLeft(root) {
-      case (t: TagTreeTrunk, p: TagPathTag) => t.thenTag(p.tag)
-      case (t: TagTreeTrunk, p: TagPathItem) => t.thenItem(p.tag, p.item)
-      case (t: TagTreeTrunk, p: TagPathItemEnd) => t.thenItem(p.tag, p.item)
-      case (t: TagTreeTrunk, p: TagPathSequence) => t.thenAnyItem(p.tag)
+      case (t: TagTreeTrunk, p: TagPathTag)         => t.thenTag(p.tag)
+      case (t: TagTreeTrunk, p: TagPathItem)        => t.thenItem(p.tag, p.item)
+      case (t: TagTreeTrunk, p: TagPathItemEnd)     => t.thenItem(p.tag, p.item)
+      case (t: TagTreeTrunk, p: TagPathSequence)    => t.thenAnyItem(p.tag)
       case (t: TagTreeTrunk, p: TagPathSequenceEnd) => t.thenAnyItem(p.tag)
-      case (t, _) => t
+      case (t, _)                                   => t
     }
   }
 
@@ -333,10 +338,12 @@ object TagTree {
 
     def tagPart(s: String): String = s.substring(0, s.indexOf('['))
 
-    def parseTag(s: String): Int = try Integer.parseInt(s.substring(1, 5) + s.substring(6, 10), 16) catch {
-      case _: Throwable =>
-        Lookup.tagOf(s)
-    }
+    def parseTag(s: String): Int =
+      try Integer.parseInt(s.substring(1, 5) + s.substring(6, 10), 16)
+      catch {
+        case _: Throwable =>
+          Lookup.tagOf(s)
+      }
 
     def parseIndex(s: String): Option[Int] = if (s == "*") None else Some(Integer.parseInt(s))
 
@@ -344,23 +351,24 @@ object TagTree {
 
     def addTag(s: String, tree: TagTreeTrunk): TagTreeTag = tree.thenTag(parseTag(s))
 
-    def createSeq(s: String): TagTreeTrunk = parseIndex(indexPart(s))
-      .map(index => TagTree.fromItem(parseTag(tagPart(s)), index))
-      .getOrElse(TagTree.fromAnyItem(parseTag(tagPart(s))))
+    def createSeq(s: String): TagTreeTrunk =
+      parseIndex(indexPart(s))
+        .map(index => TagTree.fromItem(parseTag(tagPart(s)), index))
+        .getOrElse(TagTree.fromAnyItem(parseTag(tagPart(s))))
 
-    def addSeq(s: String, tree: TagTreeTrunk): TagTreeTrunk = parseIndex(indexPart(s))
-      .map(index => tree.thenItem(parseTag(tagPart(s)), index))
-      .getOrElse(tree.thenAnyItem(parseTag(tagPart(s))))
+    def addSeq(s: String, tree: TagTreeTrunk): TagTreeTrunk =
+      parseIndex(indexPart(s))
+        .map(index => tree.thenItem(parseTag(tagPart(s)), index))
+        .getOrElse(tree.thenAnyItem(parseTag(tagPart(s))))
 
-
-    val tags = if (s.indexOf('.') > 0) s.split("\\.").toList else List(s)
+    val tags    = if (s.indexOf('.') > 0) s.split("\\.").toList else List(s)
     val seqTags = if (tags.length > 1) tags.init else Nil // list of sequence tags, if any
-    val lastTag = tags.last // tag or sequence
-    try {
-      seqTags.headOption.map(first => seqTags.tail.foldLeft(createSeq(first))((tree, tag) => addSeq(tag, tree))) match {
-        case Some(tree) => if (isSeq(lastTag)) addSeq(lastTag, tree) else addTag(lastTag, tree)
-        case None => if (isSeq(lastTag)) createSeq(lastTag) else createTag(lastTag)
-      }
+    val lastTag = tags.last                               // tag or sequence
+    try seqTags.headOption.map(first =>
+      seqTags.tail.foldLeft(createSeq(first))((tree, tag) => addSeq(tag, tree))
+    ) match {
+      case Some(tree) => if (isSeq(lastTag)) addSeq(lastTag, tree) else addTag(lastTag, tree)
+      case None       => if (isSeq(lastTag)) createSeq(lastTag) else createTag(lastTag)
     } catch {
       case e: Exception => throw new IllegalArgumentException("Tag tree could not be parsed", e)
     }

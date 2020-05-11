@@ -18,7 +18,7 @@ package com.exini.dicom.streams
 
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.Elements.ValueElement
-import com.exini.dicom.data.{Elements, _}
+import com.exini.dicom.data.{ Elements, _ }
 
 object CollectFlow {
 
@@ -42,8 +42,10 @@ object CollectFlow {
     */
   def collectFlow(whitelist: Set[_ <: TagTree], label: String, maxBufferSize: Int = 1000000): PartFlow = {
     val maxTag = if (whitelist.isEmpty) 0 else whitelist.map(_.head.tag).map(intToUnsignedLong).max
-    val tagCondition = (currentPath: TagPath) => whitelist.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath))
-    val stopCondition = (tagPath: TagPath) => whitelist.isEmpty || tagPath.isRoot && intToUnsignedLong(tagPath.tag) > maxTag
+    val tagCondition = (currentPath: TagPath) =>
+      whitelist.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath))
+    val stopCondition = (tagPath: TagPath) =>
+      whitelist.isEmpty || tagPath.isRoot && intToUnsignedLong(tagPath.tag) > maxTag
     collectFlow(tagCondition, stopCondition, label, maxBufferSize)
   }
 
@@ -65,14 +67,19 @@ object CollectFlow {
     *                      if this limit is exceed. Set to 0 for an unlimited buffer size
     * @return A DicomPart Flow which will begin with a ElementsPart followed by the input parts
     */
-  def collectFlow(tagCondition: TagPath => Boolean, stopCondition: TagPath => Boolean, label: String, maxBufferSize: Int): PartFlow =
+  def collectFlow(
+      tagCondition: TagPath => Boolean,
+      stopCondition: TagPath => Boolean,
+      label: String,
+      maxBufferSize: Int
+  ): PartFlow =
     DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with EndEvent[DicomPart] {
 
-      var reachedEnd = false
-      var currentBufferSize = 0
+      var reachedEnd                           = false
+      var currentBufferSize                    = 0
       var currentElement: Option[ValueElement] = None
-      var buffer: List[DicomPart] = Nil
-      var elements: Elements = Elements.empty()
+      var buffer: List[DicomPart]              = Nil
+      var elements: Elements                   = Elements.empty()
 
       def elementsAndBuffer(): List[DicomPart] = {
         val parts = ElementsPart(label, elements) :: buffer
@@ -90,7 +97,7 @@ object CollectFlow {
         else
           elementsAndBuffer()
 
-      override def onPart(part: DicomPart): List[DicomPart] = {
+      override def onPart(part: DicomPart): List[DicomPart] =
         if (reachedEnd)
           part :: Nil
         else {
@@ -98,9 +105,9 @@ object CollectFlow {
             throw new DicomStreamException("Error collecting elements: max buffer size exceeded")
 
           part match {
-            case ValueChunkMarker =>
+            case ValueChunkMarker               =>
             case SequenceDelimitationPartMarker =>
-            case _: ItemDelimitationPartMarker =>
+            case _: ItemDelimitationPartMarker  =>
             case _ =>
               buffer = buffer :+ part
               currentBufferSize = currentBufferSize + part.bytes.size
@@ -110,8 +117,9 @@ object CollectFlow {
             case _: TagPart if stopCondition(tagPath) =>
               elementsAndBuffer()
 
-              case header: HeaderPart if tagCondition(tagPath) || header.tag == Tag.SpecificCharacterSet =>
-              currentElement = Some(ValueElement(header.tag, header.vr, Value.empty, header.bigEndian, header.explicitVR))
+            case header: HeaderPart if tagCondition(tagPath) || header.tag == Tag.SpecificCharacterSet =>
+              currentElement =
+                Some(ValueElement(header.tag, header.vr, Value.empty, header.bigEndian, header.explicitVR))
               Nil
 
             case _: HeaderPart =>
@@ -119,7 +127,6 @@ object CollectFlow {
               Nil
 
             case valueChunk: ValueChunk =>
-
               currentElement match {
                 case Some(element) =>
                   val updatedElement = element.copy(value = element.value ++ valueChunk.bytes)
@@ -139,8 +146,6 @@ object CollectFlow {
             case _ => Nil
           }
         }
-      }
     })
-
 
 }

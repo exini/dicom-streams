@@ -5,14 +5,18 @@ import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.{Tag, TagPath, VR, _}
+import com.exini.dicom.data.{ Tag, TagPath, VR, _ }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContextExecutor
 
-class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
+class ModifyFlowTest
+    extends TestKit(ActorSystem("ModifyFlowSpec"))
+    with AnyFlatSpecLike
+    with Matchers
+    with BeforeAndAfterAll {
 
   import ModifyFlow._
   import ParseFlow.parseFlow
@@ -29,13 +33,20 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(modifications = Seq(
-        TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty),
-        TagModification.equals(TagPath.fromTag(Tag.PatientName), _ => mikeBytes))))
+      .via(
+        modifyFlow(modifications =
+          Seq(
+            TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty),
+            TagModification.equals(TagPath.fromTag(Tag.PatientName), _ => mikeBytes)
+          )
+        )
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, 0)
       .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
       .expectValueChunk(mikeBytes)
@@ -43,15 +54,19 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "not modify elements in datasets other than the dataset the tag path points to" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(
+      Tag.DerivationCodeSequence
+    ) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.PatientName), _ => mikeBytes))))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem(1)
       .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
@@ -66,11 +81,13 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "insert elements if not present" in {
     val bytes = personNameJohnDoe()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => studyDate().drop(8)))))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
       .expectValueChunk(studyDate().drop(8))
       .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
@@ -81,11 +98,15 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "insert elements if not present also at end of dataset" in {
     val bytes = studyDate()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8)))))
+      .via(
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8))))
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
       .expectValueChunk(studyDate().drop(8))
       .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
@@ -96,11 +117,13 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "insert elements if not present also at end of dataset when last element is empty" in {
     val bytes = tagToBytesLE(0x00080050) ++ ByteString("SH") ++ shortToBytesLE(0x0000)
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.SOPInstanceUID), _ => ByteString("1.2.3.4 ")))))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.SOPInstanceUID, VR.UI, 8)
       .expectValueChunk(8)
       .expectHeader(Tag.AccessionNumber, VR.SH, 0)
@@ -110,11 +133,15 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "insert elements between a normal attribute and a sequence" in {
     val bytes = studyDate() ++ sequence(Tag.AbstractPriorCodeSequence) ++ sequenceDelimitation()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8)))))
+      .via(
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8))))
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
       .expectValueChunk(studyDate().drop(8))
       .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
@@ -127,11 +154,15 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "insert elements between a sequence and a normal attribute" in {
     val bytes = sequence(Tag.DerivationCodeSequence) ++ sequenceDelimitation() ++ patientID()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8)))))
+      .via(
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8))))
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectSequenceDelimitation()
       .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
@@ -142,13 +173,19 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "insert elements between two sequences" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ sequenceDelimitation() ++ sequence(Tag.AbstractPriorCodeSequence) ++ sequenceDelimitation()
+    val bytes = sequence(Tag.DerivationCodeSequence) ++ sequenceDelimitation() ++ sequence(
+      Tag.AbstractPriorCodeSequence
+    ) ++ sequenceDelimitation()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8)))))
+      .via(
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8))))
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectSequenceDelimitation()
       .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
@@ -163,13 +200,20 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(
-        TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty),
-        TagInsertion(TagPath.fromTag(Tag.PatientName), _ => mikeBytes))))
+      .via(
+        modifyFlow(insertions =
+          Seq(
+            TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty),
+            TagInsertion(TagPath.fromTag(Tag.PatientName), _ => mikeBytes)
+          )
+        )
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, 0)
       .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
       .expectValueChunk(mikeBytes)
@@ -181,12 +225,17 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(
-        TagInsertion(TagPath.fromTag(Tag.PatientName), _.map(_ ++ ByteString(" Senior ")).getOrElse(mikeBytes)))))
+      .via(
+        modifyFlow(insertions =
+          Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _.map(_ ++ ByteString(" Senior ")).getOrElse(mikeBytes)))
+        )
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.PatientName, VR.PN, 16)
       .expectValueChunk(ByteString("John^Doe Senior "))
       .expectDicomComplete()
@@ -195,13 +244,20 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "insert all relevant elements below the current tag number" in {
     val bytes = personNameJohnDoe()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(
-        TagInsertion(TagPath.fromTag(Tag.SeriesDate), _ => studyDate().drop(8)),
-        TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => studyDate().drop(8)))))
+      .via(
+        modifyFlow(insertions =
+          Seq(
+            TagInsertion(TagPath.fromTag(Tag.SeriesDate), _ => studyDate().drop(8)),
+            TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => studyDate().drop(8))
+          )
+        )
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
       .expectValueChunk(studyDate().drop(8))
       .expectHeader(Tag.SeriesDate, VR.DA, studyDate().length - 8)
@@ -216,18 +272,32 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
       .via(parseFlow)
       .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.SeriesDate), _ => studyDate().drop(8)))))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectDicomComplete()
   }
 
   it should "insert elements in sequences if sequence is present but element is not present" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(
+      Tag.DerivationCodeSequence
+    ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate), _ => studyDate().drop(8)))))
+      .via(
+        modifyFlow(insertions =
+          Seq(
+            TagInsertion(
+              TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),
+              _ => studyDate().drop(8)
+            )
+          )
+        )
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem(1)
       .expectHeader(Tag.StudyDate)
@@ -242,13 +312,26 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "skip inserting elements in missing sequences" in {
     val bytes = personNameJohnDoe()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(
-        TagInsertion(TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate), _ => studyDate().drop(8)),
-        TagInsertion(TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.PatientName), _ => ByteString.empty))))
+      .via(
+        modifyFlow(insertions =
+          Seq(
+            TagInsertion(
+              TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),
+              _ => studyDate().drop(8)
+            ),
+            TagInsertion(
+              TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.PatientName),
+              _ => ByteString.empty
+            )
+          )
+        )
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectDicomComplete()
@@ -257,11 +340,13 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "not insert unknown elements" in {
     val bytes = personNameJohnDoe()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(0x00200021), _ => ByteString(1, 2, 3, 4)))))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectDicomError()
@@ -270,22 +355,39 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   it should "not insert sequences" in {
     val bytes = personNameJohnDoe()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.DerivationCodeSequence), _ => ByteString.empty))))
+      .via(
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.DerivationCodeSequence), _ => ByteString.empty)))
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectDicomError()
   }
 
   it should "insert into the correct sequence item" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(
+      Tag.DerivationCodeSequence
+    ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate), _ => studyDate().drop(8)))))
+      .via(
+        modifyFlow(insertions =
+          Seq(
+            TagInsertion(
+              TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate),
+              _ => studyDate().drop(8)
+            )
+          )
+        )
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem(1)
       .expectHeader(Tag.PatientName)
@@ -302,16 +404,26 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "modify the correct sequence item" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(
+      Tag.DerivationCodeSequence
+    ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .via(modifyFlow(modifications = Seq(
-        TagModification.equals(TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.PatientName), _ => mikeBytes))))
+      .via(
+        modifyFlow(modifications =
+          Seq(
+            TagModification
+              .equals(TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.PatientName), _ => mikeBytes)
+          )
+        )
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem(1)
       .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().drop(8).length)
@@ -326,16 +438,20 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "modify all sequence items" in {
-    val bytes = sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = sequence(
+      Tag.DerivationCodeSequence
+    ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
-    val tagTree = TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.PatientName)
+    val tagTree   = TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.PatientName)
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(modifyFlow(modifications = Seq(TagModification(tagTree.hasPath, _ => mikeBytes))))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem(1)
       .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
@@ -350,15 +466,18 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "correctly sort elements with tag numbers exceeding the positive range of its signed integer representation" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ ByteString(0xFF, 0xFF, 0xFF, 0xFF, 68, 65, 10, 0, 49, 56, 51, 49, 51, 56, 46, 55, 54, 53)
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ ByteString(0xff, 0xff, 0xff,
+      0xff, 68, 65, 10, 0, 49, 56, 51, 49, 51, 56, 46, 55, 54, 53)
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => mikeBytes))))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -372,15 +491,19 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
   }
 
   it should "work also with the endsWith modification matcher" in {
-    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
+    val bytes = studyDate() ++ sequence(
+      Tag.DerivationCodeSequence
+    ) ++ item() ++ studyDate() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val studyBytes = ByteString("2012-01-01")
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(modifyFlow(modifications = Seq(TagModification.endsWith(TagPath.fromTag(Tag.StudyDate), _ => studyBytes))))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate)
       .expectValueChunk(studyBytes)
       .expectSequence(Tag.DerivationCodeSequence)
@@ -399,13 +522,20 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .prepend(Source.single(TagModificationsPart(Seq(TagModification.equals(
-        TagPath.fromTag(Tag.PatientName), _ => mikeBytes)), Seq.empty)))
-      .via(modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty))))
+      .prepend(
+        Source.single(
+          TagModificationsPart(Seq(TagModification.equals(TagPath.fromTag(Tag.PatientName), _ => mikeBytes)), Seq.empty)
+        )
+      )
+      .via(
+        modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty)))
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate, VR.DA, 0)
       .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
       .expectValueChunk(mikeBytes)
@@ -417,13 +547,24 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
 
     val mikeBytes = ByteString('M', 'i', 'k', 'e')
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
-      .prepend(Source.single(TagModificationsPart(Seq(TagModification.equals(
-        TagPath.fromTag(Tag.PatientName), _ => mikeBytes)), Seq.empty, replace = true)))
-      .via(modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty))))
+      .prepend(
+        Source.single(
+          TagModificationsPart(
+            Seq(TagModification.equals(TagPath.fromTag(Tag.PatientName), _ => mikeBytes)),
+            Seq.empty,
+            replace = true
+          )
+        )
+      )
+      .via(
+        modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty)))
+      )
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
@@ -436,11 +577,13 @@ class ModifyFlowTest extends TestKit(ActorSystem("ModifyFlowSpec")) with AnyFlat
       sequence(Tag.DerivationCodeSequence, 24) ++
       item(16) ++ studyDate()
 
-    val source = Source.single(bytes)
+    val source = Source
+      .single(bytes)
       .via(parseFlow)
       .via(modifyFlow(logGroupLengthWarnings = false))
 
-    source.runWith(TestSink.probe[DicomPart])
+    source
+      .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence, 24)

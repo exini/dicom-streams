@@ -18,19 +18,19 @@ package com.exini.dicom.streams
 
 import akka.NotUsed
 import akka.stream.javadsl.MergePreferred
-import akka.stream.scaladsl.{Compression, Flow, GraphDSL, Partition}
+import akka.stream.scaladsl.{ Compression, Flow, GraphDSL, Partition }
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape}
+import akka.stream.{ Attributes, FlowShape }
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.VR.VR
 import com.exini.dicom.data._
 
-class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
+class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
 
   import ByteStringParser._
 
-  final val dicomPreambleLength = 132
+  final val dicomPreambleLength       = 132
   final val transferSyntaxLengthLimit = 1024
 
   protected class DicomParsingLogic extends ParsingLogic with StageLogging {
@@ -42,7 +42,14 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
 
     case class DatasetHeaderState(itemIndex: Int, bigEndian: Boolean, explicitVR: Boolean) extends HeaderState
 
-    case class FmiHeaderState(tsuid: Option[String], bigEndian: Boolean, explicitVR: Boolean, hasFmi: Boolean, pos: Long, fmiEndPos: Option[Long]) extends HeaderState
+    case class FmiHeaderState(
+        tsuid: Option[String],
+        bigEndian: Boolean,
+        explicitVR: Boolean,
+        hasFmi: Boolean,
+        pos: Long,
+        fmiEndPos: Option[Long]
+    ) extends HeaderState
 
     case class ValueState(bigEndian: Boolean, bytesLeft: Long, nextStep: ParseStep[DicomPart])
 
@@ -57,7 +64,9 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
     case object AtBeginning extends DicomParseStep {
       private case class HeaderInfo(bigEndian: Boolean, explicitVR: Boolean, hasFmi: Boolean)
 
-      private def isPreamble(data: ByteString): Boolean = data.length >= dicomPreambleLength && data.slice(dicomPreambleLength - 4, dicomPreambleLength) == ByteString('D', 'I', 'C', 'M')
+      private def isPreamble(data: ByteString): Boolean =
+        data.length >= dicomPreambleLength && data
+          .slice(dicomPreambleLength - 4, dicomPreambleLength) == ByteString('D', 'I', 'C', 'M')
 
       private def tryReadHeader(data: ByteString): Option[HeaderInfo] =
         tryReadHeader(data, assumeBigEndian = false)
@@ -67,16 +76,15 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
         val (tag, vr) = tagVr(data, assumeBigEndian, explicitVr = false)
         if (vr == VR.UN)
           None
-        else
-          if (bytesToVR(data.drop(4)) == vr.code)
-            Some(HeaderInfo(bigEndian = assumeBigEndian, explicitVR = true, hasFmi = isFileMetaInformation(tag)))
-          else if (intToUnsignedLong(bytesToInt(data.drop(4), assumeBigEndian)) >= 0)
-            if (assumeBigEndian)
-              throw new DicomStreamException("Implicit VR Big Endian encoded DICOM Stream")
-            else
-              Some(HeaderInfo(bigEndian = false, explicitVR = false, hasFmi = isFileMetaInformation(tag)))
+        else if (bytesToVR(data.drop(4)) == vr.code)
+          Some(HeaderInfo(bigEndian = assumeBigEndian, explicitVR = true, hasFmi = isFileMetaInformation(tag)))
+        else if (intToUnsignedLong(bytesToInt(data.drop(4), assumeBigEndian)) >= 0)
+          if (assumeBigEndian)
+            throw new DicomStreamException("Implicit VR Big Endian encoded DICOM Stream")
           else
-            None
+            Some(HeaderInfo(bigEndian = false, explicitVR = false, hasFmi = isFileMetaInformation(tag)))
+        else
+          None
       }
 
       def parse(reader: ByteReader): ParseResult[DicomPart] = {
@@ -86,19 +94,21 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
             if (isPreamble(reader.remainingData.take(dicomPreambleLength)))
               Some(PreamblePart(bytes = reader.take(dicomPreambleLength)))
             else None
-          }
-          else None
+          } else None
         if (maybePreamble.isDefined && !reader.hasRemaining && isUpstreamClosed)
           ParseResult(maybePreamble, FinishedParser)
         else {
           reader.ensure(8)
-          tryReadHeader(reader.remainingData.take(8)).map { info =>
-            val nextState = if (info.hasFmi)
-              InFmiHeader(FmiHeaderState(None, info.bigEndian, info.explicitVR, info.hasFmi, 0, None))
-            else
-              InDatasetHeader(DatasetHeaderState(0, info.bigEndian, info.explicitVR))
-            ParseResult(maybePreamble, nextState)
-          }.getOrElse(throw new DicomStreamException("Not a DICOM stream"))
+          tryReadHeader(reader.remainingData.take(8))
+            .map { info =>
+              val nextState =
+                if (info.hasFmi)
+                  InFmiHeader(FmiHeaderState(None, info.bigEndian, info.explicitVR, info.hasFmi, 0, None))
+                else
+                  InDatasetHeader(DatasetHeaderState(0, info.bigEndian, info.explicitVR))
+              ParseResult(maybePreamble, nextState)
+            }
+            .getOrElse(throw new DicomStreamException("Not a DICOM stream"))
         }
       }
     }
@@ -110,7 +120,7 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
           UID.ExplicitVRLittleEndian
         }
 
-        val bigEndian = tsuid == UID.ExplicitVRBigEndianRetired
+        val bigEndian  = tsuid == UID.ExplicitVRBigEndianRetired
         val explicitVR = tsuid != UID.ImplicitVRLittleEndian
         val isDeflated = tsuid == UID.DeflatedExplicitVRLittleEndian || tsuid == UID.JPIPReferencedDeflate
 
@@ -123,7 +133,7 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
           InDatasetHeader(DatasetHeaderState(0, bigEndian, explicitVR))
       }
 
-      private def hasZLIBHeader(firstTwoBytes: ByteString): Boolean = bytesToUShortBE(firstTwoBytes) == 0x789C
+      private def hasZLIBHeader(firstTwoBytes: ByteString): Boolean = bytesToUShortBE(firstTwoBytes) == 0x789c
 
       def parse(reader: ByteReader): ParseResult[DicomPart] = {
         val (tag, vr, headerLength, valueLength) = readHeader(reader, state)
@@ -132,14 +142,17 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
           ParseResult(None, toDatasetStep(ByteString(0, 0), state))
         } else {
           // no meta elements can lead to vr = null
-          val updatedVr = if (vr == VR.UN) Lookup.vrOf(tag) else vr
-          val bytes = reader.take(headerLength)
+          val updatedVr  = if (vr == VR.UN) Lookup.vrOf(tag) else vr
+          val bytes      = reader.take(headerLength)
           val updatedPos = state.pos + headerLength + valueLength
           val updatedState = tag match {
             case Tag.FileMetaInformationGroupLength =>
               reader.ensure(4)
               val valueBytes = reader.remainingData.take(4)
-              state.copy(pos = updatedPos, fmiEndPos = Some(updatedPos + intToUnsignedLong(bytesToInt(valueBytes, state.bigEndian))))
+              state.copy(
+                pos = updatedPos,
+                fmiEndPos = Some(updatedPos + intToUnsignedLong(bytesToInt(valueBytes, state.bigEndian)))
+              )
             case Tag.TransferSyntaxUID =>
               if (valueLength < transferSyntaxLengthLimit) {
                 reader.ensure(valueLength.toInt)
@@ -152,7 +165,9 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
             case _ =>
               state.copy(pos = updatedPos)
           }
-          val part = Some(HeaderPart(tag, updatedVr, valueLength, isFmi = true, state.bigEndian, state.explicitVR, bytes))
+          val part = Some(
+            HeaderPart(tag, updatedVr, valueLength, isFmi = true, state.bigEndian, state.explicitVR, bytes)
+          )
           val nextStep = updatedState.fmiEndPos.filter(_ <= updatedPos) match {
             case Some(_) =>
               reader.ensure(valueLength.toInt)
@@ -165,7 +180,11 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
             case None =>
               InFmiHeader(updatedState)
           }
-          ParseResult(part, InValue(ValueState(updatedState.bigEndian, valueLength, nextStep)), acceptUpstreamFinish = false)
+          ParseResult(
+            part,
+            InValue(ValueState(updatedState.bigEndian, valueLength, nextStep)),
+            acceptUpstreamFinish = false
+          )
         }
       }
     }
@@ -179,32 +198,34 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
             Some(SequencePart(tag, valueLength, state.bigEndian, state.explicitVR, bytes))
           else if (valueLength == indeterminateLength)
             Some(FragmentsPart(tag, valueLength, vr, state.bigEndian, state.explicitVR, bytes))
-          else {
+          else
             Some(HeaderPart(tag, vr, valueLength, isFmi = false, state.bigEndian, state.explicitVR, bytes))
-          }
         } else
           tag match {
-            case 0xFFFEE000 => Some(ItemPart(state.itemIndex + 1, valueLength, state.bigEndian, reader.take(8)))
-            case 0xFFFEE00D => Some(ItemDelimitationPart(state.itemIndex, state.bigEndian, reader.take(8)))
-            case 0xFFFEE0DD => Some(SequenceDelimitationPart(state.bigEndian, reader.take(8)))
-            case _ => Some(UnknownPart(state.bigEndian, reader.take(headerLength)))
+            case 0xfffee000 => Some(ItemPart(state.itemIndex + 1, valueLength, state.bigEndian, reader.take(8)))
+            case 0xfffee00d => Some(ItemDelimitationPart(state.itemIndex, state.bigEndian, reader.take(8)))
+            case 0xfffee0dd => Some(SequenceDelimitationPart(state.bigEndian, reader.take(8)))
+            case _          => Some(UnknownPart(state.bigEndian, reader.take(headerLength)))
           }
       }
 
       def parse(reader: ByteReader): ParseResult[DicomPart] = {
         val part = readDatasetHeader(reader, state)
-        val nextState = part.map {
-          case HeaderPart(_, _, length, _, bigEndian, _, _) =>
-            if (length > 0)
-              InValue(ValueState(bigEndian, length, InDatasetHeader(state)))
-            else
-              InDatasetHeader(state)
-          case FragmentsPart(_, _, _, bigEndian, _, _) => InFragments(FragmentsState(fragmentIndex = 0, bigEndian, state.explicitVR))
-          case SequencePart(_, _, _, _, _) => InDatasetHeader(state.copy(itemIndex = 0))
-          case ItemPart(index, _, _, _) => InDatasetHeader(state.copy(itemIndex = index))
-          case ItemDelimitationPart(index, _, _) => InDatasetHeader(state.copy(itemIndex = index))
-          case _ => InDatasetHeader(state)
-        }.getOrElse(FinishedParser)
+        val nextState = part
+          .map {
+            case HeaderPart(_, _, length, _, bigEndian, _, _) =>
+              if (length > 0)
+                InValue(ValueState(bigEndian, length, InDatasetHeader(state)))
+              else
+                InDatasetHeader(state)
+            case FragmentsPart(_, _, _, bigEndian, _, _) =>
+              InFragments(FragmentsState(fragmentIndex = 0, bigEndian, state.explicitVR))
+            case SequencePart(_, _, _, _, _)       => InDatasetHeader(state.copy(itemIndex = 0))
+            case ItemPart(index, _, _, _)          => InDatasetHeader(state.copy(itemIndex = index))
+            case ItemDelimitationPart(index, _, _) => InDatasetHeader(state.copy(itemIndex = index))
+            case _                                 => InDatasetHeader(state)
+          }
+          .getOrElse(FinishedParser)
         ParseResult(part, nextState, acceptUpstreamFinish = !nextState.isInstanceOf[InValue])
       }
     }
@@ -212,9 +233,15 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
     case class InValue(state: ValueState) extends DicomParseStep {
       def parse(reader: ByteReader): ParseResult[DicomPart] =
         if (state.bytesLeft <= chunkSize)
-          ParseResult(Some(ValueChunk(state.bigEndian, reader.take(state.bytesLeft.toInt), last = true)), state.nextStep)
+          ParseResult(
+            Some(ValueChunk(state.bigEndian, reader.take(state.bytesLeft.toInt), last = true)),
+            state.nextStep
+          )
         else
-          ParseResult(Some(ValueChunk(state.bigEndian, reader.take(chunkSize), last = false)), InValue(state.copy(bytesLeft = state.bytesLeft - chunkSize)))
+          ParseResult(
+            Some(ValueChunk(state.bigEndian, reader.take(chunkSize), last = false)),
+            InValue(state.copy(bytesLeft = state.bytesLeft - chunkSize))
+          )
 
       override def onTruncation(reader: ByteReader): Unit =
         if (reader.hasRemaining)
@@ -230,10 +257,16 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
         val (tag, _, headerLength, valueLength) = readHeader(reader, state)
         tag match {
 
-          case 0xFFFEE000 => // begin fragment
+          case 0xfffee000 => // begin fragment
             val nextState =
               if (valueLength > 0)
-                InValue(ValueState(state.bigEndian, valueLength, this.copy(state = state.copy(fragmentIndex = state.fragmentIndex + 1))))
+                InValue(
+                  ValueState(
+                    state.bigEndian,
+                    valueLength,
+                    this.copy(state = state.copy(fragmentIndex = state.fragmentIndex + 1))
+                  )
+                )
               else
                 this.copy(state = state.copy(fragmentIndex = state.fragmentIndex + 1))
             ParseResult(
@@ -241,11 +274,13 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
               nextState
             )
 
-          case 0xFFFEE0DD => // end fragments
-            if (valueLength != 0) {
+          case 0xfffee0dd => // end fragments
+            if (valueLength != 0)
               log.warning(s"Unexpected fragments delimitation length $valueLength")
-            }
-            ParseResult(Some(SequenceDelimitationPart(state.bigEndian, reader.take(headerLength))), InDatasetHeader(DatasetHeaderState(0, state.bigEndian, state.explicitVR)))
+            ParseResult(
+              Some(SequenceDelimitationPart(state.bigEndian, reader.take(headerLength))),
+              InDatasetHeader(DatasetHeaderState(0, state.bigEndian, state.explicitVR))
+            )
 
           case _ =>
             log.warning(s"Unexpected element (${tagToString(tag)}) in fragments with length=$valueLength")
@@ -255,7 +290,11 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
     }
 
     case class InDeflatedData(state: DeflatedState) extends DicomParseStep {
-      def parse(reader: ByteReader) = ParseResult(Some(DeflatedChunk(state.bigEndian, reader.take(math.min(chunkSize, reader.remainingSize)), state.nowrap)), this)
+      def parse(reader: ByteReader) =
+        ParseResult(
+          Some(DeflatedChunk(state.bigEndian, reader.take(math.min(chunkSize, reader.remainingSize)), state.nowrap)),
+          this
+        )
 
       override def onTruncation(reader: ByteReader): Unit = {
         emit(objOut, DeflatedChunk(state.bigEndian, reader.takeAll(), state.nowrap))
@@ -265,7 +304,7 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
 
     def tagVr(data: ByteString, bigEndian: Boolean, explicitVr: Boolean): (Int, VR) = {
       val tag = bytesToTag(data, bigEndian)
-      if (tag == 0xFFFEE000 || tag == 0xFFFEE00D || tag == 0xFFFEE0DD)
+      if (tag == 0xfffee000 || tag == 0xfffee00d || tag == 0xfffee0dd)
         (tag, null)
       else if (explicitVr)
         (tag, VR.valueOf(bytesToVR(data.drop(4))))
@@ -276,7 +315,7 @@ class ParseFlow private(chunkSize: Int) extends ByteStringParser[DicomPart] {
     private def readHeader(reader: ByteReader, state: HeaderState): (Int, VR, Int, Long) = {
       reader.ensure(8)
       val tagVrBytes = reader.remainingData.take(8)
-      val (tag, vr) = tagVr(tagVrBytes, state.bigEndian, state.explicitVR)
+      val (tag, vr)  = tagVr(tagVrBytes, state.bigEndian, state.explicitVR)
       if (vr == null)
         (tag, vr, 8, lengthToLong(bytesToInt(tagVrBytes.drop(4), state.bigEndian)))
       else if (state.explicitVR)
@@ -318,28 +357,30 @@ object ParseFlow {
         val parser1 = builder.add(new ParseFlow(chunkSize))
         val parser2 = new ParseFlow(chunkSize)
 
-        val decider = builder.add(Flow[DicomPart]
-          .statefulMapConcat(() => {
-            var route = 0
+        val decider = builder.add(
+          Flow[DicomPart]
+            .statefulMapConcat { () =>
+              var route = 0
 
-            {
-              case part: DeflatedChunk if route == 0 =>
-                if (part.nowrap) route = 1 else route = 2
-                (part, route) :: Nil
-              case part => (part, route) :: Nil
+              {
+                case part: DeflatedChunk if route == 0 =>
+                  if (part.nowrap) route = 1 else route = 2
+                  (part, route) :: Nil
+                case part => (part, route) :: Nil
+              }
             }
-          }))
+        )
         val partition = builder.add(Partition[(DicomPart, Int)](3, _._2))
-        val toPart = Flow.fromFunction[(DicomPart, Int), DicomPart](_._1)
-        val toBytes = Flow.fromFunction[(DicomPart, Int), ByteString](_._1.bytes)
+        val toPart    = Flow.fromFunction[(DicomPart, Int), DicomPart](_._1)
+        val toBytes   = Flow.fromFunction[(DicomPart, Int), ByteString](_._1.bytes)
         val inflater1 = inflateNowrap(maxBytesPerChunk = chunkSize)
         val inflater2 = Compression.inflate(maxBytesPerChunk = chunkSize)
-        val merge = builder.add(MergePreferred.create[DicomPart](2))
+        val merge     = builder.add(MergePreferred.create[DicomPart](2))
 
         parser1 ~> decider ~> partition
-                              partition.out(0) ~> toPart                          ~> merge.preferred
-                              partition.out(1) ~> toBytes ~> inflater1 ~> parser2 ~> merge.in(0)
-                              partition.out(2) ~> toBytes ~> inflater2 ~> parser2 ~> merge.in(1)
+        partition.out(0) ~> toPart ~> merge.preferred
+        partition.out(1) ~> toBytes ~> inflater1 ~> parser2 ~> merge.in(0)
+        partition.out(2) ~> toBytes ~> inflater2 ~> parser2 ~> merge.in(1)
         FlowShape(parser1.in, merge.out)
       })
     else

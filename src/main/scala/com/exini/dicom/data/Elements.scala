@@ -18,11 +18,11 @@ package com.exini.dicom.data
 
 import java.math.BigInteger
 import java.net.URI
-import java.time.{LocalDate, LocalTime, ZoneOffset, ZonedDateTime}
+import java.time.{ LocalDate, LocalTime, ZoneOffset, ZonedDateTime }
 
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.Elements.{ValueElement, _}
+import com.exini.dicom.data.Elements.{ ValueElement, _ }
 import com.exini.dicom.data.TagPath._
 import com.exini.dicom.data.VR.VR
 
@@ -53,116 +53,137 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     * @param tagPath input tag path
     * @return element set, if present
     */
-  def apply(tagPath: TagPathTag): Option[ElementSet] = tagPath.previous match {
-    case tp: TagPathItem => getNested(tp).flatMap(_.apply(tagPath.tag))
-    case EmptyTagPath => apply(tagPath.tag)
-    case _ => throw new IllegalArgumentException("Unsupported tag path type")
-  }
+  def apply(tagPath: TagPathTag): Option[ElementSet] =
+    tagPath.previous match {
+      case tp: TagPathItem => getNested(tp).flatMap(_.apply(tagPath.tag))
+      case EmptyTagPath    => apply(tagPath.tag)
+      case _               => throw new IllegalArgumentException("Unsupported tag path type")
+    }
 
-  private def get[A](tag: Int, f: ValueElement => Option[A]): Option[A] = apply(tag).flatMap {
-    case e: ValueElement => f(e)
-    case _ => None
-  }
+  private def get[A](tag: Int, f: ValueElement => Option[A]): Option[A] =
+    apply(tag).flatMap {
+      case e: ValueElement => f(e)
+      case _               => None
+    }
 
-  private def getPath[A](tagPath: TagPathTag, f: ValueElement => Option[A]): Option[A] = apply(tagPath).flatMap {
-    case e: ValueElement => f(e)
-    case _ => None
-  }
+  private def getPath[A](tagPath: TagPathTag, f: ValueElement => Option[A]): Option[A] =
+    apply(tagPath).flatMap {
+      case e: ValueElement => f(e)
+      case _               => None
+    }
 
-  private def getAll[A](tag: Int, f: ValueElement => Seq[A]): Seq[A] = apply(tag).map {
-    case e: ValueElement => f(e)
-    case _ => Seq.empty
-  }.getOrElse(Seq.empty)
+  private def getAll[A](tag: Int, f: ValueElement => Seq[A]): Seq[A] =
+    apply(tag)
+      .map {
+        case e: ValueElement => f(e)
+        case _               => Seq.empty
+      }
+      .getOrElse(Seq.empty)
 
-  private def getAllPath[A](tagPath: TagPathTag, f: ValueElement => Seq[A]): Seq[A] = apply(tagPath).map {
-    case e: ValueElement => f(e)
-    case _ => Seq.empty
-  }.getOrElse(Seq.empty)
+  private def getAllPath[A](tagPath: TagPathTag, f: ValueElement => Seq[A]): Seq[A] =
+    apply(tagPath)
+      .map {
+        case e: ValueElement => f(e)
+        case _               => Seq.empty
+      }
+      .getOrElse(Seq.empty)
 
-  def getValueElement(tag: Int): Option[ValueElement] = get(tag, Option.apply)
+  def getValueElement(tag: Int): Option[ValueElement]            = get(tag, Option.apply)
   def getValueElement(tagPath: TagPathTag): Option[ValueElement] = getPath(tagPath, Option.apply)
-  def getValue(tag: Int): Option[Value] = getValueElement(tag).map(_.value)
-  def getValue(tagPath: TagPathTag): Option[Value] = getValueElement(tagPath).map(_.value)
-  def getBytes(tag: Int): Option[ByteString] = getValue(tag).map(_.bytes)
-  def getBytes(tagPath: TagPathTag): Option[ByteString] = getValue(tagPath).map(_.bytes)
-  def getStrings(tag: Int): Seq[String] = getAll(tag, v => v.value.toStrings(v.vr, v.bigEndian, characterSets))
-  def getStrings(tagPath: TagPathTag): Seq[String] = getAllPath(tagPath, v => v.value.toStrings(v.vr, v.bigEndian, characterSets))
-  def getSingleString(tag: Int): Option[String] = get(tag, v => v.value.toSingleString(v.vr, v.bigEndian, characterSets))
-  def getSingleString(tagPath: TagPathTag): Option[String] = getPath(tagPath, v => v.value.toSingleString(v.vr, v.bigEndian, characterSets))
+  def getValue(tag: Int): Option[Value]                          = getValueElement(tag).map(_.value)
+  def getValue(tagPath: TagPathTag): Option[Value]               = getValueElement(tagPath).map(_.value)
+  def getBytes(tag: Int): Option[ByteString]                     = getValue(tag).map(_.bytes)
+  def getBytes(tagPath: TagPathTag): Option[ByteString]          = getValue(tagPath).map(_.bytes)
+  def getStrings(tag: Int): Seq[String]                          = getAll(tag, v => v.value.toStrings(v.vr, v.bigEndian, characterSets))
+  def getStrings(tagPath: TagPathTag): Seq[String] =
+    getAllPath(tagPath, v => v.value.toStrings(v.vr, v.bigEndian, characterSets))
+  def getSingleString(tag: Int): Option[String] =
+    get(tag, v => v.value.toSingleString(v.vr, v.bigEndian, characterSets))
+  def getSingleString(tagPath: TagPathTag): Option[String] =
+    getPath(tagPath, v => v.value.toSingleString(v.vr, v.bigEndian, characterSets))
   def getString(tag: Int): Option[String] = get(tag, v => v.value.toString(v.vr, v.bigEndian, characterSets))
-  def getString(tagPath: TagPathTag): Option[String] = getPath(tagPath, v => v.value.toString(v.vr, v.bigEndian, characterSets))
-  def getShorts(tag: Int): Seq[Short] = getAll(tag, v => v.value.toShorts(v.vr, v.bigEndian))
-  def getShorts(tagPath: TagPathTag): Seq[Short] = getAllPath(tagPath, v => v.value.toShorts(v.vr, v.bigEndian))
-  def getShort(tag: Int): Option[Short] = get(tag, v => v.value.toShort(v.vr, v.bigEndian))
+  def getString(tagPath: TagPathTag): Option[String] =
+    getPath(tagPath, v => v.value.toString(v.vr, v.bigEndian, characterSets))
+  def getShorts(tag: Int): Seq[Short]              = getAll(tag, v => v.value.toShorts(v.vr, v.bigEndian))
+  def getShorts(tagPath: TagPathTag): Seq[Short]   = getAllPath(tagPath, v => v.value.toShorts(v.vr, v.bigEndian))
+  def getShort(tag: Int): Option[Short]            = get(tag, v => v.value.toShort(v.vr, v.bigEndian))
   def getShort(tagPath: TagPathTag): Option[Short] = getPath(tagPath, v => v.value.toShort(v.vr, v.bigEndian))
-  def getInts(tag: Int): Seq[Int] = getAll(tag, v => v.value.toInts(v.vr, v.bigEndian))
-  def getInts(tagPath: TagPathTag): Seq[Int] = getAllPath(tagPath, v => v.value.toInts(v.vr, v.bigEndian))
-  def getInt(tag: Int): Option[Int] = get(tag, v => v.value.toInt(v.vr, v.bigEndian))
-  def getInt(tagPath: TagPathTag): Option[Int] = getPath(tagPath, v => v.value.toInt(v.vr, v.bigEndian))
-  def getLongs(tag: Int): Seq[Long] = getAll(tag, v => v.value.toLongs(v.vr, v.bigEndian))
-  def getLongs(tagPath: TagPathTag): Seq[Long] = getAllPath(tagPath, v => v.value.toLongs(v.vr, v.bigEndian))
-  def getLong(tag: Int): Option[Long] = get(tag, v => v.value.toLong(v.vr, v.bigEndian))
-  def getLong(tagPath: TagPathTag): Option[Long] = getPath(tagPath, v => v.value.toLong(v.vr, v.bigEndian))
-  def getVeryLongs(tag: Int): Seq[BigInteger] = getAll(tag, v => v.value.toVeryLongs(v.vr, v.bigEndian))
-  def getVeryLongs(tagPath: TagPathTag): Seq[BigInteger] = getAllPath(tagPath, v => v.value.toVeryLongs(v.vr, v.bigEndian))
+  def getInts(tag: Int): Seq[Int]                  = getAll(tag, v => v.value.toInts(v.vr, v.bigEndian))
+  def getInts(tagPath: TagPathTag): Seq[Int]       = getAllPath(tagPath, v => v.value.toInts(v.vr, v.bigEndian))
+  def getInt(tag: Int): Option[Int]                = get(tag, v => v.value.toInt(v.vr, v.bigEndian))
+  def getInt(tagPath: TagPathTag): Option[Int]     = getPath(tagPath, v => v.value.toInt(v.vr, v.bigEndian))
+  def getLongs(tag: Int): Seq[Long]                = getAll(tag, v => v.value.toLongs(v.vr, v.bigEndian))
+  def getLongs(tagPath: TagPathTag): Seq[Long]     = getAllPath(tagPath, v => v.value.toLongs(v.vr, v.bigEndian))
+  def getLong(tag: Int): Option[Long]              = get(tag, v => v.value.toLong(v.vr, v.bigEndian))
+  def getLong(tagPath: TagPathTag): Option[Long]   = getPath(tagPath, v => v.value.toLong(v.vr, v.bigEndian))
+  def getVeryLongs(tag: Int): Seq[BigInteger]      = getAll(tag, v => v.value.toVeryLongs(v.vr, v.bigEndian))
+  def getVeryLongs(tagPath: TagPathTag): Seq[BigInteger] =
+    getAllPath(tagPath, v => v.value.toVeryLongs(v.vr, v.bigEndian))
   def getVeryLong(tag: Int): Option[BigInteger] = get(tag, v => v.value.toVeryLong(v.vr, v.bigEndian))
-  def getVeryLong(tagPath: TagPathTag): Option[BigInteger] = getPath(tagPath, v => v.value.toVeryLong(v.vr, v.bigEndian))
-  def getFloats(tag: Int): Seq[Float] = getAll(tag, v => v.value.toFloats(v.vr, v.bigEndian))
-  def getFloats(tagPath: TagPathTag): Seq[Float] = getAllPath(tagPath, v => v.value.toFloats(v.vr, v.bigEndian))
-  def getFloat(tag: Int): Option[Float] = get(tag, v => v.value.toFloat(v.vr, v.bigEndian))
-  def getFloat(tagPath: TagPathTag): Option[Float] = getPath(tagPath, v => v.value.toFloat(v.vr, v.bigEndian))
-  def getDoubles(tag: Int): Seq[Double] = getAll(tag, v => v.value.toDoubles(v.vr, v.bigEndian))
-  def getDoubles(tagPath: TagPathTag): Seq[Double] = getAllPath(tagPath, v => v.value.toDoubles(v.vr, v.bigEndian))
-  def getDouble(tag: Int): Option[Double] = get(tag, v => v.value.toDouble(v.vr, v.bigEndian))
-  def getDouble(tagPath: TagPathTag): Option[Double] = getPath(tagPath, v => v.value.toDouble(v.vr, v.bigEndian))
-  def getDates(tag: Int): Seq[LocalDate] = getAll(tag, v => v.value.toDates(v.vr))
-  def getDates(tagPath: TagPathTag): Seq[LocalDate] = getAllPath(tagPath, v => v.value.toDates(v.vr))
-  def getDate(tag: Int): Option[LocalDate] = get(tag, v => v.value.toDate(v.vr))
+  def getVeryLong(tagPath: TagPathTag): Option[BigInteger] =
+    getPath(tagPath, v => v.value.toVeryLong(v.vr, v.bigEndian))
+  def getFloats(tag: Int): Seq[Float]                 = getAll(tag, v => v.value.toFloats(v.vr, v.bigEndian))
+  def getFloats(tagPath: TagPathTag): Seq[Float]      = getAllPath(tagPath, v => v.value.toFloats(v.vr, v.bigEndian))
+  def getFloat(tag: Int): Option[Float]               = get(tag, v => v.value.toFloat(v.vr, v.bigEndian))
+  def getFloat(tagPath: TagPathTag): Option[Float]    = getPath(tagPath, v => v.value.toFloat(v.vr, v.bigEndian))
+  def getDoubles(tag: Int): Seq[Double]               = getAll(tag, v => v.value.toDoubles(v.vr, v.bigEndian))
+  def getDoubles(tagPath: TagPathTag): Seq[Double]    = getAllPath(tagPath, v => v.value.toDoubles(v.vr, v.bigEndian))
+  def getDouble(tag: Int): Option[Double]             = get(tag, v => v.value.toDouble(v.vr, v.bigEndian))
+  def getDouble(tagPath: TagPathTag): Option[Double]  = getPath(tagPath, v => v.value.toDouble(v.vr, v.bigEndian))
+  def getDates(tag: Int): Seq[LocalDate]              = getAll(tag, v => v.value.toDates(v.vr))
+  def getDates(tagPath: TagPathTag): Seq[LocalDate]   = getAllPath(tagPath, v => v.value.toDates(v.vr))
+  def getDate(tag: Int): Option[LocalDate]            = get(tag, v => v.value.toDate(v.vr))
   def getDate(tagPath: TagPathTag): Option[LocalDate] = getPath(tagPath, v => v.value.toDate(v.vr))
-  def getTimes(tag: Int): Seq[LocalTime] = getAll(tag, v => v.value.toTimes(v.vr))
-  def getTimes(tagPath: TagPathTag): Seq[LocalTime] = getAllPath(tagPath, v => v.value.toTimes(v.vr))
-  def getTime(tag: Int): Option[LocalTime] = get(tag, v => v.value.toTime(v.vr))
+  def getTimes(tag: Int): Seq[LocalTime]              = getAll(tag, v => v.value.toTimes(v.vr))
+  def getTimes(tagPath: TagPathTag): Seq[LocalTime]   = getAllPath(tagPath, v => v.value.toTimes(v.vr))
+  def getTime(tag: Int): Option[LocalTime]            = get(tag, v => v.value.toTime(v.vr))
   def getTime(tagPath: TagPathTag): Option[LocalTime] = getPath(tagPath, v => v.value.toTime(v.vr))
-  def getDateTimes(tag: Int): Seq[ZonedDateTime] = getAll(tag, v => v.value.toDateTimes(v.vr, zoneOffset))
-  def getDateTimes(tagPath: TagPathTag): Seq[ZonedDateTime] = getAllPath(tagPath, v => v.value.toDateTimes(v.vr, zoneOffset))
+  def getDateTimes(tag: Int): Seq[ZonedDateTime]      = getAll(tag, v => v.value.toDateTimes(v.vr, zoneOffset))
+  def getDateTimes(tagPath: TagPathTag): Seq[ZonedDateTime] =
+    getAllPath(tagPath, v => v.value.toDateTimes(v.vr, zoneOffset))
   def getDateTime(tag: Int): Option[ZonedDateTime] = get(tag, v => v.value.toDateTime(v.vr, zoneOffset))
-  def getDateTime(tagPath: TagPathTag): Option[ZonedDateTime] = getPath(tagPath, v => v.value.toDateTime(v.vr, zoneOffset))
+  def getDateTime(tagPath: TagPathTag): Option[ZonedDateTime] =
+    getPath(tagPath, v => v.value.toDateTime(v.vr, zoneOffset))
   def getPersonNames(tag: Int): Seq[PersonName] = getAll(tag, v => v.value.toPersonNames(v.vr, characterSets))
-  def getPersonNames(tagPath: TagPathTag): Seq[PersonName] = getAllPath(tagPath, v => v.value.toPersonNames(v.vr, characterSets))
+  def getPersonNames(tagPath: TagPathTag): Seq[PersonName] =
+    getAllPath(tagPath, v => v.value.toPersonNames(v.vr, characterSets))
   def getPersonName(tag: Int): Option[PersonName] = get(tag, v => v.value.toPersonName(v.vr, characterSets))
-  def getPersonName(tagPath: TagPathTag): Option[PersonName] = getPath(tagPath, v => v.value.toPersonName(v.vr, characterSets))
-  def getURI(tag: Int): Option[URI] = get(tag, v => v.value.toURI(v.vr))
+  def getPersonName(tagPath: TagPathTag): Option[PersonName] =
+    getPath(tagPath, v => v.value.toPersonName(v.vr, characterSets))
+  def getURI(tag: Int): Option[URI]            = get(tag, v => v.value.toURI(v.vr))
   def getURI(tagPath: TagPathTag): Option[URI] = getPath(tagPath, v => v.value.toURI(v.vr))
 
-  private def traverseTrunk(elems: Option[Elements], trunk: TagPathTrunk): Option[Elements] = {
+  private def traverseTrunk(elems: Option[Elements], trunk: TagPathTrunk): Option[Elements] =
     if (trunk.isEmpty)
       elems
     else
       trunk match {
         case tp: TagPathItem => traverseTrunk(elems, trunk.previous).flatMap(_.getNested(tp.tag, tp.item))
-        case _ => throw new IllegalArgumentException("Unsupported tag path type")
+        case _               => throw new IllegalArgumentException("Unsupported tag path type")
       }
-  }
-  def getSequence(tag: Int): Option[Sequence] = apply(tag).flatMap {
-    case e: Sequence => Some(e)
-    case _ => None
-  }
+  def getSequence(tag: Int): Option[Sequence] =
+    apply(tag).flatMap {
+      case e: Sequence => Some(e)
+      case _           => None
+    }
   def getSequence(tagPath: TagPathSequence): Option[Sequence] =
     traverseTrunk(Some(this), tagPath.previous).flatMap(_.getSequence(tagPath.tag))
 
-  def getItem(tag: Int, item: Int): Option[Item] = getSequence(tag).flatMap(_.item(item))
+  def getItem(tag: Int, item: Int): Option[Item]       = getSequence(tag).flatMap(_.item(item))
   def getNested(tag: Int, item: Int): Option[Elements] = getItem(tag, item).map(_.elements)
   def getNested(tagPath: TagPathItem): Option[Elements] =
     traverseTrunk(Some(this), tagPath.previous).flatMap(_.getNested(tagPath.tag, tagPath.item))
 
-  def getFragments(tag: Int): Option[Fragments] = apply(tag).flatMap {
-    case e: Fragments => Some(e)
-    case _ => None
-  }
+  def getFragments(tag: Int): Option[Fragments] =
+    apply(tag).flatMap {
+      case e: Fragments => Some(e)
+      case _            => None
+    }
 
-  private def insertOrdered(element: ElementSet): Vector[ElementSet] = {
-    if (isEmpty) Vector(element) else {
-      val b = Vector.newBuilder[ElementSet]
+  private def insertOrdered(element: ElementSet): Vector[ElementSet] =
+    if (isEmpty) Vector(element)
+    else {
+      val b       = Vector.newBuilder[ElementSet]
       var isBelow = true
       data.foreach { e =>
         if (isBelow && e.tag > element.tag) {
@@ -178,7 +199,6 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
       if (isBelow) b += element
       b.result()
     }
-  }
 
   /**
     * Insert or update element in the root dataset with the specified tag number. If the element is Specific Character
@@ -188,13 +208,14 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     * @param element element set to insert or update
     * @return a new Elements containing the updated element
     */
-  def set(element: ElementSet): Elements = element match {
-    case e: ValueElement if e.tag == Tag.SpecificCharacterSet =>
-      copy(characterSets = CharacterSets(e), data = insertOrdered(e))
-    case e: ValueElement if e.tag == Tag.TimezoneOffsetFromUTC =>
-      copy(zoneOffset = parseZoneOffset(e.value.toUtf8String).getOrElse(zoneOffset), data = insertOrdered(e))
-    case e => copy(data = insertOrdered(e))
-  }
+  def set(element: ElementSet): Elements =
+    element match {
+      case e: ValueElement if e.tag == Tag.SpecificCharacterSet =>
+        copy(characterSets = CharacterSets(e), data = insertOrdered(e))
+      case e: ValueElement if e.tag == Tag.TimezoneOffsetFromUTC =>
+        copy(zoneOffset = parseZoneOffset(e.value.toUtf8String).getOrElse(zoneOffset), data = insertOrdered(e))
+      case e => copy(data = insertOrdered(e))
+    }
 
   def set(elementSets: Seq[_ <: ElementSet]): Elements = elementSets.foldLeft(this)(_.set(_))
 
@@ -212,15 +233,15 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
       set(s2)
     }
 
-  private def updatePath(elems: Elements, tagPath: List[_ <: TagPath], f: Elements => Elements): Elements = {
+  private def updatePath(elems: Elements, tagPath: List[_ <: TagPath], f: Elements => Elements): Elements =
     if (tagPath.isEmpty)
       f(elems)
     else
       tagPath.head match {
-        case tp: TagPathItem => elems.updateSequence(tp.tag, tp.item, e => updatePath(e, tagPath.tail, f)).getOrElse(elems)
+        case tp: TagPathItem =>
+          elems.updateSequence(tp.tag, tp.item, e => updatePath(e, tagPath.tail, f)).getOrElse(elems)
         case _ => throw new IllegalArgumentException("Unsupported tag path type")
       }
-  }
 
   /**
     * Replace the item that the tag path points to
@@ -231,6 +252,7 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     */
   def setNested(tagPath: TagPathItem, elements: Elements): Elements =
     updatePath(this, tagPath.toList, _ => elements)
+
   /**
     * Set (insert or update) an element in the item that the tag path points to
     *
@@ -258,25 +280,27 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     * @param elements elements of new item
     * @return the updated (root) elements
     */
-  def addItem(tagPath: TagPathSequence, elements: Elements): Elements = {
-    getSequence(tagPath).map { sequence =>
-      val bigEndian = sequence.bigEndian
-      val indeterminate = sequence.indeterminate
-      val item = if (indeterminate)
-        Item.fromElements(elements, indeterminateLength, bigEndian)
-      else
-        Item.fromElements(elements, elements.toBytes(withPreamble = false).length, bigEndian)
-      val updatedSequence = sequence + item
-      tagPath.previous match {
-        case EmptyTagPath => setSequence(updatedSequence)
-        case tp: TagPathItem => setSequence(tp, updatedSequence)
-        case _ => throw new IllegalArgumentException("Unsupported tag path type")
+  def addItem(tagPath: TagPathSequence, elements: Elements): Elements =
+    getSequence(tagPath)
+      .map { sequence =>
+        val bigEndian     = sequence.bigEndian
+        val indeterminate = sequence.indeterminate
+        val item =
+          if (indeterminate)
+            Item.fromElements(elements, indeterminateLength, bigEndian)
+          else
+            Item.fromElements(elements, elements.toBytes(withPreamble = false).length, bigEndian)
+        val updatedSequence = sequence + item
+        tagPath.previous match {
+          case EmptyTagPath    => setSequence(updatedSequence)
+          case tp: TagPathItem => setSequence(tp, updatedSequence)
+          case _               => throw new IllegalArgumentException("Unsupported tag path type")
+        }
       }
-    }.getOrElse(this)
-  }
+      .getOrElse(this)
 
   def setCharacterSets(characterSets: CharacterSets): Elements = copy(characterSets = characterSets)
-  def setZoneOffset(zoneOffset: ZoneOffset): Elements = copy(zoneOffset = zoneOffset)
+  def setZoneOffset(zoneOffset: ZoneOffset): Elements          = copy(zoneOffset = zoneOffset)
 
   def setValue(tag: Int, vr: VR, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
     set(ValueElement(tag, vr, value, bigEndian, explicitVR))
@@ -321,7 +345,12 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
 
   def setVeryLongs(tag: Int, vr: VR, values: Seq[BigInteger], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromVeryLongs(vr, values, bigEndian), bigEndian, explicitVR)
-  def setVeryLongs(tag: Int, values: Seq[BigInteger], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+  def setVeryLongs(
+      tag: Int,
+      values: Seq[BigInteger],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
     setVeryLongs(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setVeryLong(tag: Int, vr: VR, value: BigInteger, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromVeryLong(vr, value, bigEndian), bigEndian, explicitVR)
@@ -366,7 +395,12 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
 
   def setDateTimes(tag: Int, vr: VR, values: Seq[ZonedDateTime], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromDateTimes(vr, values), bigEndian, explicitVR)
-  def setDateTimes(tag: Int, values: Seq[ZonedDateTime], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+  def setDateTimes(
+      tag: Int,
+      values: Seq[ZonedDateTime],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
     setDateTimes(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setDateTime(tag: Int, vr: VR, value: ZonedDateTime, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromDateTime(vr, value), bigEndian, explicitVR)
@@ -375,7 +409,12 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
 
   def setPersonNames(tag: Int, vr: VR, values: Seq[PersonName], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromPersonNames(vr, values), bigEndian, explicitVR)
-  def setPersonNames(tag: Int, values: Seq[PersonName], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+  def setPersonNames(
+      tag: Int,
+      values: Seq[PersonName],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
     setPersonNames(tag, Lookup.vrOf(tag), values, bigEndian, explicitVR)
   def setPersonName(tag: Int, vr: VR, value: PersonName, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromPersonName(vr, value), bigEndian, explicitVR)
@@ -388,28 +427,32 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     setURI(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def remove(tag: Int): Elements = filter(_.tag != tag)
-  def remove(tagPath: TagPath): Elements = tagPath match {
-    case EmptyTagPath => this
-    case tp: TagPathItem => tp.previous match {
-      case EmptyTagPath => getSequence(tp.tag).map(s => set(s.removeItem(tp.item))).getOrElse(this)
-      case tpsi: TagPathItem => getNested(tpsi).map(_.remove(TagPath.fromItem(tp.tag, tp.item))).map(setNested(tpsi, _)).getOrElse(this)
+  def remove(tagPath: TagPath): Elements =
+    tagPath match {
+      case EmptyTagPath => this
+      case tp: TagPathItem =>
+        tp.previous match {
+          case EmptyTagPath => getSequence(tp.tag).map(s => set(s.removeItem(tp.item))).getOrElse(this)
+          case tpsi: TagPathItem =>
+            getNested(tpsi).map(_.remove(TagPath.fromItem(tp.tag, tp.item))).map(setNested(tpsi, _)).getOrElse(this)
+          case _ => throw new IllegalArgumentException("Unsupported tag path type")
+        }
+      case tp: TagPathTag =>
+        tp.previous match {
+          case EmptyTagPath      => remove(tp.tag)
+          case tpsi: TagPathItem => getNested(tpsi).map(_.remove(tp.tag)).map(setNested(tpsi, _)).getOrElse(this)
+          case _                 => throw new IllegalArgumentException("Unsupported tag path type")
+        }
       case _ => throw new IllegalArgumentException("Unsupported tag path type")
     }
-    case tp: TagPathTag => tp.previous match {
-      case EmptyTagPath => remove(tp.tag)
-      case tpsi: TagPathItem => getNested(tpsi).map(_.remove(tp.tag)).map(setNested(tpsi, _)).getOrElse(this)
-      case _ => throw new IllegalArgumentException("Unsupported tag path type")
-    }
-    case _ => throw new IllegalArgumentException("Unsupported tag path type")
-  }
   def filter(f: ElementSet => Boolean): Elements = copy(data = data.filter(f))
 
-  def head: ElementSet = data.head
-  def size: Int = data.size
-  def isEmpty: Boolean = data.isEmpty
-  def nonEmpty: Boolean = !isEmpty
-  def contains(tag: Int): Boolean = data.map(_.tag).contains(tag)
-  def contains(tagPath: TagPathTag): Boolean = apply(tagPath).isDefined
+  def head: ElementSet                        = data.head
+  def size: Int                               = data.size
+  def isEmpty: Boolean                        = data.isEmpty
+  def nonEmpty: Boolean                       = !isEmpty
+  def contains(tag: Int): Boolean             = data.map(_.tag).contains(tag)
+  def contains(tagPath: TagPathTag): Boolean  = apply(tagPath).isDefined
   def contains(tagPath: TagPathItem): Boolean = getNested(tagPath).isDefined
 
   /**
@@ -432,25 +475,34 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     data.flatMap {
       case e: ValueElement =>
         val strings = e.value.toStrings(e.vr, e.bigEndian, characterSets)
-        val s = strings.mkString(multiValueDelimiter)
-        val vm = strings.length.toString
-        s"$indent${tagToString(e.tag)} ${e.vr} [$s] ${space1(s)} # ${space2(e.length)} ${e.length}, $vm ${Lookup.keywordOf(e.tag)}" :: Nil
+        val s       = strings.mkString(multiValueDelimiter)
+        val vm      = strings.length.toString
+        s"$indent${tagToString(e.tag)} ${e.vr} [$s] ${space1(s)} # ${space2(e.length)} ${e.length}, $vm ${Lookup
+          .keywordOf(e.tag)}" :: Nil
 
       case s: Sequence =>
         val heading = {
-          val description = if (s.length == indeterminateLength) "Sequence with indeterminate length" else s"Sequence with explicit length ${s.length}"
-          s"$indent${tagToString(s.tag)} SQ ($description) ${space1(description)} # ${space2(s.length)} ${s.length}, 1 ${Lookup.keywordOf(s.tag)}"
+          val description =
+            if (s.length == indeterminateLength) "Sequence with indeterminate length"
+            else s"Sequence with explicit length ${s.length}"
+          s"$indent${tagToString(s.tag)} SQ ($description) ${space1(description)} # ${space2(s.length)} ${s.length}, 1 ${Lookup
+            .keywordOf(s.tag)}"
         }
         val items = s.items.flatMap { i =>
           val heading = {
-            val description = if (i.indeterminate) "Item with indeterminate length" else s"Item with explicit length ${i.length}"
+            val description =
+              if (i.indeterminate) "Item with indeterminate length" else s"Item with explicit length ${i.length}"
             s"$indent  ${tagToString(Tag.Item)} na ($description) ${space1(description)} # ${space2(i.length)} ${i.length}, 1 Item"
           }
           val elems = i.elements.toStrings(indent + "    ").toList
-          val delimitation = s"$indent  ${tagToString(Tag.ItemDelimitationItem)} na ${" " * 43} #     0, 0 ItemDelimitationItem${if (i.indeterminate) "" else " (marker)"}"
+          val delimitation =
+            s"$indent  ${tagToString(Tag.ItemDelimitationItem)} na ${" " * 43} #     0, 0 ItemDelimitationItem${if (i.indeterminate) ""
+            else " (marker)"}"
           heading :: elems ::: delimitation :: Nil
         }
-        val delimitation = s"$indent${tagToString(Tag.SequenceDelimitationItem)} na ${" " * 43} #     0, 0 SequenceDelimitationItem${if (s.indeterminate) "" else " (marker)"}"
+        val delimitation =
+          s"$indent${tagToString(Tag.SequenceDelimitationItem)} na ${" " * 43} #     0, 0 SequenceDelimitationItem${if (s.indeterminate) ""
+          else " (marker)"}"
         heading :: items ::: delimitation :: Nil
 
       case f: Fragments =>
@@ -458,15 +510,18 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
           val description = s"Fragments with ${f.size} fragment(s)"
           s"$indent${tagToString(f.tag)} ${f.vr} ($description) ${space1(description)} #    na, 1 ${Lookup.keywordOf(f.tag)}"
         }
-        val offsets = f.offsets.map { o =>
-          val description = s"Offsets table with ${o.length} offset(s)"
-          s"$indent  ${tagToString(Tag.Item)} na ($description) ${space1(description)} # ${space2(o.length * 4)} ${o.length * 4}, 1 Item" :: Nil
-        }.getOrElse(Nil)
+        val offsets = f.offsets
+          .map { o =>
+            val description = s"Offsets table with ${o.length} offset(s)"
+            s"$indent  ${tagToString(Tag.Item)} na ($description) ${space1(description)} # ${space2(o.length * 4)} ${o.length * 4}, 1 Item" :: Nil
+          }
+          .getOrElse(Nil)
         val fragments = f.fragments.map { f =>
           val description = s"Fragment with length ${f.length}"
           s"$indent  ${tagToString(Tag.Item)} na ($description) ${space1(description)} # ${space2(f.length)} ${f.length}, 1 Item"
         }
-        val delimitation = s"$indent${tagToString(Tag.SequenceDelimitationItem)} na ${" " * 43} #     0, 0 SequenceDelimitationItem"
+        val delimitation =
+          s"$indent${tagToString(Tag.SequenceDelimitationItem)} na ${" " * 43} #     0, 0 SequenceDelimitationItem"
         heading :: offsets ::: fragments ::: delimitation :: Nil
 
       case _ => Nil
@@ -491,20 +546,37 @@ object Elements {
   def newBuilder(characterSets: CharacterSets = defaultCharacterSet, zoneOffset: ZoneOffset = systemZone) =
     new ElementsBuilder(characterSets, zoneOffset)
 
-  def fileMetaInformationElements(sopInstanceUID: String, sopClassUID: String, transferSyntax: String): List[ValueElement] = {
+  def fileMetaInformationElements(
+      sopInstanceUID: String,
+      sopClassUID: String,
+      transferSyntax: String
+  ): List[ValueElement] = {
     val fmiElements = List(
       ValueElement.fromBytes(Tag.FileMetaInformationVersion, ByteString(0, 1)),
-      ValueElement.fromBytes(Tag.MediaStorageSOPClassUID, padToEvenLength(ByteString(sopClassUID), Tag.MediaStorageSOPClassUID)),
-      ValueElement.fromBytes(Tag.MediaStorageSOPInstanceUID, padToEvenLength(ByteString(sopInstanceUID), Tag.MediaStorageSOPInstanceUID)),
+      ValueElement
+        .fromBytes(Tag.MediaStorageSOPClassUID, padToEvenLength(ByteString(sopClassUID), Tag.MediaStorageSOPClassUID)),
+      ValueElement.fromBytes(
+        Tag.MediaStorageSOPInstanceUID,
+        padToEvenLength(ByteString(sopInstanceUID), Tag.MediaStorageSOPInstanceUID)
+      ),
       ValueElement.fromBytes(Tag.TransferSyntaxUID, padToEvenLength(ByteString(transferSyntax), Tag.TransferSyntaxUID)),
-      ValueElement.fromBytes(Tag.ImplementationClassUID, padToEvenLength(ByteString(Implementation.classUid), Tag.ImplementationClassUID)),
-      ValueElement.fromBytes(Tag.ImplementationVersionName, padToEvenLength(ByteString(Implementation.versionName), Tag.ImplementationVersionName)))
-    val groupLength = ValueElement.fromBytes(Tag.FileMetaInformationGroupLength, intToBytesLE(fmiElements.map(_.toBytes.length).sum))
+      ValueElement.fromBytes(
+        Tag.ImplementationClassUID,
+        padToEvenLength(ByteString(Implementation.classUid), Tag.ImplementationClassUID)
+      ),
+      ValueElement.fromBytes(
+        Tag.ImplementationVersionName,
+        padToEvenLength(ByteString(Implementation.versionName), Tag.ImplementationVersionName)
+      )
+    )
+    val groupLength =
+      ValueElement.fromBytes(Tag.FileMetaInformationGroupLength, intToBytesLE(fmiElements.map(_.toBytes.length).sum))
     groupLength :: fmiElements
   }
 
   def parseZoneOffset(s: String): Option[ZoneOffset] =
-    try Option(ZoneOffset.of(s)) catch {
+    try Option(ZoneOffset.of(s))
+    catch {
       case _: Throwable => None
     }
 
@@ -531,26 +603,32 @@ object Elements {
   }
 
   case object PreambleElement extends Element {
-    override val bigEndian: Boolean = false
-    override def toBytes: ByteString = ByteString.fromArray(new Array[Byte](128)) ++ ByteString("DICM")
-    override def toString: String = "PreambleElement(0, ..., 0, D, I, C, M)"
+    override val bigEndian: Boolean       = false
+    override def toBytes: ByteString      = ByteString.fromArray(new Array[Byte](128)) ++ ByteString("DICM")
+    override def toString: String         = "PreambleElement(0, ..., 0, D, I, C, M)"
     override def toParts: List[DicomPart] = PreamblePart(toBytes) :: Nil
   }
 
-  case class ValueElement(tag: Int, vr: VR, value: Value, bigEndian: Boolean, explicitVR: Boolean) extends Element with ElementSet {
-    val length: Int = value.length
+  case class ValueElement(tag: Int, vr: VR, value: Value, bigEndian: Boolean, explicitVR: Boolean)
+      extends Element
+      with ElementSet {
+    val length: Int                          = value.length
     def setValue(value: Value): ValueElement = copy(value = value.ensurePadding(vr))
-    override def toBytes: ByteString = toParts.map(_.bytes).reduce(_ ++ _)
+    override def toBytes: ByteString         = toParts.map(_.bytes).reduce(_ ++ _)
     override def toParts: List[DicomPart] =
       if (length > 0)
-        HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
+        HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: ValueChunk(
+          bigEndian,
+          value.bytes,
+          last = true
+        ) :: Nil
       else
         HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: Nil
     override def toElements: List[Element] = this :: Nil
     override def toString: String = {
       val strings = value.toStrings(vr, bigEndian, defaultCharacterSet)
-      val s = strings.mkString(multiValueDelimiter)
-      val vm = strings.length.toString
+      val s       = strings.mkString(multiValueDelimiter)
+      val vm      = strings.length.toString
       s"ValueElement(${tagToString(tag)} $vr [$s] # $length, $vm ${Lookup.keywordOf(tag)})"
     }
   }
@@ -566,17 +644,26 @@ object Elements {
       ValueElement(tag, vr, Value.empty, bigEndian, explicitVR)
   }
 
-  case class SequenceElement(tag: Int, length: Long, bigEndian: Boolean = false, explicitVR: Boolean = true) extends Element {
-    def indeterminate: Boolean = length == indeterminateLength
-    override def toBytes: ByteString = HeaderPart(tag, VR.SQ, length, isFmi = false, bigEndian, explicitVR).bytes
+  case class SequenceElement(tag: Int, length: Long, bigEndian: Boolean = false, explicitVR: Boolean = true)
+      extends Element {
+    def indeterminate: Boolean            = length == indeterminateLength
+    override def toBytes: ByteString      = HeaderPart(tag, VR.SQ, length, isFmi = false, bigEndian, explicitVR).bytes
     override def toParts: List[DicomPart] = SequencePart(tag, length, bigEndian, explicitVR, toBytes) :: Nil
-    override def toString: String = s"SequenceElement(${tagToString(tag)} SQ # $length ${Lookup.keywordOf(tag)})"
+    override def toString: String         = s"SequenceElement(${tagToString(tag)} SQ # $length ${Lookup.keywordOf(tag)})"
   }
 
-  case class FragmentsElement(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true) extends Element {
+  case class FragmentsElement(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true)
+      extends Element {
     override def toBytes: ByteString = toParts.head.bytes
-    override def toParts: List[DicomPart] = FragmentsPart(tag, indeterminateLength, vr, bigEndian, explicitVR,
-      HeaderPart(this.tag, this.vr, indeterminateLength, isFmi = false, this.bigEndian, this.explicitVR).bytes) :: Nil
+    override def toParts: List[DicomPart] =
+      FragmentsPart(
+        tag,
+        indeterminateLength,
+        vr,
+        bigEndian,
+        explicitVR,
+        HeaderPart(this.tag, this.vr, indeterminateLength, isFmi = false, this.bigEndian, this.explicitVR).bytes
+      ) :: Nil
     override def toString: String = s"FragmentsElement(${tagToString(tag)} $vr # ${Lookup.keywordOf(tag)})"
   }
 
@@ -591,35 +678,40 @@ object Elements {
   }
 
   object FragmentElement {
-    def empty(index: Int, length: Long, bigEndian: Boolean = false): FragmentElement = FragmentElement(index, length, Value.empty, bigEndian)
+    def empty(index: Int, length: Long, bigEndian: Boolean = false): FragmentElement =
+      FragmentElement(index, length, Value.empty, bigEndian)
   }
 
   case class ItemElement(index: Int, length: Long, bigEndian: Boolean = false) extends Element {
-    def indeterminate: Boolean = length == indeterminateLength
-    override def toBytes: ByteString = tagToBytes(Tag.Item, bigEndian) ++ intToBytes(length.toInt, bigEndian)
+    def indeterminate: Boolean            = length == indeterminateLength
+    override def toBytes: ByteString      = tagToBytes(Tag.Item, bigEndian) ++ intToBytes(length.toInt, bigEndian)
     override def toParts: List[DicomPart] = ItemPart(index, length, bigEndian, toBytes) :: Nil
-    override def toString: String = s"ItemElement(index = $index, length = $length)"
+    override def toString: String         = s"ItemElement(index = $index, length = $length)"
   }
 
   case class ItemDelimitationElement(index: Int, marker: Boolean = false, bigEndian: Boolean = false) extends Element {
-    override def toBytes: ByteString = if (marker) ByteString.empty else tagToBytes(Tag.ItemDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
+    override def toBytes: ByteString =
+      if (marker) ByteString.empty else tagToBytes(Tag.ItemDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
     override def toParts: List[DicomPart] = if (marker) Nil else ItemDelimitationPart(index, bigEndian, toBytes) :: Nil
-    override def toString: String = s"ItemDelimitationElement(index = $index, marker = $marker)"
+    override def toString: String         = s"ItemDelimitationElement(index = $index, marker = $marker)"
   }
 
   case class SequenceDelimitationElement(marker: Boolean = false, bigEndian: Boolean = false) extends Element {
-    override def toBytes: ByteString = if (marker) ByteString.empty else tagToBytes(Tag.SequenceDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
+    override def toBytes: ByteString =
+      if (marker) ByteString.empty else tagToBytes(Tag.SequenceDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
     override def toParts: List[DicomPart] = if (marker) Nil else SequenceDelimitationPart(bigEndian, toBytes) :: Nil
-    override def toString: String = s"SequenceDelimitationElement(marker = $marker)"
+    override def toString: String         = s"SequenceDelimitationElement(marker = $marker)"
   }
 
-
-  case class Sequence(tag: Int, length: Long, items: List[Item], bigEndian: Boolean = false, explicitVR: Boolean = true) extends ElementSet {
-    val vr: VR = VR.SQ
+  case class Sequence(tag: Int, length: Long, items: List[Item], bigEndian: Boolean = false, explicitVR: Boolean = true)
+      extends ElementSet {
+    val vr: VR                 = VR.SQ
     val indeterminate: Boolean = length == indeterminateLength
-    def item(index: Int): Option[Item] = try Option(items(index - 1)) catch {
-      case _: Throwable => None
-    }
+    def item(index: Int): Option[Item] =
+      try Option(items(index - 1))
+      catch {
+        case _: Throwable => None
+      }
     def +(item: Item): Sequence =
       if (indeterminate)
         copy(items = items :+ item)
@@ -631,28 +723,53 @@ object Elements {
       else
         copy(length = length - item(index).map(_.toBytes.length).getOrElse(0), items = items.patch(index - 1, Nil, 1))
     override def toBytes: ByteString = toElements.map(_.toBytes).reduce(_ ++ _)
-    override def toElements: List[Element] = SequenceElement(tag, length, bigEndian, explicitVR) ::
-      items.zipWithIndex.flatMap { case (item, index) => item.toElements(index + 1) } :::
-      SequenceDelimitationElement(marker = !indeterminate, bigEndian) :: Nil
-    def size: Int = items.length
+    override def toElements: List[Element] =
+      SequenceElement(tag, length, bigEndian, explicitVR) ::
+        items.zipWithIndex.flatMap { case (item, index) => item.toElements(index + 1) } :::
+        SequenceDelimitationElement(marker = !indeterminate, bigEndian) :: Nil
+    def size: Int                                 = items.length
     def setItem(index: Int, item: Item): Sequence = copy(items = items.updated(index - 1, item))
-    override def toString: String = s"Sequence(${tagToString(tag)} SQ # $length ${items.length} ${Lookup.keywordOf(tag)})"
+    override def toString: String =
+      s"Sequence(${tagToString(tag)} SQ # $length ${items.length} ${Lookup.keywordOf(tag)})"
   }
 
   object Sequence {
-    def empty(tag: Int, length: Long = indeterminateLength, bigEndian: Boolean = false, explicitVR: Boolean = true): Sequence = Sequence(tag, length, Nil, bigEndian, explicitVR)
-    def empty(element: SequenceElement): Sequence = empty(element.tag, element.length, element.bigEndian, element.explicitVR)
-    def fromItems(tag: Int, items: List[Item], length: Long = indeterminateLength, bigEndian: Boolean = false, explicitVR: Boolean = true): Sequence =
+    def empty(
+        tag: Int,
+        length: Long = indeterminateLength,
+        bigEndian: Boolean = false,
+        explicitVR: Boolean = true
+    ): Sequence = Sequence(tag, length, Nil, bigEndian, explicitVR)
+    def empty(element: SequenceElement): Sequence =
+      empty(element.tag, element.length, element.bigEndian, element.explicitVR)
+    def fromItems(
+        tag: Int,
+        items: List[Item],
+        length: Long = indeterminateLength,
+        bigEndian: Boolean = false,
+        explicitVR: Boolean = true
+    ): Sequence =
       Sequence(tag, length, items, bigEndian, explicitVR)
-    def fromElements(tag: Int, elements: List[Elements], bigEndian: Boolean = false, explicitVR: Boolean = true): Sequence =
-      Sequence(tag, indeterminateLength, elements.map(Item.fromElements(_, indeterminateLength, bigEndian)), bigEndian, explicitVR)
+    def fromElements(
+        tag: Int,
+        elements: List[Elements],
+        bigEndian: Boolean = false,
+        explicitVR: Boolean = true
+    ): Sequence =
+      Sequence(
+        tag,
+        indeterminateLength,
+        elements.map(Item.fromElements(_, indeterminateLength, bigEndian)),
+        bigEndian,
+        explicitVR
+      )
   }
-
 
   case class Item(elements: Elements, length: Long = indeterminateLength, bigEndian: Boolean = false) {
     val indeterminate: Boolean = length == indeterminateLength
-    def toElements(index: Int): List[Element] = ItemElement(index, length, bigEndian) :: elements.toElements(false) :::
-      ItemDelimitationElement(index, marker = !indeterminate, bigEndian) :: Nil
+    def toElements(index: Int): List[Element] =
+      ItemElement(index, length, bigEndian) :: elements.toElements(false) :::
+        ItemDelimitationElement(index, marker = !indeterminate, bigEndian) :: Nil
     def toBytes: ByteString = toElements(1).map(_.toBytes).reduce(_ ++ _)
     def setElements(elements: Elements): Item = {
       val newLength = if (this.indeterminate) indeterminateLength else elements.toBytes(withPreamble = false).length
@@ -662,21 +779,22 @@ object Elements {
   }
 
   object Item {
-    def empty(length: Long = indeterminateLength, bigEndian: Boolean = false): Item = Item(Elements.empty(), length, bigEndian)
+    def empty(length: Long = indeterminateLength, bigEndian: Boolean = false): Item =
+      Item(Elements.empty(), length, bigEndian)
     def empty(element: ItemElement): Item = empty(element.length, element.bigEndian)
-    def fromElements(elements: Elements, length: Long = indeterminateLength, bigEndian: Boolean = false): Item = Item(elements, length, bigEndian)
+    def fromElements(elements: Elements, length: Long = indeterminateLength, bigEndian: Boolean = false): Item =
+      Item(elements, length, bigEndian)
   }
-
 
   case class Fragment(length: Long, value: Value, bigEndian: Boolean = false) {
     def toElement(index: Int): FragmentElement = FragmentElement(index, length, value, bigEndian)
-    override def toString: String = s"Fragment(length = $length, value length = ${value.length})"
+    override def toString: String              = s"Fragment(length = $length, value length = ${value.length})"
   }
 
   object Fragment {
-    def fromElement(fragmentElement: FragmentElement): Fragment = Fragment(fragmentElement.length, fragmentElement.value, fragmentElement.bigEndian)
+    def fromElement(fragmentElement: FragmentElement): Fragment =
+      Fragment(fragmentElement.length, fragmentElement.value, fragmentElement.bigEndian)
   }
-
 
   /**
     * Encapsulated (pixel) data holder
@@ -690,10 +808,19 @@ object Elements {
     * @param bigEndian  `true` if big endian encoded (should be false)
     * @param explicitVR `true` if explicit VR is used (should be true)
     */
-  case class Fragments(tag: Int, vr: VR, offsets: Option[List[Long]], fragments: List[Fragment], bigEndian: Boolean = false, explicitVR: Boolean = true) extends ElementSet {
-    def fragment(index: Int): Option[Fragment] = try Option(fragments(index - 1)) catch {
-      case _: Throwable => None
-    }
+  case class Fragments(
+      tag: Int,
+      vr: VR,
+      offsets: Option[List[Long]],
+      fragments: List[Fragment],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ) extends ElementSet {
+    def fragment(index: Int): Option[Fragment] =
+      try Option(fragments(index - 1))
+      catch {
+        case _: Throwable => None
+      }
 
     /**
       * @return the number of frames encapsulated in this `Fragments`
@@ -703,48 +830,77 @@ object Elements {
     /**
       * @return an `Iterator[ByteString]` over the frames encoded in this `Fragments`
       */
-    def frameIterator: Iterator[ByteString] = new Iterator[ByteString] {
-      val totalLength: Long = fragments.map(_.length).sum
-      val frameOffsets: List[Long] = if (totalLength <= 0) List(0L) else offsets.filter(_.nonEmpty).getOrElse(List(0L)) :+ totalLength
-      val fragmentIterator: Iterator[Fragment] = fragments.iterator
-      var offsetIndex: Int = 0
-      var bytes: ByteString = ByteString.empty
+    def frameIterator: Iterator[ByteString] =
+      new Iterator[ByteString] {
+        val totalLength: Long = fragments.map(_.length).sum
+        val frameOffsets: List[Long] =
+          if (totalLength <= 0) List(0L) else offsets.filter(_.nonEmpty).getOrElse(List(0L)) :+ totalLength
+        val fragmentIterator: Iterator[Fragment] = fragments.iterator
+        var offsetIndex: Int                     = 0
+        var bytes: ByteString                    = ByteString.empty
 
-      override def hasNext: Boolean = offsetIndex < frameOffsets.length - 1
-      override def next(): ByteString = {
-        val frameLength = (frameOffsets(offsetIndex + 1) - frameOffsets(offsetIndex)).toInt
-        while (fragmentIterator.hasNext && bytes.length < frameLength) bytes = bytes ++ fragmentIterator.next().value.bytes
-        val (frame, rest) = bytes.splitAt(frameLength)
-        bytes = rest
-        offsetIndex += 1
-        frame
+        override def hasNext: Boolean = offsetIndex < frameOffsets.length - 1
+        override def next(): ByteString = {
+          val frameLength = (frameOffsets(offsetIndex + 1) - frameOffsets(offsetIndex)).toInt
+          while (fragmentIterator.hasNext && bytes.length < frameLength)
+            bytes = bytes ++ fragmentIterator.next().value.bytes
+          val (frame, rest) = bytes.splitAt(frameLength)
+          bytes = rest
+          offsetIndex += 1
+          frame
+        }
       }
-    }
 
     def +(fragment: Fragment): Fragments =
       if (fragments.isEmpty && offsets.isEmpty)
-        copy(offsets = Option(fragment.value.bytes.grouped(4).map(bytes => intToUnsignedLong(bytesToInt(bytes, fragment.bigEndian))).toList))
+        copy(offsets =
+          Option(
+            fragment.value.bytes
+              .grouped(4)
+              .map(bytes => intToUnsignedLong(bytesToInt(bytes, fragment.bigEndian)))
+              .toList
+          )
+        )
       else
         copy(fragments = fragments :+ fragment)
     def toBytes: ByteString = toElements.map(_.toBytes).reduce(_ ++ _)
-    def size: Int = fragments.length
-    override def toElements: List[Element] = FragmentsElement(tag, vr, bigEndian, explicitVR) ::
-      offsets.map(o => FragmentElement(1, 4L * o.length, Value(o.map(offset => truncate(4, longToBytes(offset, bigEndian), bigEndian)).foldLeft(ByteString.empty)(_ ++ _)), bigEndian) :: Nil).getOrElse(Nil) :::
-      fragments.zipWithIndex.map { case (fragment, index) => fragment.toElement(index + 2) } :::
-      SequenceDelimitationElement(bigEndian) :: Nil
-    def setFragment(index: Int, fragment: Fragment): Fragments = copy(fragments = fragments.updated(index - 1, fragment))
+    def size: Int           = fragments.length
+    override def toElements: List[Element] =
+      FragmentsElement(tag, vr, bigEndian, explicitVR) ::
+        offsets
+          .map(o =>
+            FragmentElement(
+              1,
+              4L * o.length,
+              Value(
+                o.map(offset => truncate(4, longToBytes(offset, bigEndian), bigEndian))
+                  .foldLeft(ByteString.empty)(_ ++ _)
+              ),
+              bigEndian
+            ) :: Nil
+          )
+          .getOrElse(Nil) :::
+        fragments.zipWithIndex.map { case (fragment, index) => fragment.toElement(index + 2) } :::
+        SequenceDelimitationElement(bigEndian) :: Nil
+    def setFragment(index: Int, fragment: Fragment): Fragments =
+      copy(fragments = fragments.updated(index - 1, fragment))
     override def toString: String = s"Fragments(${tagToString(tag)} $vr # ${fragments.length} ${Lookup.keywordOf(tag)})"
   }
 
   object Fragments {
-    def empty(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true): Fragments = Fragments(tag, vr, None, Nil, bigEndian, explicitVR)
-    def empty(element: FragmentsElement): Fragments = empty(element.tag, element.vr, element.bigEndian, element.explicitVR)
+    def empty(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true): Fragments =
+      Fragments(tag, vr, None, Nil, bigEndian, explicitVR)
+    def empty(element: FragmentsElement): Fragments =
+      empty(element.tag, element.vr, element.bigEndian, element.explicitVR)
   }
 
   /**
     * A builder for performant creation of Elements.
     */
-  class ElementsBuilder private[Elements](var characterSets: CharacterSets = defaultCharacterSet, var zoneOffset: ZoneOffset = systemZone) {
+  class ElementsBuilder private[Elements] (
+      var characterSets: CharacterSets = defaultCharacterSet,
+      var zoneOffset: ZoneOffset = systemZone
+  ) {
     val data: ArrayBuffer[ElementSet] = ArrayBuffer.empty
     def +=(element: ElementSet): ElementsBuilder = {
       element match {
@@ -758,8 +914,8 @@ object Elements {
       this
     }
     def result(): Elements = Elements(characterSets, zoneOffset, data.toVector)
-    override def toString: String = s"ElementsBuilder(characterSets = $characterSets, zoneOffset = $zoneOffset, size = ${data.size})"
+    override def toString: String =
+      s"ElementsBuilder(characterSets = $characterSets, zoneOffset = $zoneOffset, size = ${data.size})"
   }
 
 }
-

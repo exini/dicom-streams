@@ -9,13 +9,23 @@ class TagPathTest extends AnyFlatSpec with Matchers {
   import TagPath.TagPathTag
 
   "A tag path" should "have a legible string representation" in {
-    val path = TagPath.fromItem(Tag.DerivationCodeSequence, 4).thenItem(Tag.DerivationCodeSequence, 3).thenItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.PatientID)
+    val path = TagPath
+      .fromItem(Tag.DerivationCodeSequence, 4)
+      .thenItem(Tag.DerivationCodeSequence, 3)
+      .thenItem(Tag.DerivationCodeSequence, 2)
+      .thenTag(Tag.PatientID)
     path.toString(lookup = false) shouldBe "(0008,9215)[4].(0008,9215)[3].(0008,9215)[2].(0010,0020)"
   }
 
   it should "support string representations with keywords instead of tag numbers where possible" in {
-    val path = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenItem(0x11110100, 3).thenItem(Tag.DetectorInformationSequence, 3).thenTag(Tag.PatientID)
-    path.toString(lookup = true) shouldBe "DerivationCodeSequence[1].(1111,0100)[3].DetectorInformationSequence[3].PatientID"
+    val path = TagPath
+      .fromItem(Tag.DerivationCodeSequence, 1)
+      .thenItem(0x11110100, 3)
+      .thenItem(Tag.DetectorInformationSequence, 3)
+      .thenTag(Tag.PatientID)
+    path.toString(lookup =
+      true
+    ) shouldBe "DerivationCodeSequence[1].(1111,0100)[3].DetectorInformationSequence[3].PatientID"
   }
 
   "Comparing two tag paths" should "return false when comparing a tag path to itself" in {
@@ -105,27 +115,35 @@ class TagPathTest extends AnyFlatSpec with Matchers {
 
   it should "establish a total ordering among tag paths encountered when parsing a file" in {
     val paths = List(
-      EmptyTagPath, // preamble
-      TagPath.fromTag(Tag.FileMetaInformationGroupLength), // FMI group length header
-      TagPath.fromTag(Tag.TransferSyntaxUID), // Transfer syntax header
-      TagPath.fromTag(Tag.StudyDate), // Patient name header
-      TagPath.fromSequence(Tag.DerivationCodeSequence), // sequence start
-      TagPath.fromItem(Tag.DerivationCodeSequence, 1), // item start
-      TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate), // study date header
-      TagPath.fromItemEnd(Tag.DerivationCodeSequence, 1), // item end
-      TagPath.fromItem(Tag.DerivationCodeSequence, 2), // item start
+      EmptyTagPath,                                                                                // preamble
+      TagPath.fromTag(Tag.FileMetaInformationGroupLength),                                         // FMI group length header
+      TagPath.fromTag(Tag.TransferSyntaxUID),                                                      // Transfer syntax header
+      TagPath.fromTag(Tag.StudyDate),                                                              // Patient name header
+      TagPath.fromSequence(Tag.DerivationCodeSequence),                                            // sequence start
+      TagPath.fromItem(Tag.DerivationCodeSequence, 1),                                             // item start
+      TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),                      // study date header
+      TagPath.fromItemEnd(Tag.DerivationCodeSequence, 1),                                          // item end
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2),                                             // item start
       TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenSequence(Tag.EnergyWindowRangeSequence), // sequence start
-      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.EnergyWindowRangeSequence, 1), // item start
-      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.EnergyWindowRangeSequence, 1).thenTag(Tag.StudyDate), // Study date header
-      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItemEnd(Tag.EnergyWindowRangeSequence, 1), //  item end (inserted)
-      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenSequenceEnd(Tag.EnergyWindowRangeSequence), // sequence end (inserted)
-      TagPath.fromItemEnd(Tag.DerivationCodeSequence, 2), // item end
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.EnergyWindowRangeSequence, 1),  // item start
+      TagPath
+        .fromItem(Tag.DerivationCodeSequence, 2)
+        .thenItem(Tag.EnergyWindowRangeSequence, 1)
+        .thenTag(Tag.StudyDate), // Study date header
+      TagPath
+        .fromItem(Tag.DerivationCodeSequence, 2)
+        .thenItemEnd(Tag.EnergyWindowRangeSequence, 1), //  item end (inserted)
+      TagPath
+        .fromItem(Tag.DerivationCodeSequence, 2)
+        .thenSequenceEnd(Tag.EnergyWindowRangeSequence),   // sequence end (inserted)
+      TagPath.fromItemEnd(Tag.DerivationCodeSequence, 2),  // item end
       TagPath.fromSequenceEnd(Tag.DerivationCodeSequence), // sequence end
-      TagPath.fromTag(Tag.PatientName), // Patient name header
-      TagPath.fromTag(Tag.PixelData), // fragments start
-      TagPath.fromTag(Tag.PixelData), // item start
-      TagPath.fromTag(Tag.PixelData), // fragment data
-      TagPath.fromTag(Tag.PixelData)) // fragments end
+      TagPath.fromTag(Tag.PatientName),                    // Patient name header
+      TagPath.fromTag(Tag.PixelData),                      // fragments start
+      TagPath.fromTag(Tag.PixelData),                      // item start
+      TagPath.fromTag(Tag.PixelData),                      // fragment data
+      TagPath.fromTag(Tag.PixelData)
+    ) // fragments end
 
     paths.reverse should not be paths
     paths.reverse.sortWith(_ < _) shouldBe paths
@@ -287,7 +305,10 @@ class TagPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "work for deep tag paths" in {
-    TagPathTag.parse("(0008,9215)[1].(0008,9215)[666].(0010,0010)") shouldBe TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenItem(Tag.DerivationCodeSequence, 666).thenTag(Tag.PatientName)
+    TagPathTag.parse("(0008,9215)[1].(0008,9215)[666].(0010,0010)") shouldBe TagPath
+      .fromItem(Tag.DerivationCodeSequence, 1)
+      .thenItem(Tag.DerivationCodeSequence, 666)
+      .thenTag(Tag.PatientName)
   }
 
   it should "throw an exception for malformed strings" in {

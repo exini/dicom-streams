@@ -17,11 +17,11 @@ class dataTest extends AnyFlatSpec with Matchers {
   }
 
   it should "convert the byte 0x2A to 2A" in {
-    byteToHexString(0x2A.toByte) shouldBe "2A"
+    byteToHexString(0x2a.toByte) shouldBe "2A"
   }
 
   it should "convert the short 0xFEDC to FEDC" in {
-    shortToHexString(0xFEDC.toShort) shouldBe "FEDC"
+    shortToHexString(0xfedc.toShort) shouldBe "FEDC"
   }
 
   it should "convert the long 0x1234567887654321 to 1234567887654321" in {
@@ -55,21 +55,21 @@ class dataTest extends AnyFlatSpec with Matchers {
   }
 
   "Mapping bytes to numbers" should "transform a ByteString of size 2 to the correct short representation" in {
-    val s1 = bytesToShort(ByteString(0xA, 0x5), bigEndian = true)
+    val s1 = bytesToShort(ByteString(0xa, 0x5), bigEndian = true)
     s1 shouldBe a[java.lang.Short] // runtime type is java native short
-    s1 shouldBe 0xA05
-    val s2 = bytesToShort(ByteString(0xA, 0x5))
+    s1 shouldBe 0xa05
+    val s2 = bytesToShort(ByteString(0xa, 0x5))
     s2 shouldBe a[java.lang.Short]
-    s2 shouldBe 0x50A
+    s2 shouldBe 0x50a
   }
 
   it should "transform a ByteString of size 4 to the correct integer representation" in {
-    val s1 = bytesToInt(ByteString(0xA, 0xB, 0xC, 0xD), bigEndian = true)
+    val s1 = bytesToInt(ByteString(0xa, 0xb, 0xc, 0xd), bigEndian = true)
     s1 shouldBe a[java.lang.Integer] // runtime type is java native short
-    s1 shouldBe 0x0A0B0C0D
-    val s2 = bytesToInt(ByteString(0xA, 0xB, 0xC, 0xD))
+    s1 shouldBe 0x0a0b0c0d
+    val s2 = bytesToInt(ByteString(0xa, 0xb, 0xc, 0xd))
     s2 shouldBe a[java.lang.Integer]
-    s2 shouldBe 0x0D0C0B0A
+    s2 shouldBe 0x0d0c0b0a
   }
 
   it should "transform a ByteString of size 8 to the correct long representation" in {
@@ -82,7 +82,10 @@ class dataTest extends AnyFlatSpec with Matchers {
   }
 
   it should "transform a ByteString of size 8 to the correct double representation" in {
-    val beBytes = ByteString(ByteBuffer.allocate(8).putLong(java.lang.Double.doubleToLongBits(math.Pi)).array()) // java is big-endian
+    val beBytes =
+      ByteString(
+        ByteBuffer.allocate(8).putLong(java.lang.Double.doubleToLongBits(math.Pi)).array()
+      ) // java is big-endian
     val s1 = bytesToDouble(beBytes, bigEndian = true)
     s1 shouldBe a[java.lang.Double]
     s1 shouldBe math.Pi
@@ -92,7 +95,10 @@ class dataTest extends AnyFlatSpec with Matchers {
   }
 
   it should "transform a ByteString of size 4 to the correct float representation" in {
-    val beBytes = ByteString(ByteBuffer.allocate(4).putInt(java.lang.Float.floatToIntBits(math.Pi.toFloat)).array()) // java is big-endian
+    val beBytes =
+      ByteString(
+        ByteBuffer.allocate(4).putInt(java.lang.Float.floatToIntBits(math.Pi.toFloat)).array()
+      ) // java is big-endian
     val s1 = bytesToFloat(beBytes, bigEndian = true)
     s1 shouldBe a[java.lang.Float]
     s1 shouldBe math.Pi.toFloat
@@ -102,33 +108,33 @@ class dataTest extends AnyFlatSpec with Matchers {
   }
 
   it should "transform a ByteString of size 2 to the correct unsigned short representation (as an Int)" in {
-    val s1 = bytesToUShort(ByteString(0xFF, 0xFE), bigEndian = true)
+    val s1 = bytesToUShort(ByteString(0xff, 0xfe), bigEndian = true)
     s1 shouldBe a[java.lang.Integer]
-    s1 shouldBe 0xFFFE
-    val s2 = bytesToUShort(ByteString(0xFF, 0xFE))
+    s1 shouldBe 0xfffe
+    val s2 = bytesToUShort(ByteString(0xff, 0xfe))
     s2 shouldBe a[java.lang.Integer]
-    s2 shouldBe 0xFEFF
+    s2 shouldBe 0xfeff
   }
 
   it should "parse a tag number given as two consecutive short numbers (big or little endian)" in {
-    val s1 = ByteString(0xA, 0xB)
+    val s1 = ByteString(0xa, 0xb)
     val s2 = ByteString(1, 2)
     val t1 = bytesToTag(s1.concat(s2), bigEndian = true)
     t1 shouldBe a[java.lang.Integer]
-    t1 shouldBe 0x0A0B0102
+    t1 shouldBe 0x0a0b0102
     val t2 = bytesToTag(s1.concat(s2))
     t2 shouldBe a[java.lang.Integer]
-    t2 shouldBe 0x0B0A0201
+    t2 shouldBe 0x0b0a0201
   }
 
   it should "parse two bytes in big-endian order as a VR code" in {
-    val vr = ByteString(0xAB, 0xCD)
-    bytesToVR(vr) shouldBe 0xABCD
+    val vr = ByteString(0xab, 0xcd)
+    bytesToVR(vr) shouldBe 0xabcd
   }
 
   "Mapping numbers to bytes" should "decode a short into bytes" in {
-    shortToBytes(0xABCD.toShort, bigEndian = true) shouldBe ByteString(0xAB, 0xCD)
-    shortToBytes(0xABCD.toShort) shouldBe ByteString(0xCD, 0xAB)
+    shortToBytes(0xabcd.toShort, bigEndian = true) shouldBe ByteString(0xab, 0xcd)
+    shortToBytes(0xabcd.toShort) shouldBe ByteString(0xcd, 0xab)
   }
 
   it should "decode an integer into bytes" in {
