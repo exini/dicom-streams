@@ -21,7 +21,6 @@ stages:
 
 jobs:
   include:
-    - stage: test
     - name: linting
       script: sbt scalafmtCheckAll
     - name: "test with coverage"
