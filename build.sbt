@@ -2,10 +2,22 @@ import sbt.IO
 import DicomSourceGenerators._
 
 name := "dicom-streams"
-version := "1.0.1-SNAPSHOT"
 organization := "com.exini"
-scalaVersion := "2.13.1"
-crossScalaVersions := Seq("2.12.10", "2.13.1")
+organizationName := "EXINI Diagnostics"
+startYear := Some(2019)
+homepage := Some(url("https://github.com/exini/dicom-streams"))
+licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+developers := List(
+  Developer(
+    "karl-exini",
+    "Karl Sjöstrand",
+    "karl.sjostrand@exini.com",
+    url("https://exini.com")
+  )
+)
+
+scalaVersion := "2.13.2"
+crossScalaVersions := Seq("2.12.10", "2.13.2")
 scalacOptions := Seq("-encoding", "UTF-8", "-Xlint", "-deprecation", "-unchecked", "-feature", "-target:jvm-1.8")
 scalacOptions in(Compile, doc) ++= Seq(
   "-no-link-warnings" // Suppresses problems with Scaladoc @throws links
@@ -62,46 +74,6 @@ mappings in (Compile, packageSrc) ++= {
   files.map { f => (f, f.relativeTo(base).get.getPath) }
 }
 
-// for automatic license stub generation
-
-organizationName := "EXINI Diagnostics"
-startYear := Some(2019)
-licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt"))
-
 // coverage
 
 coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*"
-
-// publish
-publishMavenStyle := true
-
-publishArtifact in Test := false
-
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
-
-pomIncludeRepository := { _ => false }
-
-scmInfo := Some(
-  ScmInfo(
-    url("https://github.com/exini/dicom-streams"),
-    "scm:git@github.com:exini/dicom-streams.git"
-  )
-)
-
-homepage := Some(url("https://github.com/exini/dicom-streams"))
-
-
-developers := List(
-  Developer(
-    id    = "karl-exini",
-    name  = "Karl Sjöstrand",
-    email = "karl.sjostrand@exini.com",
-    url   = url("https://github.com/karl-exini")
-  )
-)
