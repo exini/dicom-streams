@@ -17,7 +17,7 @@ before_install:
 stages:
   - name: test
   - name: release
-    if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
+    if: ((branch = master AND type = push) OR (tag IS present))
 
 jobs:
   include:
