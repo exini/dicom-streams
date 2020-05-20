@@ -26,8 +26,6 @@ import com.exini.dicom.data.Elements.{ ValueElement, _ }
 import com.exini.dicom.data.TagPath._
 import com.exini.dicom.data.VR.VR
 
-import scala.collection.mutable.ArrayBuffer
-
 /**
   * Representation of a group of `ElementSet`s, a dataset. Representation is immutable so methods for inserting, updating
   * and removing elements return a new instance. For performant building use the associated builder. Also specifies the
@@ -496,19 +494,17 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
           }
           val elems = i.elements.toStrings(indent + "    ").toList
           val delimitation =
-            s"$indent  ${tagToString(Tag.ItemDelimitationItem)} na ${" " * 43} #     0, 0 ItemDelimitationItem${if (i.indeterminate) ""
-            else " (marker)"}"
+            s"$indent  ${tagToString(Tag.ItemDelimitationItem)} na ${" " * 43} #     0, 0 ItemDelimitationItem"
           heading :: elems ::: delimitation :: Nil
         }
         val delimitation =
-          s"$indent${tagToString(Tag.SequenceDelimitationItem)} na ${" " * 43} #     0, 0 SequenceDelimitationItem${if (s.indeterminate) ""
-          else " (marker)"}"
+          s"$indent${tagToString(Tag.SequenceDelimitationItem)} na ${" " * 43} #     0, 0 SequenceDelimitationItem"
         heading :: items ::: delimitation :: Nil
 
       case f: Fragments =>
         val heading = {
           val description = s"Fragments with ${f.size} fragment(s)"
-          s"$indent${tagToString(f.tag)} ${f.vr} ($description) ${space1(description)} #    na, 1 ${Lookup.keywordOf(f.tag)}"
+          s"$indent${tagToString(f.tag)} ${f.vr} ($description) ${space1(description)} #    na, 1 ${Lookup.keywordOf(f.tag).getOrElse("")}"
         }
         val offsets = f.offsets
           .map { o =>
@@ -537,14 +533,13 @@ object Elements {
   /**
     * @return an Elements with no data and default character set only and the system's time zone
     */
-  def empty(characterSets: CharacterSets = defaultCharacterSet, zoneOffset: ZoneOffset = systemZone): Elements =
-    Elements(characterSets, zoneOffset, Vector.empty)
+  def empty(): Elements =
+    Elements(defaultCharacterSet, systemZone, Vector.empty)
 
   /**
     * @return create a new Elements builder used to incrementally add data to Elements in a performant manner
     */
-  def newBuilder(characterSets: CharacterSets = defaultCharacterSet, zoneOffset: ZoneOffset = systemZone) =
-    new ElementsBuilder(characterSets, zoneOffset)
+  def newBuilder() = new ElementsBuilder()
 
   def fileMetaInformationElements(
       sopInstanceUID: String,
@@ -581,8 +576,8 @@ object Elements {
     }
 
   /**
-    * A complete DICOM element, e.g. a standard value element, a sequence start marker, a sequence delimiation marker or
-    * a fragments start marker.
+    * A complete DICOM element, e.g. a standard value element, a sequence start element, a sequence delimitation element
+    * or a fragments start element.
     */
   trait Element {
     val bigEndian: Boolean
@@ -629,7 +624,7 @@ object Elements {
       val strings = value.toStrings(vr, bigEndian, defaultCharacterSet)
       val s       = strings.mkString(multiValueDelimiter)
       val vm      = strings.length.toString
-      s"ValueElement(${tagToString(tag)} $vr [$s] # $length, $vm ${Lookup.keywordOf(tag)})"
+      s"ValueElement(${tagToString(tag)} $vr [$s] # $length, $vm ${Lookup.keywordOf(tag).getOrElse("")})"
     }
   }
 
@@ -649,7 +644,8 @@ object Elements {
     def indeterminate: Boolean            = length == indeterminateLength
     override def toBytes: ByteString      = HeaderPart(tag, VR.SQ, length, isFmi = false, bigEndian, explicitVR).bytes
     override def toParts: List[DicomPart] = SequencePart(tag, length, bigEndian, explicitVR, toBytes) :: Nil
-    override def toString: String         = s"SequenceElement(${tagToString(tag)} SQ # $length ${Lookup.keywordOf(tag)})"
+    override def toString: String =
+      s"SequenceElement(${tagToString(tag)} SQ # $length ${Lookup.keywordOf(tag).getOrElse("")})"
   }
 
   case class FragmentsElement(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true)
@@ -664,7 +660,8 @@ object Elements {
         explicitVR,
         HeaderPart(this.tag, this.vr, indeterminateLength, isFmi = false, this.bigEndian, this.explicitVR).bytes
       ) :: Nil
-    override def toString: String = s"FragmentsElement(${tagToString(tag)} $vr # ${Lookup.keywordOf(tag)})"
+    override def toString: String =
+      s"FragmentsElement(${tagToString(tag)} $vr # ${Lookup.keywordOf(tag).getOrElse("")})"
   }
 
   case class FragmentElement(index: Int, length: Long, value: Value, bigEndian: Boolean = false) extends Element {
@@ -689,18 +686,16 @@ object Elements {
     override def toString: String         = s"ItemElement(index = $index, length = $length)"
   }
 
-  case class ItemDelimitationElement(index: Int, marker: Boolean = false, bigEndian: Boolean = false) extends Element {
-    override def toBytes: ByteString =
-      if (marker) ByteString.empty else tagToBytes(Tag.ItemDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
-    override def toParts: List[DicomPart] = if (marker) Nil else ItemDelimitationPart(index, bigEndian, toBytes) :: Nil
-    override def toString: String         = s"ItemDelimitationElement(index = $index, marker = $marker)"
+  case class ItemDelimitationElement(index: Int, bigEndian: Boolean = false) extends Element {
+    override def toBytes: ByteString      = tagToBytes(Tag.ItemDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
+    override def toParts: List[DicomPart] = ItemDelimitationPart(index, bigEndian, toBytes) :: Nil
+    override def toString: String         = s"ItemDelimitationElement(index = $index)"
   }
 
-  case class SequenceDelimitationElement(marker: Boolean = false, bigEndian: Boolean = false) extends Element {
-    override def toBytes: ByteString =
-      if (marker) ByteString.empty else tagToBytes(Tag.SequenceDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
-    override def toParts: List[DicomPart] = if (marker) Nil else SequenceDelimitationPart(bigEndian, toBytes) :: Nil
-    override def toString: String         = s"SequenceDelimitationElement(marker = $marker)"
+  case class SequenceDelimitationElement(bigEndian: Boolean = false) extends Element {
+    override def toBytes: ByteString      = tagToBytes(Tag.SequenceDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
+    override def toParts: List[DicomPart] = SequenceDelimitationPart(bigEndian, toBytes) :: Nil
+    override def toString: String         = s"SequenceDelimitationElement"
   }
 
   case class Sequence(tag: Int, length: Long, items: List[Item], bigEndian: Boolean = false, explicitVR: Boolean = true)
@@ -725,12 +720,14 @@ object Elements {
     override def toBytes: ByteString = toElements.map(_.toBytes).reduce(_ ++ _)
     override def toElements: List[Element] =
       SequenceElement(tag, length, bigEndian, explicitVR) ::
-        items.zipWithIndex.flatMap { case (item, index) => item.toElements(index + 1) } :::
-        SequenceDelimitationElement(marker = !indeterminate, bigEndian) :: Nil
+        items.zipWithIndex.flatMap {
+          case (item, index) => item.toElements(index + 1)
+        } :::
+        (if (indeterminate) SequenceDelimitationElement(bigEndian) :: Nil else Nil)
     def size: Int                                 = items.length
     def setItem(index: Int, item: Item): Sequence = copy(items = items.updated(index - 1, item))
     override def toString: String =
-      s"Sequence(${tagToString(tag)} SQ # $length ${items.length} ${Lookup.keywordOf(tag)})"
+      s"Sequence(${tagToString(tag)} SQ # $length ${items.length} ${Lookup.keywordOf(tag).getOrElse("")})"
   }
 
   object Sequence {
@@ -769,7 +766,7 @@ object Elements {
     val indeterminate: Boolean = length == indeterminateLength
     def toElements(index: Int): List[Element] =
       ItemElement(index, length, bigEndian) :: elements.toElements(false) :::
-        ItemDelimitationElement(index, marker = !indeterminate, bigEndian) :: Nil
+        (if (indeterminate) ItemDelimitationElement(index, bigEndian) :: Nil else Nil)
     def toBytes: ByteString = toElements(1).map(_.toBytes).reduce(_ ++ _)
     def setElements(elements: Elements): Item = {
       val newLength = if (this.indeterminate) indeterminateLength else elements.toBytes(withPreamble = false).length
@@ -884,7 +881,8 @@ object Elements {
         SequenceDelimitationElement(bigEndian) :: Nil
     def setFragment(index: Int, fragment: Fragment): Fragments =
       copy(fragments = fragments.updated(index - 1, fragment))
-    override def toString: String = s"Fragments(${tagToString(tag)} $vr # ${fragments.length} ${Lookup.keywordOf(tag)})"
+    override def toString: String =
+      s"Fragments(${tagToString(tag)} $vr # ${fragments.length} ${Lookup.keywordOf(tag).getOrElse("")})"
   }
 
   object Fragments {
@@ -892,30 +890,6 @@ object Elements {
       Fragments(tag, vr, None, Nil, bigEndian, explicitVR)
     def empty(element: FragmentsElement): Fragments =
       empty(element.tag, element.vr, element.bigEndian, element.explicitVR)
-  }
-
-  /**
-    * A builder for performant creation of Elements.
-    */
-  class ElementsBuilder private[Elements] (
-      var characterSets: CharacterSets = defaultCharacterSet,
-      var zoneOffset: ZoneOffset = systemZone
-  ) {
-    val data: ArrayBuffer[ElementSet] = ArrayBuffer.empty
-    def +=(element: ElementSet): ElementsBuilder = {
-      element match {
-        case e: ValueElement if e.tag == Tag.SpecificCharacterSet =>
-          characterSets = CharacterSets(e)
-        case e: ValueElement if e.tag == Tag.TimezoneOffsetFromUTC =>
-          zoneOffset = parseZoneOffset(e.value.toUtf8String).getOrElse(zoneOffset)
-        case _ =>
-      }
-      data += element
-      this
-    }
-    def result(): Elements = Elements(characterSets, zoneOffset, data.toVector)
-    override def toString: String =
-      s"ElementsBuilder(characterSets = $characterSets, zoneOffset = $zoneOffset, size = ${data.size})"
   }
 
 }

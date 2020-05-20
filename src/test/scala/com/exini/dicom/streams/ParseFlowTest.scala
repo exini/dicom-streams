@@ -241,12 +241,8 @@ class ParseFlowTest
   }
 
   it should "read DICOM data with fragments" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++ ByteString(
-      5,
-      6,
-      7,
-      8
-    ) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
+      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
       .single(bytes)
@@ -264,12 +260,8 @@ class ParseFlowTest
   }
 
   it should "issue a warning when a fragments delimitation tag has nonzero length" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++ ByteString(
-      5,
-      6,
-      7,
-      8
-    ) ++ sequenceEndNonZeroLength()
+    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
+      ByteString(5, 6, 7, 8) ++ sequenceEndNonZeroLength()
 
     val source = Source
       .single(bytes)
@@ -287,12 +279,8 @@ class ParseFlowTest
   }
 
   it should "parse a tag which is not an item, item data nor fragments delimitation inside fragments as unknown" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ studyDate() ++ item(4) ++ ByteString(
-      5,
-      6,
-      7,
-      8
-    ) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ studyDate() ++ item(4) ++
+      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
       .single(bytes)
@@ -512,8 +500,8 @@ class ParseFlowTest
   }
 
   it should "handle sequences and items of determinate length" in {
-    val bytes = studyDate() ++ (sequence(Tag.DerivationCodeSequence, 8 + 18 + 16) ++ item(
-      18 + 16
+    val bytes = studyDate() ++ (sequence(Tag.DerivationCodeSequence, 8 + 16 + 16) ++ item(
+      16 + 16
     ) ++ studyDate() ++ personNameJohnDoe()) ++ personNameJohnDoe()
 
     val source = Source
