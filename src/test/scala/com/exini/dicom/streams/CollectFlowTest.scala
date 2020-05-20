@@ -7,7 +7,7 @@ import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts.{ DicomPart, ElementsPart }
 import com.exini.dicom.data.TestData._
-import com.exini.dicom.data.{ Tag, TagTree }
+import com.exini.dicom.data.{ Tag, TagTree, item, _ }
 import com.exini.dicom.streams.CollectFlow._
 import com.exini.dicom.streams.ParseFlow.parseFlow
 import com.exini.dicom.streams.TestUtils._
@@ -133,4 +133,63 @@ class CollectFlowTest
       .expectDicomError()
   }
 
+  it should "collect attributes in sequences" in {
+    val bytes = studyDate() ++
+      (
+        sequence(Tag.DerivationCodeSequence, 8 + 16 + 12 + 8 + 16 + 8 + 8 + 16) ++
+          item(16 + 12 + 8 + 16 + 8 + 8 + 16) ++
+          studyDate() ++ (sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++
+          itemDelimitation() ++ sequenceDelimitation()) ++
+          personNameJohnDoe()
+      ) ++ patientID()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow(chunkSize = 500))
+      .via(
+        collectFlow(
+          Set(
+            TagTree.fromTag(Tag.PatientID),
+            TagTree.fromItem(Tag.DerivationCodeSequence, 1)
+          ),
+          "tag"
+        )
+      )
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .request(1)
+      .expectNextChainingPF {
+        case e: ElementsPart =>
+          e.label shouldBe "tag"
+          e.elements.size shouldBe 2
+          e.elements(Tag.PatientID) should not be empty
+          e.elements(Tag.DerivationCodeSequence) should not be empty
+          e.elements.getSequence(Tag.DerivationCodeSequence).get.item(1).get.elements.size shouldBe 3
+      }
+  }
+
+  it should "collect fragments" in {
+    val bytes = studyDate() ++ pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
+      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow(chunkSize = 500))
+      .via(collectFlow(Set(TagTree.fromTag(Tag.PixelData)), "tag"))
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .request(1)
+      .expectNextChainingPF {
+        case e: ElementsPart =>
+          e.label shouldBe "tag"
+          e.elements.size shouldBe 1
+          val f = e.elements.getFragments(Tag.PixelData)
+          f should not be empty
+          f.get.offsets shouldBe defined
+          f.get.offsets.get should have length 1
+          f.get.fragments should have length 1
+      }
+  }
 }

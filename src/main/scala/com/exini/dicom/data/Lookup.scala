@@ -16,8 +16,6 @@
 
 package com.exini.dicom.data
 
-import com.exini.dicom.data.VR.VR
-
 object Lookup {
 
   def vrOf(tag: Int): VR = TagToVR.vrOf(tag)

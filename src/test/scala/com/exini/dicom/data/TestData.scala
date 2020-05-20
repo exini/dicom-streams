@@ -1,7 +1,7 @@
 package com.exini.dicom.data
 
 import akka.util.ByteString
-import com.exini.dicom.data.Elements.ValueElement
+import com.exini.dicom.data.DicomElements.ValueElement
 
 object TestData {
 

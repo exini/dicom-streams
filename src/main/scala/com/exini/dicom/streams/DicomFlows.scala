@@ -22,10 +22,9 @@ import akka.NotUsed
 import akka.stream.scaladsl.{ Flow, Source }
 import akka.util.ByteString
 import com.exini.dicom.data.CharacterSets.utf8Charset
+import com.exini.dicom.data.DicomElements.ValueElement
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.Elements.ValueElement
 import com.exini.dicom.data.TagPath.EmptyTagPath
-import com.exini.dicom.data.VR.VR
 import com.exini.dicom.data._
 import com.exini.dicom.streams.CollectFlow._
 import com.exini.dicom.streams.ModifyFlow._
@@ -444,7 +443,7 @@ object DicomFlows {
   def toIndeterminateLengthSequences: PartFlow =
     DicomFlowFactory.create(
       new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] { // map to indeterminate length
-        val indeterminateBytes = ByteString(0xff, 0xff, 0xff, 0xff)
+        val indeterminateBytes: ByteString = ByteString(0xff, 0xff, 0xff, 0xff)
 
         override def onSequence(part: SequencePart): List[DicomPart] =
           super.onSequence(part).map {

@@ -4,9 +4,8 @@ import java.util.zip.Deflater
 
 import akka.stream.testkit.TestSubscriber
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.Elements._
-import com.exini.dicom.data.VR.VR
 import com.exini.dicom.data._
 
 object TestUtils {
@@ -263,20 +262,20 @@ object TestUtils {
           case p                                                        => throw new RuntimeException(s"Expected ItemElement, got $p")
         }
 
-    def expectItemDelimitation(index: Int, marker: Boolean): ElementProbe =
+    def expectItemDelimitation(index: Int): ElementProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case e: ItemDelimitationElement if e.index == index && e.marker == marker => true
-          case p                                                                    => throw new RuntimeException(s"Expected ItemDelimitationElement, got $p")
+          case e: ItemDelimitationElement if e.index == index => true
+          case p                                              => throw new RuntimeException(s"Expected ItemDelimitationElement, got $p")
         }
 
-    def expectSequenceDelimitation(marker: Boolean): ElementProbe =
+    def expectSequenceDelimitation(): ElementProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case e: SequenceDelimitationElement if e.marker == marker => true
-          case p                                                    => throw new RuntimeException(s"Expected SequencedDelimitationElement, got $p")
+          case _: SequenceDelimitationElement => true
+          case p                              => throw new RuntimeException(s"Expected SequencedDelimitationElement, got $p")
         }
 
     def expectDicomComplete(): ElementProbe =

@@ -21,12 +21,10 @@ import java.net.URI
 import java.time.{ LocalDate, LocalTime, ZoneOffset, ZonedDateTime }
 
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.Elements.{ ValueElement, _ }
+import com.exini.dicom.data.Elements._
 import com.exini.dicom.data.TagPath._
-import com.exini.dicom.data.VR.VR
-
-import scala.collection.mutable.ArrayBuffer
 
 /**
   * Representation of a group of `ElementSet`s, a dataset. Representation is immutable so methods for inserting, updating
@@ -302,10 +300,15 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def setCharacterSets(characterSets: CharacterSets): Elements = copy(characterSets = characterSets)
   def setZoneOffset(zoneOffset: ZoneOffset): Elements          = copy(zoneOffset = zoneOffset)
 
-  def setValue(tag: Int, vr: VR, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+  def setValue(tag: Int, vr: VR, value: Value, bigEndian: Boolean, explicitVR: Boolean): Elements =
     set(ValueElement(tag, vr, value, bigEndian, explicitVR))
-  def setBytes(tag: Int, vr: VR, value: ByteString, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+  def setValue(tag: Int, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setValue(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
+
+  def setBytes(tag: Int, vr: VR, value: ByteString, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value(value), bigEndian, explicitVR)
+  def setBytes(tag: Int, value: ByteString, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setBytes(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setStrings(tag: Int, vr: VR, values: Seq[String], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromStrings(vr, values, bigEndian), bigEndian, explicitVR)
@@ -426,6 +429,327 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def setURI(tag: Int, value: URI, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
     setURI(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
+  def setNestedValue(tagPath: TagPathTag, vr: VR, value: Value, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    if (tagPath.isRoot)
+      setValue(tagPath.tag, vr, value, bigEndian, explicitVR)
+    else
+      setNested(
+        tagPath.previous.asInstanceOf[TagPathItem],
+        getNested(tagPath.previous.asInstanceOf[TagPathItem])
+          .getOrElse(Elements.empty())
+          .setValue(tagPath.tag, vr, value, bigEndian, explicitVR)
+      )
+  def setNestedValue(
+      tagPath: TagPathTag,
+      value: Value,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedValue(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedBytes(
+      tagPath: TagPathTag,
+      vr: VR,
+      value: ByteString,
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value(value), bigEndian, explicitVR)
+  def setNestedBytes(
+      tagPath: TagPathTag,
+      value: ByteString,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedBytes(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedStrings(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[String],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromStrings(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedStrings(
+      tagPath: TagPathTag,
+      values: Seq[String],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedStrings(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedString(tagPath: TagPathTag, vr: VR, value: String, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromString(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedString(
+      tagPath: TagPathTag,
+      value: String,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedString(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedShorts(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[Short],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromShorts(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedShorts(
+      tagPath: TagPathTag,
+      values: Seq[Short],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedShorts(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedShort(tagPath: TagPathTag, vr: VR, value: Short, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromShort(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedShort(
+      tagPath: TagPathTag,
+      value: Short,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedShort(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedInts(tagPath: TagPathTag, vr: VR, values: Seq[Int], bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromInts(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedInts(
+      tagPath: TagPathTag,
+      values: Seq[Int],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedInts(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedInt(tagPath: TagPathTag, vr: VR, value: Int, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromInt(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedInt(tagPath: TagPathTag, value: Int, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setNestedInt(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedLongs(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[Long],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromLongs(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedLongs(
+      tagPath: TagPathTag,
+      values: Seq[Long],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedLongs(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedLong(tagPath: TagPathTag, vr: VR, value: Long, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromLong(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedLong(
+      tagPath: TagPathTag,
+      value: Long,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedLong(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedVeryLongs(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[BigInteger],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromVeryLongs(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedVeryLongs(
+      tagPath: TagPathTag,
+      values: Seq[BigInteger],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedVeryLongs(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedVeryLong(
+      tagPath: TagPathTag,
+      vr: VR,
+      value: BigInteger,
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromVeryLong(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedVeryLong(
+      tagPath: TagPathTag,
+      value: BigInteger,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedVeryLong(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedFloats(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[Float],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromFloats(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedFloats(
+      tagPath: TagPathTag,
+      values: Seq[Float],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedFloats(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedFloat(tagPath: TagPathTag, vr: VR, value: Float, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromFloat(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedFloat(
+      tagPath: TagPathTag,
+      value: Float,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedFloat(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedDoubles(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[Double],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromDoubles(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedDoubles(
+      tagPath: TagPathTag,
+      values: Seq[Double],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDoubles(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedDouble(tagPath: TagPathTag, vr: VR, value: Double, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromDouble(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedDouble(
+      tagPath: TagPathTag,
+      value: Double,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDouble(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedDates(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[LocalDate],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromDates(vr, values), bigEndian, explicitVR)
+  def setNestedDates(
+      tagPath: TagPathTag,
+      values: Seq[LocalDate],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDates(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedDate(tagPath: TagPathTag, vr: VR, value: LocalDate, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromDate(vr, value), bigEndian, explicitVR)
+  def setNestedDate(
+      tagPath: TagPathTag,
+      value: LocalDate,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDate(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedTimes(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[LocalTime],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromTimes(vr, values), bigEndian, explicitVR)
+  def setNestedTimes(
+      tagPath: TagPathTag,
+      values: Seq[LocalTime],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedTimes(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedTime(tagPath: TagPathTag, vr: VR, value: LocalTime, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromTime(vr, value), bigEndian, explicitVR)
+  def setNestedTime(
+      tagPath: TagPathTag,
+      value: LocalTime,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedTime(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedDateTimes(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[ZonedDateTime],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromDateTimes(vr, values), bigEndian, explicitVR)
+  def setNestedDateTimes(
+      tagPath: TagPathTag,
+      values: Seq[ZonedDateTime],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDateTimes(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedDateTime(
+      tagPath: TagPathTag,
+      vr: VR,
+      value: ZonedDateTime,
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromDateTime(vr, value), bigEndian, explicitVR)
+  def setNestedDateTime(
+      tagPath: TagPathTag,
+      value: ZonedDateTime,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDateTime(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedPersonNames(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[PersonName],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromPersonNames(vr, values), bigEndian, explicitVR)
+  def setNestedPersonNames(
+      tagPath: TagPathTag,
+      values: Seq[PersonName],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedPersonNames(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedPersonName(
+      tagPath: TagPathTag,
+      vr: VR,
+      value: PersonName,
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromPersonName(vr, value), bigEndian, explicitVR)
+  def setNestedPersonName(
+      tagPath: TagPathTag,
+      value: PersonName,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedPersonName(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedURI(tagPath: TagPathTag, vr: VR, value: URI, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromURI(vr, value), bigEndian, explicitVR)
+  def setNestedURI(tagPath: TagPathTag, value: URI, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setNestedURI(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
   def remove(tag: Int): Elements = filter(_.tag != tag)
   def remove(tagPath: TagPath): Elements =
     tagPath match {
@@ -508,7 +832,7 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
       case f: Fragments =>
         val heading = {
           val description = s"Fragments with ${f.size} fragment(s)"
-          s"$indent${tagToString(f.tag)} ${f.vr} ($description) ${space1(description)} #    na, 1 ${Lookup.keywordOf(f.tag)}"
+          s"$indent${tagToString(f.tag)} ${f.vr} ($description) ${space1(description)} #    na, 1 ${Lookup.keywordOf(f.tag).getOrElse("")}"
         }
         val offsets = f.offsets
           .map { o =>
@@ -537,14 +861,13 @@ object Elements {
   /**
     * @return an Elements with no data and default character set only and the system's time zone
     */
-  def empty(characterSets: CharacterSets = defaultCharacterSet, zoneOffset: ZoneOffset = systemZone): Elements =
-    Elements(characterSets, zoneOffset, Vector.empty)
+  def empty(): Elements =
+    Elements(defaultCharacterSet, systemZone, Vector.empty)
 
   /**
     * @return create a new Elements builder used to incrementally add data to Elements in a performant manner
     */
-  def newBuilder(characterSets: CharacterSets = defaultCharacterSet, zoneOffset: ZoneOffset = systemZone) =
-    new ElementsBuilder(characterSets, zoneOffset)
+  def newBuilder() = new ElementsBuilder()
 
   def fileMetaInformationElements(
       sopInstanceUID: String,
@@ -579,343 +902,5 @@ object Elements {
     catch {
       case _: Throwable => None
     }
-
-  /**
-    * A complete DICOM element, e.g. a standard value element, a sequence start marker, a sequence delimiation marker or
-    * a fragments start marker.
-    */
-  trait Element {
-    val bigEndian: Boolean
-    def toBytes: ByteString
-    def toParts: List[DicomPart]
-  }
-
-  /**
-    * A DICOM tag and all its associated data: a standard value element, a (complete) sequence or a (complete) fragments
-    */
-  sealed trait ElementSet {
-    val tag: Int
-    val vr: VR
-    val bigEndian: Boolean
-    val explicitVR: Boolean
-    def toBytes: ByteString
-    def toElements: List[Element]
-  }
-
-  case object PreambleElement extends Element {
-    override val bigEndian: Boolean       = false
-    override def toBytes: ByteString      = ByteString.fromArray(new Array[Byte](128)) ++ ByteString("DICM")
-    override def toString: String         = "PreambleElement(0, ..., 0, D, I, C, M)"
-    override def toParts: List[DicomPart] = PreamblePart(toBytes) :: Nil
-  }
-
-  case class ValueElement(tag: Int, vr: VR, value: Value, bigEndian: Boolean, explicitVR: Boolean)
-      extends Element
-      with ElementSet {
-    val length: Int                          = value.length
-    def setValue(value: Value): ValueElement = copy(value = value.ensurePadding(vr))
-    override def toBytes: ByteString         = toParts.map(_.bytes).reduce(_ ++ _)
-    override def toParts: List[DicomPart] =
-      if (length > 0)
-        HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: ValueChunk(
-          bigEndian,
-          value.bytes,
-          last = true
-        ) :: Nil
-      else
-        HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: Nil
-    override def toElements: List[Element] = this :: Nil
-    override def toString: String = {
-      val strings = value.toStrings(vr, bigEndian, defaultCharacterSet)
-      val s       = strings.mkString(multiValueDelimiter)
-      val vm      = strings.length.toString
-      s"ValueElement(${tagToString(tag)} $vr [$s] # $length, $vm ${Lookup.keywordOf(tag)})"
-    }
-  }
-
-  object ValueElement {
-    def apply(tag: Int, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
-      ValueElement(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
-    def fromBytes(tag: Int, bytes: ByteString, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
-      apply(tag, Value(bytes), bigEndian, explicitVR)
-    def fromString(tag: Int, string: String, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
-      apply(tag, Value.fromString(Lookup.vrOf(tag), string, bigEndian), bigEndian, explicitVR)
-    def empty(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
-      ValueElement(tag, vr, Value.empty, bigEndian, explicitVR)
-  }
-
-  case class SequenceElement(tag: Int, length: Long, bigEndian: Boolean = false, explicitVR: Boolean = true)
-      extends Element {
-    def indeterminate: Boolean            = length == indeterminateLength
-    override def toBytes: ByteString      = HeaderPart(tag, VR.SQ, length, isFmi = false, bigEndian, explicitVR).bytes
-    override def toParts: List[DicomPart] = SequencePart(tag, length, bigEndian, explicitVR, toBytes) :: Nil
-    override def toString: String         = s"SequenceElement(${tagToString(tag)} SQ # $length ${Lookup.keywordOf(tag)})"
-  }
-
-  case class FragmentsElement(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true)
-      extends Element {
-    override def toBytes: ByteString = toParts.head.bytes
-    override def toParts: List[DicomPart] =
-      FragmentsPart(
-        tag,
-        indeterminateLength,
-        vr,
-        bigEndian,
-        explicitVR,
-        HeaderPart(this.tag, this.vr, indeterminateLength, isFmi = false, this.bigEndian, this.explicitVR).bytes
-      ) :: Nil
-    override def toString: String = s"FragmentsElement(${tagToString(tag)} $vr # ${Lookup.keywordOf(tag)})"
-  }
-
-  case class FragmentElement(index: Int, length: Long, value: Value, bigEndian: Boolean = false) extends Element {
-    override def toBytes: ByteString = toParts.map(_.bytes).reduce(_ ++ _)
-    override def toParts: List[DicomPart] =
-      if (value.length > 0)
-        ItemElement(index, value.length, bigEndian).toParts ::: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
-      else
-        ItemElement(index, value.length, bigEndian).toParts ::: Nil
-    override def toString: String = s"FragmentElement(index = $index, length = $length)"
-  }
-
-  object FragmentElement {
-    def empty(index: Int, length: Long, bigEndian: Boolean = false): FragmentElement =
-      FragmentElement(index, length, Value.empty, bigEndian)
-  }
-
-  case class ItemElement(index: Int, length: Long, bigEndian: Boolean = false) extends Element {
-    def indeterminate: Boolean            = length == indeterminateLength
-    override def toBytes: ByteString      = tagToBytes(Tag.Item, bigEndian) ++ intToBytes(length.toInt, bigEndian)
-    override def toParts: List[DicomPart] = ItemPart(index, length, bigEndian, toBytes) :: Nil
-    override def toString: String         = s"ItemElement(index = $index, length = $length)"
-  }
-
-  case class ItemDelimitationElement(index: Int, marker: Boolean = false, bigEndian: Boolean = false) extends Element {
-    override def toBytes: ByteString =
-      if (marker) ByteString.empty else tagToBytes(Tag.ItemDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
-    override def toParts: List[DicomPart] = if (marker) Nil else ItemDelimitationPart(index, bigEndian, toBytes) :: Nil
-    override def toString: String         = s"ItemDelimitationElement(index = $index, marker = $marker)"
-  }
-
-  case class SequenceDelimitationElement(marker: Boolean = false, bigEndian: Boolean = false) extends Element {
-    override def toBytes: ByteString =
-      if (marker) ByteString.empty else tagToBytes(Tag.SequenceDelimitationItem, bigEndian) ++ ByteString(0, 0, 0, 0)
-    override def toParts: List[DicomPart] = if (marker) Nil else SequenceDelimitationPart(bigEndian, toBytes) :: Nil
-    override def toString: String         = s"SequenceDelimitationElement(marker = $marker)"
-  }
-
-  case class Sequence(tag: Int, length: Long, items: List[Item], bigEndian: Boolean = false, explicitVR: Boolean = true)
-      extends ElementSet {
-    val vr: VR                 = VR.SQ
-    val indeterminate: Boolean = length == indeterminateLength
-    def item(index: Int): Option[Item] =
-      try Option(items(index - 1))
-      catch {
-        case _: Throwable => None
-      }
-    def +(item: Item): Sequence =
-      if (indeterminate)
-        copy(items = items :+ item)
-      else
-        copy(length = length + item.toBytes.length, items = items :+ item)
-    def removeItem(index: Int): Sequence =
-      if (indeterminate)
-        copy(items = items.patch(index - 1, Nil, 1))
-      else
-        copy(length = length - item(index).map(_.toBytes.length).getOrElse(0), items = items.patch(index - 1, Nil, 1))
-    override def toBytes: ByteString = toElements.map(_.toBytes).reduce(_ ++ _)
-    override def toElements: List[Element] =
-      SequenceElement(tag, length, bigEndian, explicitVR) ::
-        items.zipWithIndex.flatMap { case (item, index) => item.toElements(index + 1) } :::
-        SequenceDelimitationElement(marker = !indeterminate, bigEndian) :: Nil
-    def size: Int                                 = items.length
-    def setItem(index: Int, item: Item): Sequence = copy(items = items.updated(index - 1, item))
-    override def toString: String =
-      s"Sequence(${tagToString(tag)} SQ # $length ${items.length} ${Lookup.keywordOf(tag)})"
-  }
-
-  object Sequence {
-    def empty(
-        tag: Int,
-        length: Long = indeterminateLength,
-        bigEndian: Boolean = false,
-        explicitVR: Boolean = true
-    ): Sequence = Sequence(tag, length, Nil, bigEndian, explicitVR)
-    def empty(element: SequenceElement): Sequence =
-      empty(element.tag, element.length, element.bigEndian, element.explicitVR)
-    def fromItems(
-        tag: Int,
-        items: List[Item],
-        length: Long = indeterminateLength,
-        bigEndian: Boolean = false,
-        explicitVR: Boolean = true
-    ): Sequence =
-      Sequence(tag, length, items, bigEndian, explicitVR)
-    def fromElements(
-        tag: Int,
-        elements: List[Elements],
-        bigEndian: Boolean = false,
-        explicitVR: Boolean = true
-    ): Sequence =
-      Sequence(
-        tag,
-        indeterminateLength,
-        elements.map(Item.fromElements(_, indeterminateLength, bigEndian)),
-        bigEndian,
-        explicitVR
-      )
-  }
-
-  case class Item(elements: Elements, length: Long = indeterminateLength, bigEndian: Boolean = false) {
-    val indeterminate: Boolean = length == indeterminateLength
-    def toElements(index: Int): List[Element] =
-      ItemElement(index, length, bigEndian) :: elements.toElements(false) :::
-        ItemDelimitationElement(index, marker = !indeterminate, bigEndian) :: Nil
-    def toBytes: ByteString = toElements(1).map(_.toBytes).reduce(_ ++ _)
-    def setElements(elements: Elements): Item = {
-      val newLength = if (this.indeterminate) indeterminateLength else elements.toBytes(withPreamble = false).length
-      copy(elements = elements, length = newLength)
-    }
-    override def toString: String = s"Item(length = $length, elements size = ${elements.size})"
-  }
-
-  object Item {
-    def empty(length: Long = indeterminateLength, bigEndian: Boolean = false): Item =
-      Item(Elements.empty(), length, bigEndian)
-    def empty(element: ItemElement): Item = empty(element.length, element.bigEndian)
-    def fromElements(elements: Elements, length: Long = indeterminateLength, bigEndian: Boolean = false): Item =
-      Item(elements, length, bigEndian)
-  }
-
-  case class Fragment(length: Long, value: Value, bigEndian: Boolean = false) {
-    def toElement(index: Int): FragmentElement = FragmentElement(index, length, value, bigEndian)
-    override def toString: String              = s"Fragment(length = $length, value length = ${value.length})"
-  }
-
-  object Fragment {
-    def fromElement(fragmentElement: FragmentElement): Fragment =
-      Fragment(fragmentElement.length, fragmentElement.value, fragmentElement.bigEndian)
-  }
-
-  /**
-    * Encapsulated (pixel) data holder
-    *
-    * @param tag        tag
-    * @param vr         vr
-    * @param offsets    list of frame offsets. No list (None) means fragments is empty and contains no items. An empty
-    *                   list means offsets item is present but empty. Subsequent items hold frame data
-    * @param fragments  frame data. Note that frames may span several fragments and fragments may contain more than one
-    *                   frame
-    * @param bigEndian  `true` if big endian encoded (should be false)
-    * @param explicitVR `true` if explicit VR is used (should be true)
-    */
-  case class Fragments(
-      tag: Int,
-      vr: VR,
-      offsets: Option[List[Long]],
-      fragments: List[Fragment],
-      bigEndian: Boolean = false,
-      explicitVR: Boolean = true
-  ) extends ElementSet {
-    def fragment(index: Int): Option[Fragment] =
-      try Option(fragments(index - 1))
-      catch {
-        case _: Throwable => None
-      }
-
-    /**
-      * @return the number of frames encapsulated in this `Fragments`
-      */
-    def frameCount: Int = if (offsets.isEmpty && fragments.isEmpty) 0 else if (offsets.isEmpty) 1 else offsets.size
-
-    /**
-      * @return an `Iterator[ByteString]` over the frames encoded in this `Fragments`
-      */
-    def frameIterator: Iterator[ByteString] =
-      new Iterator[ByteString] {
-        val totalLength: Long = fragments.map(_.length).sum
-        val frameOffsets: List[Long] =
-          if (totalLength <= 0) List(0L) else offsets.filter(_.nonEmpty).getOrElse(List(0L)) :+ totalLength
-        val fragmentIterator: Iterator[Fragment] = fragments.iterator
-        var offsetIndex: Int                     = 0
-        var bytes: ByteString                    = ByteString.empty
-
-        override def hasNext: Boolean = offsetIndex < frameOffsets.length - 1
-        override def next(): ByteString = {
-          val frameLength = (frameOffsets(offsetIndex + 1) - frameOffsets(offsetIndex)).toInt
-          while (fragmentIterator.hasNext && bytes.length < frameLength)
-            bytes = bytes ++ fragmentIterator.next().value.bytes
-          val (frame, rest) = bytes.splitAt(frameLength)
-          bytes = rest
-          offsetIndex += 1
-          frame
-        }
-      }
-
-    def +(fragment: Fragment): Fragments =
-      if (fragments.isEmpty && offsets.isEmpty)
-        copy(offsets =
-          Option(
-            fragment.value.bytes
-              .grouped(4)
-              .map(bytes => intToUnsignedLong(bytesToInt(bytes, fragment.bigEndian)))
-              .toList
-          )
-        )
-      else
-        copy(fragments = fragments :+ fragment)
-    def toBytes: ByteString = toElements.map(_.toBytes).reduce(_ ++ _)
-    def size: Int           = fragments.length
-    override def toElements: List[Element] =
-      FragmentsElement(tag, vr, bigEndian, explicitVR) ::
-        offsets
-          .map(o =>
-            FragmentElement(
-              1,
-              4L * o.length,
-              Value(
-                o.map(offset => truncate(4, longToBytes(offset, bigEndian), bigEndian))
-                  .foldLeft(ByteString.empty)(_ ++ _)
-              ),
-              bigEndian
-            ) :: Nil
-          )
-          .getOrElse(Nil) :::
-        fragments.zipWithIndex.map { case (fragment, index) => fragment.toElement(index + 2) } :::
-        SequenceDelimitationElement(bigEndian) :: Nil
-    def setFragment(index: Int, fragment: Fragment): Fragments =
-      copy(fragments = fragments.updated(index - 1, fragment))
-    override def toString: String = s"Fragments(${tagToString(tag)} $vr # ${fragments.length} ${Lookup.keywordOf(tag)})"
-  }
-
-  object Fragments {
-    def empty(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true): Fragments =
-      Fragments(tag, vr, None, Nil, bigEndian, explicitVR)
-    def empty(element: FragmentsElement): Fragments =
-      empty(element.tag, element.vr, element.bigEndian, element.explicitVR)
-  }
-
-  /**
-    * A builder for performant creation of Elements.
-    */
-  class ElementsBuilder private[Elements] (
-      var characterSets: CharacterSets = defaultCharacterSet,
-      var zoneOffset: ZoneOffset = systemZone
-  ) {
-    val data: ArrayBuffer[ElementSet] = ArrayBuffer.empty
-    def +=(element: ElementSet): ElementsBuilder = {
-      element match {
-        case e: ValueElement if e.tag == Tag.SpecificCharacterSet =>
-          characterSets = CharacterSets(e)
-        case e: ValueElement if e.tag == Tag.TimezoneOffsetFromUTC =>
-          zoneOffset = parseZoneOffset(e.value.toUtf8String).getOrElse(zoneOffset)
-        case _ =>
-      }
-      data += element
-      this
-    }
-    def result(): Elements = Elements(characterSets, zoneOffset, data.toVector)
-    override def toString: String =
-      s"ElementsBuilder(characterSets = $characterSets, zoneOffset = $zoneOffset, size = ${data.size})"
-  }
 
 }

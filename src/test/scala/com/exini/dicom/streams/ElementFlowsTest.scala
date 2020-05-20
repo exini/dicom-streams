@@ -5,7 +5,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.Elements._
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
@@ -60,7 +60,7 @@ class ElementFlowsTest
       .expectFragments(Tag.PixelData)
       .expectFragment(4)
       .expectFragment(4)
-      .expectSequenceDelimitation(marker = false)
+      .expectSequenceDelimitation()
       .expectDicomComplete()
   }
 
@@ -80,7 +80,7 @@ class ElementFlowsTest
       .expectFragments(Tag.PixelData)
       .expectFragment(0)
       .expectFragment(4)
-      .expectSequenceDelimitation(marker = false)
+      .expectSequenceDelimitation()
       .expectDicomComplete()
   }
 
@@ -98,8 +98,6 @@ class ElementFlowsTest
       .expectSequence(Tag.DerivationCodeSequence, 24)
       .expectItem(1, 16)
       .expectElement(Tag.PatientName)
-      .expectItemDelimitation(1, marker = true)
-      .expectSequenceDelimitation(marker = true)
       .expectDicomComplete()
   }
 
@@ -214,14 +212,6 @@ class ElementFlowsTest
         case (_: TagPath, _: ValueElement) => true
       }
       .request(1)
-      .expectNextChainingPF {
-        case (_: TagPath, e: ItemDelimitationElement) if e.marker && e.index == 1 => true
-      }
-      .request(1)
-      .expectNextChainingPF {
-        case (_: TagPath, e: SequenceDelimitationElement) if e.marker => true
-      }
-      .request(1)
       .expectComplete()
   }
 
@@ -231,12 +221,10 @@ class ElementFlowsTest
       SequenceElement(Tag.DerivationCodeSequence, indeterminateLength),
       SequenceDelimitationElement(),
       SequenceElement(Tag.DerivationCodeSequence, 0),
-      SequenceDelimitationElement(marker = true),
       SequenceElement(Tag.DerivationCodeSequence, indeterminateLength),
       ItemElement(1, indeterminateLength),
       ItemDelimitationElement(1),
       ItemElement(2, 0),
-      ItemDelimitationElement(2, marker = true),
       SequenceDelimitationElement(),
       FragmentsElement(Tag.PixelData, VR.OB),
       FragmentElement(1, 0, Value.empty),
@@ -268,10 +256,6 @@ class ElementFlowsTest
       }
       .request(1)
       .expectNextChainingPF {
-        case (_: TagPath, _: SequenceDelimitationElement) => true
-      }
-      .request(1)
-      .expectNextChainingPF {
         case (_: TagPath, _: SequenceElement) => true
       }
       .request(1)
@@ -285,10 +269,6 @@ class ElementFlowsTest
       .request(1)
       .expectNextChainingPF {
         case (_: TagPath, _: ItemElement) => true
-      }
-      .request(1)
-      .expectNextChainingPF {
-        case (_: TagPath, _: ItemDelimitationElement) => true
       }
       .request(1)
       .expectNextChainingPF {

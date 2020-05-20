@@ -4,9 +4,9 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.Elements.{ SequenceDelimitationElement, SequenceElement, _ }
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.TestData.pixeDataFragments
-import com.exini.dicom.data.{ Tag, UID, _ }
+import com.exini.dicom.data._
 import com.exini.dicom.streams.ElementSink.elementSink
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
@@ -59,19 +59,15 @@ class ElementSinkTest
       SequenceElement(Tag.DerivationCodeSequence, indeterminateLength),
       SequenceDelimitationElement(),
       SequenceElement(Tag.DerivationCodeSequence, 0),
-      SequenceDelimitationElement(marker = true),
       SequenceElement(Tag.DerivationCodeSequence, indeterminateLength),
       ItemElement(1, indeterminateLength),
       ItemDelimitationElement(1),
       ItemElement(2, 0),
-      ItemDelimitationElement(2, marker = true),
       SequenceDelimitationElement(),
       SequenceElement(Tag.DerivationCodeSequence, 16 + 16 + 8),
       ItemElement(1, 16 + 16),
       ValueElement.fromString(Tag.StudyDate, "20200202"),
       ValueElement.fromString(Tag.PatientName, "John^Doe"),
-      ItemDelimitationElement(1, marker = true),
-      SequenceDelimitationElement(marker = true),
       FragmentsElement(Tag.PixelData, VR.OB),
       FragmentElement(1, 0, Value.empty),
       SequenceDelimitationElement(),

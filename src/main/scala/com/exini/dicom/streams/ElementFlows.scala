@@ -19,8 +19,8 @@ package com.exini.dicom.streams
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.Elements._
 import com.exini.dicom.data.TagPath._
 import com.exini.dicom.data.{ TagPath, Value }
 
@@ -32,7 +32,7 @@ object ElementFlows {
     */
   def elementFlow: Flow[DicomPart, Element, NotUsed] =
     DicomFlowFactory.create(
-      new DeferToPartFlow[Element] with GuaranteedDelimitationEvents[Element] with GuaranteedValueEvent[Element] {
+      new DeferToPartFlow[Element] with GuaranteedValueEvent[Element] {
         var bytes: ByteString                        = ByteString.empty
         var currentValue: Option[ValueElement]       = None
         var currentFragment: Option[FragmentElement] = None
@@ -70,14 +70,10 @@ object ElementFlows {
               FragmentsElement(fragments.tag, fragments.vr, fragments.bigEndian, fragments.explicitVR) :: Nil
             case item: ItemPart =>
               ItemElement(item.index, item.length, item.bigEndian) :: Nil
-            case itemDelimitation: ItemDelimitationPartMarker =>
-              ItemDelimitationElement(itemDelimitation.index, marker = true, itemDelimitation.bigEndian) :: Nil
             case itemDelimitation: ItemDelimitationPart =>
-              ItemDelimitationElement(itemDelimitation.index, marker = false, itemDelimitation.bigEndian) :: Nil
-            case SequenceDelimitationPartMarker =>
-              SequenceDelimitationElement(marker = true, SequenceDelimitationPartMarker.bigEndian) :: Nil
+              ItemDelimitationElement(itemDelimitation.index, itemDelimitation.bigEndian) :: Nil
             case sequenceDelimitation: SequenceDelimitationPart =>
-              SequenceDelimitationElement(marker = false, sequenceDelimitation.bigEndian) :: Nil
+              SequenceDelimitationElement(sequenceDelimitation.bigEndian) :: Nil
 
             case _ => Nil
           }
