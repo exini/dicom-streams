@@ -38,7 +38,7 @@ object ModifyFlow {
     /**
       * Modification that will modify dataset elements matching its tag path.
       */
-    def equals(tagPath: TagPathTag, modification: ByteString => ByteString) =
+    def equals(tagPath: TagPathTag, modification: ByteString => ByteString): TagModification =
       TagModification(tagPath.equals, modification)
 
     /**
@@ -46,7 +46,7 @@ object ModifyFlow {
       * modification. E.g. both the dataset elements (0010,0010) and (0008,9215)[1].(0010,0010) will be modified if
       * this tag path is (0010,0010). Useful for changing all instances of a certain element.
       */
-    def endsWith(tagPath: TagPathTag, modification: ByteString => ByteString) =
+    def endsWith(tagPath: TagPathTag, modification: ByteString => ByteString): TagModification =
       TagModification(_.endsWith(tagPath), modification)
   }
 

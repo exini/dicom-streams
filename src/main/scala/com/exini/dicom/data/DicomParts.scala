@@ -17,7 +17,6 @@
 package com.exini.dicom.data
 
 import akka.util.ByteString
-import com.exini.dicom.data.VR.VR
 
 object DicomParts {
 

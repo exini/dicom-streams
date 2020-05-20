@@ -16,50 +16,46 @@
 
 package com.exini.dicom.data
 
-import scala.language.implicitConversions
+import enumeratum.values.{ IntEnum, IntEnumEntry }
 
-object VR extends Enumeration {
-  protected final case class Val(code: Int, headerLength: Int, paddingByte: Byte) extends super.Val
-  type VR = Val
-  implicit def valueToVR(x: Value): VR = x.asInstanceOf[VR]
+sealed abstract class VR(val value: Int, val headerLength: Int, val paddingByte: Byte) extends IntEnumEntry
 
-  final val AE = Val(0x4145, 8, ' ')
-  final val AS = Val(0x4153, 8, ' ')
-  final val AT = Val(0x4154, 8, 0)
-  final val CS = Val(0x4353, 8, ' ')
-  final val DA = Val(0x4441, 8, ' ')
-  final val DS = Val(0x4453, 8, ' ')
-  final val DT = Val(0x4454, 8, ' ')
-  final val FD = Val(0x4644, 8, 0)
-  final val FL = Val(0x464c, 8, 0)
-  final val IS = Val(0x4953, 8, ' ')
-  final val LO = Val(0x4c4f, 8, ' ')
-  final val LT = Val(0x4c54, 8, ' ')
-  final val OB = Val(0x4f42, 12, 0)
-  final val OD = Val(0x4f44, 12, 0)
-  final val OF = Val(0x4f46, 12, 0)
-  final val OL = Val(0x4f4c, 12, 0)
-  final val OV = Val(0x4f56, 12, 0)
-  final val OW = Val(0x4f57, 12, 0)
-  final val PN = Val(0x504e, 8, ' ')
-  final val SH = Val(0x5348, 8, ' ')
-  final val SL = Val(0x534c, 8, 0)
-  final val SQ = Val(0x5351, 12, 0)
-  final val SS = Val(0x5353, 8, 0)
-  final val ST = Val(0x5354, 8, ' ')
-  final val SV = Val(0x5356, 12, 0)
-  final val TM = Val(0x544d, 8, ' ')
-  final val UC = Val(0x5543, 12, ' ')
-  final val UI = Val(0x5549, 8, 0)
-  final val UL = Val(0x554c, 8, 0)
-  final val UN = Val(0x554e, 12, 0)
-  final val UR = Val(0x5552, 12, ' ')
-  final val US = Val(0x5553, 8, 0)
-  final val UT = Val(0x5554, 12, ' ')
-  final val UV = Val(0x5556, 12, 0)
+object VR extends IntEnum[VR] {
 
-  private lazy final val valueOfMap: Map[Int, Value] = VR.values.map(vr => vr.code -> vr).toMap
-  def valueOf(code: Int): VR =
-    try valueOfMap(code)
-    catch { case _: Throwable => null }
+  val values: IndexedSeq[VR] = findValues
+
+  case object AE extends VR(0x4145, 8, ' ')
+  case object AS extends VR(0x4153, 8, ' ')
+  case object AT extends VR(0x4154, 8, 0)
+  case object CS extends VR(0x4353, 8, ' ')
+  case object DA extends VR(0x4441, 8, ' ')
+  case object DS extends VR(0x4453, 8, ' ')
+  case object DT extends VR(0x4454, 8, ' ')
+  case object FD extends VR(0x4644, 8, 0)
+  case object FL extends VR(0x464c, 8, 0)
+  case object IS extends VR(0x4953, 8, ' ')
+  case object LO extends VR(0x4c4f, 8, ' ')
+  case object LT extends VR(0x4c54, 8, ' ')
+  case object OB extends VR(0x4f42, 12, 0)
+  case object OD extends VR(0x4f44, 12, 0)
+  case object OF extends VR(0x4f46, 12, 0)
+  case object OL extends VR(0x4f4c, 12, 0)
+  case object OV extends VR(0x4f56, 12, 0)
+  case object OW extends VR(0x4f57, 12, 0)
+  case object PN extends VR(0x504e, 8, ' ')
+  case object SH extends VR(0x5348, 8, ' ')
+  case object SL extends VR(0x534c, 8, 0)
+  case object SQ extends VR(0x5351, 12, 0)
+  case object SS extends VR(0x5353, 8, 0)
+  case object ST extends VR(0x5354, 8, ' ')
+  case object SV extends VR(0x5356, 12, 0)
+  case object TM extends VR(0x544d, 8, ' ')
+  case object UC extends VR(0x5543, 12, ' ')
+  case object UI extends VR(0x5549, 8, 0)
+  case object UL extends VR(0x554c, 8, 0)
+  case object UN extends VR(0x554e, 12, 0)
+  case object UR extends VR(0x5552, 12, ' ')
+  case object US extends VR(0x5553, 8, 0)
+  case object UT extends VR(0x5554, 12, ' ')
+  case object UV extends VR(0x5556, 12, 0)
 }

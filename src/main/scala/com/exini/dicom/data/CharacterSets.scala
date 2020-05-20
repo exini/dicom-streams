@@ -19,8 +19,7 @@ package com.exini.dicom.data
 import java.nio.charset.{ Charset, StandardCharsets }
 
 import akka.util.ByteString
-import com.exini.dicom.data.Elements.ValueElement
-import com.exini.dicom.data.VR.VR
+import com.exini.dicom.data.DicomElements.ValueElement
 
 /**
   * Class for decoding DICOM character data according to one or more character sets as specified by the
@@ -184,7 +183,7 @@ object CharacterSets {
       case _     => false
     }
 
-  def encode(s: String) = ByteString(s.getBytes(utf8Charset))
+  def encode(s: String): ByteString = ByteString(s.getBytes(utf8Charset))
 }
 
 case class CharsetObj(charset: Charset, charlength: Int, escapeSequence: Option[ByteString]) {

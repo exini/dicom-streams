@@ -2,8 +2,9 @@ package com.exini.dicom.data
 
 import java.time.ZoneOffset
 
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.Elements._
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.{ Logger, LoggerFactory }
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -143,7 +144,7 @@ class ElementsBuilder() {
 }
 
 class DatasetBuilder(var characterSets: CharacterSets, var zoneOffset: ZoneOffset) {
-  private var data: ArrayBuffer[ElementSet] = ArrayBuffer.empty
+  private val data: ArrayBuffer[ElementSet] = ArrayBuffer.empty
 
   def +=(elementSet: ElementSet): DatasetBuilder = {
     elementSet match {

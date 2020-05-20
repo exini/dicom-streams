@@ -4,9 +4,9 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.Elements.{ SequenceDelimitationElement, SequenceElement, _ }
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.TestData.pixeDataFragments
-import com.exini.dicom.data.{ Tag, UID, _ }
+import com.exini.dicom.data._
 import com.exini.dicom.streams.ElementSink.elementSink
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike

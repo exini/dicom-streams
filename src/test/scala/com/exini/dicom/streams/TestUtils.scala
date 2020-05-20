@@ -4,9 +4,8 @@ import java.util.zip.Deflater
 
 import akka.stream.testkit.TestSubscriber
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.Elements._
-import com.exini.dicom.data.VR.VR
 import com.exini.dicom.data._
 
 object TestUtils {

@@ -5,8 +5,8 @@ import java.net.URI
 import java.time.{ LocalDate, LocalTime, ZoneOffset }
 
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts.HeaderPart
-import com.exini.dicom.data.Elements._
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TestData._
 import org.scalatest.Assertion

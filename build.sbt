@@ -43,6 +43,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "org.slf4j" % "slf4j-simple" % "1.7.30",
+    "com.beachape" %% "enumeratum" % "1.6.1",
     "org.scalatest" %% "scalatest" % "3.1.1" % "test",
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test"
   )

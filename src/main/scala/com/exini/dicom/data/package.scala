@@ -22,7 +22,6 @@ import java.time.{ ZoneOffset, ZonedDateTime }
 import java.util.UUID
 
 import akka.util.ByteString
-import com.exini.dicom.data.VR.VR
 
 package object data {
 

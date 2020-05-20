@@ -24,9 +24,9 @@ case class Multiplicity(min: Int, max: Option[Int]) {
 }
 
 object Multiplicity {
-  def fixed(value: Int)             = Multiplicity(value, Some(value))
-  def bounded(min: Int, max: Int)   = Multiplicity(min, Some(max))
-  def unbounded(min: Int)           = Multiplicity(min, None)
-  final val single: Multiplicity    = fixed(1)
-  final val oneToMany: Multiplicity = unbounded(1)
+  def fixed(value: Int): Multiplicity           = Multiplicity(value, Some(value))
+  def bounded(min: Int, max: Int): Multiplicity = Multiplicity(min, Some(max))
+  def unbounded(min: Int): Multiplicity         = Multiplicity(min, None)
+  final val single: Multiplicity                = fixed(1)
+  final val oneToMany: Multiplicity             = unbounded(1)
 }

@@ -139,7 +139,7 @@ class CollectFlowTest
         sequence(Tag.DerivationCodeSequence, 8 + 16 + 12 + 8 + 16 + 8 + 8 + 16) ++
           item(16 + 12 + 8 + 16 + 8 + 8 + 16) ++
           studyDate() ++ (sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++
-            itemDelimitation() ++ sequenceDelimitation()) ++
+          itemDelimitation() ++ sequenceDelimitation()) ++
           personNameJohnDoe()
       ) ++ patientID()
 
@@ -150,7 +150,7 @@ class CollectFlowTest
         collectFlow(
           Set(
             TagTree.fromTag(Tag.PatientID),
-            TagTree.fromItem(Tag.DerivationCodeSequence, 1).thenAnyItem(Tag.DerivationCodeSequence)
+            TagTree.fromItem(Tag.DerivationCodeSequence, 1)
           ),
           "tag"
         )
@@ -176,7 +176,7 @@ class CollectFlowTest
     val source = Source
       .single(bytes)
       .via(ParseFlow(chunkSize = 500))
-      .via(collectFlow(Set(TagTree.fromTag(Tag.PixelData)),"tag"))
+      .via(collectFlow(Set(TagTree.fromTag(Tag.PixelData)), "tag"))
 
     source
       .runWith(TestSink.probe[DicomPart])

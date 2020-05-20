@@ -5,7 +5,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.Elements._
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._

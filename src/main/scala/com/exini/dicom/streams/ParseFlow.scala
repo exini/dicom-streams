@@ -18,13 +18,14 @@ package com.exini.dicom.streams
 
 import akka.NotUsed
 import akka.stream.javadsl.MergePreferred
-import akka.stream.scaladsl.{ Compression, Flow, GraphDSL, Partition }
+import akka.stream.scaladsl.{Compression, Flow, GraphDSL, Partition}
 import akka.stream.stage._
-import akka.stream.{ Attributes, FlowShape }
+import akka.stream.{Attributes, FlowShape}
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.VR.VR
 import com.exini.dicom.data._
+
+import scala.util.Try
 
 class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
 
@@ -76,7 +77,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
         val (tag, vr) = tagVr(data, assumeBigEndian, explicitVr = false)
         if (vr == VR.UN)
           None
-        else if (bytesToVR(data.drop(4)) == vr.code)
+        else if (bytesToVR(data.drop(4)) == vr.value)
           Some(HeaderInfo(bigEndian = assumeBigEndian, explicitVR = true, hasFmi = isFileMetaInformation(tag)))
         else if (intToUnsignedLong(bytesToInt(data.drop(4), assumeBigEndian)) >= 0)
           if (assumeBigEndian)
@@ -290,7 +291,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
     }
 
     case class InDeflatedData(state: DeflatedState) extends DicomParseStep {
-      def parse(reader: ByteReader) =
+      def parse(reader: ByteReader): ParseResult[DicomPart] =
         ParseResult(
           Some(DeflatedChunk(state.bigEndian, reader.take(math.min(chunkSize, reader.remainingSize)), state.nowrap)),
           this
@@ -306,9 +307,10 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
       val tag = bytesToTag(data, bigEndian)
       if (tag == 0xfffee000 || tag == 0xfffee00d || tag == 0xfffee0dd)
         (tag, null)
-      else if (explicitVr)
-        (tag, VR.valueOf(bytesToVR(data.drop(4))))
-      else
+      else if (explicitVr) {
+        val vr = Try(VR.withValue(bytesToVR(data.drop(4)))).getOrElse(null)
+        (tag, vr)
+      } else
         (tag, Lookup.vrOf(tag))
     }
 
@@ -386,6 +388,6 @@ object ParseFlow {
     else
       Flow[ByteString].via(new ParseFlow(chunkSize))
 
-  val parseFlow = apply()
+  val parseFlow: Flow[ByteString, DicomPart, NotUsed] = apply()
 
 }

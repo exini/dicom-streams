@@ -17,9 +17,9 @@
 package com.exini.dicom.streams
 
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.Elements.{Element, FragmentElement, FragmentsElement, ItemDelimitationElement, ItemElement, SequenceDelimitationElement, SequenceElement, ValueElement}
-import com.exini.dicom.data.{Elements, _}
+import com.exini.dicom.data.{ Elements, _ }
 
 object CollectFlow {
 
@@ -83,7 +83,7 @@ object CollectFlow {
       var currentValue: Option[ValueElement]       = None
       var currentFragment: Option[FragmentElement] = None
 
-      val builder: ElementsBuilder                 = Elements.newBuilder()
+      val builder: ElementsBuilder = Elements.newBuilder()
 
       def elementsAndBuffer(): List[DicomPart] = {
         val parts = ElementsPart(label, builder.build()) :: buffer
@@ -95,12 +95,11 @@ object CollectFlow {
         parts
       }
 
-      def maybeAdd(element: Element): ElementsBuilder = {
+      def maybeAdd(element: Element): ElementsBuilder =
         if (tagCondition(tagPath))
           builder += element
         else
           builder !! element
-      }
 
       override def onEnd(): List[DicomPart] =
         if (hasEmitted)

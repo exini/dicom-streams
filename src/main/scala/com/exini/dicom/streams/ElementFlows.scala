@@ -19,8 +19,8 @@ package com.exini.dicom.streams
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.Elements._
 import com.exini.dicom.data.TagPath._
 import com.exini.dicom.data.{ TagPath, Value }
 
