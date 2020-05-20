@@ -165,7 +165,7 @@ class CollectFlowTest
           e.elements.size shouldBe 2
           e.elements(Tag.PatientID) should not be empty
           e.elements(Tag.DerivationCodeSequence) should not be empty
-          e.elements.getSequence(Tag.DerivationCodeSequence).get.item(1).size shouldBe 1
+          e.elements.getSequence(Tag.DerivationCodeSequence).get.item(1).get.elements.size shouldBe 3
       }
   }
 
@@ -188,6 +188,7 @@ class CollectFlowTest
           val f = e.elements.getFragments(Tag.PixelData)
           f should not be empty
           f.get.offsets shouldBe defined
+          f.get.offsets.get should have length 1
           f.get.fragments should have length 1
       }
   }

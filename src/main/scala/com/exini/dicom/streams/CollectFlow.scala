@@ -140,11 +140,14 @@ object CollectFlow {
 
             case valueChunk: ValueChunk =>
               bytes = bytes ++ valueChunk.bytes
-              if (valueChunk.last)
+              if (valueChunk.last) {
                 if (inFragments)
                   currentFragment.map(_.copy(value = Value(bytes))).foreach(maybeAdd)
                 else
                   currentValue.map(_.copy(value = Value(bytes))).foreach(maybeAdd)
+                currentFragment = None
+                currentValue = None
+              }
               Nil
 
             case sequence: SequencePart =>
