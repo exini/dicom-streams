@@ -6,7 +6,6 @@ import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.Elements._
 import org.slf4j.{ Logger, LoggerFactory }
 
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 case class ElementAndLength(element: Element, var bytesLeft: Long)
@@ -15,11 +14,10 @@ class ElementsBuilder() {
 
   protected val log: Logger = LoggerFactory.getLogger("ElementsBuilderLogger")
 
-  private val builderStack: mutable.Stack[DatasetBuilder] =
-    mutable.Stack(new DatasetBuilder(defaultCharacterSet, systemZone))
-  private val sequenceStack: mutable.Stack[Sequence]       = mutable.Stack.empty
-  private val lengthStack: mutable.Stack[ElementAndLength] = mutable.Stack.empty
-  private var fragments: Option[Fragments]                 = None
+  private var builderStack: List[DatasetBuilder]  = List(new DatasetBuilder(defaultCharacterSet, systemZone))
+  private var sequenceStack: List[Sequence]       = List.empty[Sequence]
+  private var lengthStack: List[ElementAndLength] = List.empty[ElementAndLength]
+  private var fragments: Option[Fragments]        = None
 
   /**
     * Add the input element to the build
@@ -31,7 +29,7 @@ class ElementsBuilder() {
 
       case e: ValueElement =>
         subtractLength(e.length + e.vr.headerLength)
-        val builder = builderStack.top
+        val builder = builderStack.head
         builder += e
         maybeDelimit()
 
@@ -47,7 +45,7 @@ class ElementsBuilder() {
 
       case _: SequenceDelimitationElement if hasFragments =>
         subtractLength(8)
-        val builder = builderStack.top
+        val builder = builderStack.head
         builder += fragments.get
         updateFragments(None)
         maybeDelimit()
@@ -61,8 +59,8 @@ class ElementsBuilder() {
 
       case e: ItemElement if hasSequence =>
         subtractLength(8)
-        val builder  = builderStack.top
-        val sequence = sequenceStack.top + Item.empty(if (e.indeterminate) e.length else 0, e.bigEndian)
+        val builder  = builderStack.head
+        val sequence = sequenceStack.head + Item.empty(if (e.indeterminate) e.length else 0, e.bigEndian)
         if (!e.indeterminate)
           pushLength(e, e.length)
         pushBuilder(new DatasetBuilder(builder.characterSets, builder.zoneOffset))
@@ -100,24 +98,26 @@ class ElementsBuilder() {
 
   def build(): Elements = builderStack.headOption.map(_.build()).getOrElse(Elements.empty())
 
-  private def updateSequence(sequence: Sequence): Unit = {
-    if (sequenceStack.nonEmpty) sequenceStack.pop()
-    sequenceStack.push(sequence)
-  }
+  private def updateSequence(sequence: Sequence): Unit =
+    if (sequenceStack.nonEmpty)
+      sequenceStack = sequence :: sequenceStack.tail
+    else
+      sequenceStack = sequence :: Nil
 
   private def updateFragments(fragments: Option[Fragments]): Unit = this.fragments = fragments
 
-  private def subtractLength(length: Long): Unit               = lengthStack.foreach(l => l.bytesLeft -= length)
-  private def pushBuilder(builder: DatasetBuilder): Unit       = builderStack.push(builder)
-  private def pushSequence(sequence: Sequence): Unit           = sequenceStack.push(sequence)
-  private def pushLength(element: Element, length: Long): Unit = lengthStack.push(ElementAndLength(element, length))
-  private def popBuilder(): Unit                               = builderStack.pop()
-  private def popSequence(): Unit                              = sequenceStack.pop()
-  private def hasSequence: Boolean                             = sequenceStack.nonEmpty
-  private def hasFragments: Boolean                            = fragments.isDefined
+  private def subtractLength(length: Long): Unit         = lengthStack.foreach(l => l.bytesLeft -= length)
+  private def pushBuilder(builder: DatasetBuilder): Unit = builderStack = builder :: builderStack
+  private def pushSequence(sequence: Sequence): Unit     = sequenceStack = sequence :: sequenceStack
+  private def pushLength(element: Element, length: Long): Unit =
+    lengthStack = ElementAndLength(element, length) :: lengthStack
+  private def popBuilder(): Unit    = builderStack = builderStack.tail
+  private def popSequence(): Unit   = sequenceStack = sequenceStack.tail
+  private def hasSequence: Boolean  = sequenceStack.nonEmpty
+  private def hasFragments: Boolean = fragments.isDefined
   private def endItem(): Unit = {
-    val builder  = builderStack.top
-    val sequence = sequenceStack.top
+    val builder  = builderStack.head
+    val sequence = sequenceStack.head
     val elements = builder.build()
     val items    = sequence.items
     if (items.nonEmpty) {
@@ -127,15 +127,17 @@ class ElementsBuilder() {
     }
   }
   private def endSequence(): Unit = {
-    val seq        = sequenceStack.top
+    val seq        = sequenceStack.head
     val seqLength  = if (seq.indeterminate) seq.length else seq.toBytes.length - 12
     val updatedSeq = new Sequence(seq.tag, seqLength, seq.items, seq.bigEndian, seq.explicitVR)
-    val builder    = builderStack.top
+    val builder    = builderStack.head
     builder += updatedSeq
     popSequence()
   }
   private def maybeDelimit(): ElementsBuilder = {
-    lengthStack.popWhile(_.bytesLeft <= 0).map(_.element).foreach {
+    val (done, rest) = lengthStack.partition(_.bytesLeft <= 0)
+    lengthStack = rest
+    done.map(_.element).foreach {
       case _: ItemElement => endItem()
       case _              => endSequence()
     }

@@ -22,7 +22,7 @@ sealed abstract class VR(val value: Int, val headerLength: Int, val paddingByte:
 
 object VR extends IntEnum[VR] {
 
-  val values: IndexedSeq[VR] = findValues
+  val values = findValues
 
   case object AE extends VR(0x4145, 8, ' ')
   case object AS extends VR(0x4153, 8, ' ')
