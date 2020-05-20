@@ -494,11 +494,13 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
           }
           val elems = i.elements.toStrings(indent + "    ").toList
           val delimitation =
-            s"$indent  ${tagToString(Tag.ItemDelimitationItem)} na ${" " * 43} #     0, 0 ItemDelimitationItem"
+            s"$indent  ${tagToString(Tag.ItemDelimitationItem)} na ${" " * 43} #     0, 0 ItemDelimitationItem${if (i.indeterminate) ""
+            else " (marker)"}"
           heading :: elems ::: delimitation :: Nil
         }
         val delimitation =
-          s"$indent${tagToString(Tag.SequenceDelimitationItem)} na ${" " * 43} #     0, 0 SequenceDelimitationItem"
+          s"$indent${tagToString(Tag.SequenceDelimitationItem)} na ${" " * 43} #     0, 0 SequenceDelimitationItem${if (s.indeterminate) ""
+          else " (marker)"}"
         heading :: items ::: delimitation :: Nil
 
       case f: Fragments =>

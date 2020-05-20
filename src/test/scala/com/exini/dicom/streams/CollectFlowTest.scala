@@ -150,7 +150,7 @@ class CollectFlowTest
         collectFlow(
           Set(
             TagTree.fromTag(Tag.PatientID),
-            TagTree.fromItem(Tag.DerivationCodeSequence, 1)
+            TagTree.fromItem(Tag.DerivationCodeSequence, 1).thenAnyItem(Tag.DerivationCodeSequence)
           ),
           "tag"
         )
