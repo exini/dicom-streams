@@ -18,9 +18,9 @@ package com.exini.dicom.streams
 
 import akka.NotUsed
 import akka.stream.javadsl.MergePreferred
-import akka.stream.scaladsl.{Compression, Flow, GraphDSL, Partition}
+import akka.stream.scaladsl.{ Compression, Flow, GraphDSL, Partition }
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape}
+import akka.stream.{ Attributes, FlowShape }
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data._
