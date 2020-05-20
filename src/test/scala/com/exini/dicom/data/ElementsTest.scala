@@ -361,13 +361,31 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "set value" in {
-    val updated = elements.setValue(Tag.SeriesDate, VR.DA, Value.fromString(VR.DA, "20100101"))
+    val updated = elements.setValue(Tag.SeriesDate, Value.fromString(VR.DA, "20100101"))
     updated.getDate(Tag.SeriesDate).get shouldBe LocalDate.parse("2010-01-01")
   }
 
-  it should "set bytes" in {
-    val updated = elements.setBytes(Tag.SeriesDate, VR.DA, ByteString("20100101"))
+  it should "set nested value in root dataset" in {
+    val tagPath = TagPath.fromTag(Tag.SeriesDate)
+    val updated = elements.setNestedValue(tagPath, Value.fromString(VR.DA, "20100101"))
     updated.getDate(Tag.SeriesDate).get shouldBe LocalDate.parse("2010-01-01")
+  }
+
+  it should "set nested value in deep dataset" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.SeriesDate)
+    val updated = elements.setNestedValue(tagPath, Value.fromString(VR.DA, "20100101"))
+    updated.getDate(tagPath).get shouldBe LocalDate.parse("2010-01-01")
+  }
+
+  it should "set bytes" in {
+    val updated = elements.setBytes(Tag.SeriesDate, ByteString("20100101"))
+    updated.getDate(Tag.SeriesDate).get shouldBe LocalDate.parse("2010-01-01")
+  }
+
+  it should "set nested bytes" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.SeriesDate)
+    val updated = elements.setNestedBytes(tagPath, ByteString("20100101"))
+    updated.getDate(tagPath).get shouldBe LocalDate.parse("2010-01-01")
   }
 
   it should "set strings" in {
@@ -380,6 +398,17 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getStrings(Tag.ReferringPhysicianName) shouldBe Seq(names.head)
   }
 
+  it should "set nested strings" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.ReferringPhysicianName)
+    val names   = Seq("Smith^Dr", "Jones^Dr")
+    elements
+      .setNestedStrings(tagPath, names)
+      .getStrings(tagPath) shouldBe names
+    elements
+      .setNestedString(tagPath, names.head)
+      .getStrings(tagPath) shouldBe Seq(names.head)
+  }
+
   it should "set shorts" in {
     elements
       .setShorts(Tag.ReferencedFrameNumber, Seq(1, 2, 3))
@@ -387,6 +416,16 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     elements
       .setShort(Tag.ReferencedFrameNumber, 42)
       .getShorts(Tag.ReferencedFrameNumber) shouldBe Seq(42)
+  }
+
+  it should "set nested shorts" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.ReferencedFrameNumber)
+    elements
+      .setNestedShorts(tagPath, Seq(1, 2, 3))
+      .getShorts(tagPath) shouldBe Seq(1, 2, 3)
+    elements
+      .setNestedShort(tagPath, 42)
+      .getShorts(tagPath) shouldBe Seq(42)
   }
 
   it should "set ints" in {
@@ -398,6 +437,16 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getInts(Tag.ReferencePixelX0) shouldBe Seq(42)
   }
 
+  it should "set nested ints" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.ReferencePixelX0)
+    elements
+      .setNestedInts(tagPath, Seq(1, 2, 3))
+      .getInts(tagPath) shouldBe Seq(1, 2, 3)
+    elements
+      .setNestedInt(tagPath, 42)
+      .getInts(tagPath) shouldBe Seq(42)
+  }
+
   it should "set longs" in {
     elements
       .setLongs(Tag.SimpleFrameList, Seq(1, 2, 3))
@@ -405,6 +454,16 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     elements
       .setLong(Tag.SimpleFrameList, 42)
       .getLongs(Tag.SimpleFrameList) shouldBe Seq(42)
+  }
+
+  it should "set nested longs" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.SimpleFrameList)
+    elements
+      .setNestedLongs(tagPath, Seq(1, 2, 3))
+      .getLongs(tagPath) shouldBe Seq(1, 2, 3)
+    elements
+      .setNestedLong(tagPath, 42)
+      .getLongs(tagPath) shouldBe Seq(42)
   }
 
   it should "set very longs" in {
@@ -422,6 +481,22 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getVeryLongs(0x44550010) shouldBe Seq(BigInteger.valueOf(1))
   }
 
+  it should "set nested very longs" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(0x44550010)
+    elements
+      .setNestedVeryLongs(
+        tagPath,
+        VR.UV,
+        Seq(BigInteger.valueOf(1), BigInteger.valueOf(2)),
+        bigEndian = false,
+        explicitVR = true
+      )
+      .getVeryLongs(tagPath) shouldBe Seq(BigInteger.valueOf(1), BigInteger.valueOf(2))
+    elements
+      .setNestedVeryLong(tagPath, VR.UV, BigInteger.valueOf(1), bigEndian = false, explicitVR = true)
+      .getVeryLongs(tagPath) shouldBe Seq(BigInteger.valueOf(1))
+  }
+
   it should "set floats" in {
     elements
       .setFloats(Tag.RecommendedDisplayFrameRateInFloat, Seq(1f, 2f, 3f))
@@ -431,6 +506,16 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getFloats(Tag.RecommendedDisplayFrameRateInFloat) shouldBe Seq(42f)
   }
 
+  it should "set nested floats" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.RecommendedDisplayFrameRateInFloat)
+    elements
+      .setNestedFloats(tagPath, Seq(1f, 2f, 3f))
+      .getFloats(tagPath) shouldBe Seq(1f, 2f, 3f)
+    elements
+      .setNestedFloat(tagPath, 42f)
+      .getFloats(tagPath) shouldBe Seq(42f)
+  }
+
   it should "set doubles" in {
     elements
       .setDoubles(Tag.TimeRange, Seq(1.0, 2.0, 3.0))
@@ -438,6 +523,16 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     elements
       .setDouble(Tag.TimeRange, 42.0)
       .getDoubles(Tag.TimeRange) shouldBe Seq(42.0)
+  }
+
+  it should "set nested doubles" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.TimeRange)
+    elements
+      .setNestedDoubles(tagPath, Seq(1.0, 2.0, 3.0))
+      .getDoubles(tagPath) shouldBe Seq(1.0, 2.0, 3.0)
+    elements
+      .setNestedDouble(tagPath, 42.0)
+      .getDoubles(tagPath) shouldBe Seq(42.0)
   }
 
   it should "set dates" in {
@@ -450,6 +545,17 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getDates(Tag.StudyDate) shouldBe Seq(dates.head)
   }
 
+  it should "set nested dates" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate)
+    val dates   = Seq(LocalDate.parse("2005-01-01"), LocalDate.parse("2010-01-01"))
+    elements
+      .setNestedDates(tagPath, dates)
+      .getDates(tagPath) shouldBe dates
+    elements
+      .setNestedDate(tagPath, dates.head)
+      .getDates(tagPath) shouldBe Seq(dates.head)
+  }
+
   it should "set times" in {
     val times = Seq(LocalTime.parse("23:30:10"), LocalTime.parse("12:00:00"))
     elements
@@ -458,6 +564,17 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     elements
       .setTime(Tag.AcquisitionTime, times.head)
       .getTimes(Tag.AcquisitionTime) shouldBe Seq(times.head)
+  }
+
+  it should "set nested times" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.AcquisitionTime)
+    val times   = Seq(LocalTime.parse("23:30:10"), LocalTime.parse("12:00:00"))
+    elements
+      .setNestedTimes(tagPath, times)
+      .getTimes(tagPath) shouldBe times
+    elements
+      .setNestedTime(tagPath, times.head)
+      .getTimes(tagPath) shouldBe Seq(times.head)
   }
 
   it should "set date times" in {
@@ -471,6 +588,18 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getDateTimes(Tag.InstanceCoercionDateTime) shouldBe Seq(dateTimes.head)
   }
 
+  it should "set nested date times" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.InstanceCoercionDateTime)
+    val dateTimes = Seq(LocalDate.parse("2005-01-01"), LocalDate.parse("2010-01-01"))
+      .map(_.atStartOfDay(ZoneOffset.of("+04:00")))
+    elements
+      .setNestedDateTimes(tagPath, dateTimes)
+      .getDateTimes(tagPath) shouldBe dateTimes
+    elements
+      .setNestedDateTime(tagPath, dateTimes.head)
+      .getDateTimes(tagPath) shouldBe Seq(dateTimes.head)
+  }
+
   it should "set patient names" in {
     val names        = Seq("Doe^John", "Doe^Jane")
     val patientNames = names.flatMap(PersonName.parse)
@@ -482,9 +611,27 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getPersonNames(Tag.PatientName) shouldBe Seq(patientNames.head)
   }
 
+  it should "set nested patient names" in {
+    val tagPath      = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.PatientName)
+    val names        = Seq("Doe^John", "Doe^Jane")
+    val patientNames = names.flatMap(PersonName.parse)
+    elements
+      .setNestedPersonNames(tagPath, patientNames)
+      .getPersonNames(tagPath) shouldBe patientNames
+    elements
+      .setNestedPersonName(tagPath, patientNames.head)
+      .getPersonNames(tagPath) shouldBe Seq(patientNames.head)
+  }
+
   it should "set URI" in {
     val uri = new URI("https://example.com:8080/path?q1=45")
     elements.setURI(Tag.StorageURL, uri).getURI(Tag.StorageURL) shouldBe Some(uri)
+  }
+
+  it should "set neested URI" in {
+    val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StorageURL)
+    val uri     = new URI("https://example.com:8080/path?q1=45")
+    elements.setNestedURI(tagPath, uri).getURI(tagPath) shouldBe Some(uri)
   }
 
   it should "update character sets" in {

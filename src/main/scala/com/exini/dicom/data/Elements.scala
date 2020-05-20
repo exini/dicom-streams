@@ -300,10 +300,15 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def setCharacterSets(characterSets: CharacterSets): Elements = copy(characterSets = characterSets)
   def setZoneOffset(zoneOffset: ZoneOffset): Elements          = copy(zoneOffset = zoneOffset)
 
-  def setValue(tag: Int, vr: VR, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+  def setValue(tag: Int, vr: VR, value: Value, bigEndian: Boolean, explicitVR: Boolean): Elements =
     set(ValueElement(tag, vr, value, bigEndian, explicitVR))
-  def setBytes(tag: Int, vr: VR, value: ByteString, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+  def setValue(tag: Int, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setValue(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
+
+  def setBytes(tag: Int, vr: VR, value: ByteString, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value(value), bigEndian, explicitVR)
+  def setBytes(tag: Int, value: ByteString, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setBytes(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setStrings(tag: Int, vr: VR, values: Seq[String], bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value.fromStrings(vr, values, bigEndian), bigEndian, explicitVR)
@@ -423,6 +428,327 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     setValue(tag, vr, Value.fromURI(vr, value), bigEndian, explicitVR)
   def setURI(tag: Int, value: URI, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
     setURI(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
+
+  def setNestedValue(tagPath: TagPathTag, vr: VR, value: Value, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    if (tagPath.isRoot)
+      setValue(tagPath.tag, vr, value, bigEndian, explicitVR)
+    else
+      setNested(
+        tagPath.previous.asInstanceOf[TagPathItem],
+        getNested(tagPath.previous.asInstanceOf[TagPathItem])
+          .getOrElse(Elements.empty())
+          .setValue(tagPath.tag, vr, value, bigEndian, explicitVR)
+      )
+  def setNestedValue(
+      tagPath: TagPathTag,
+      value: Value,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedValue(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedBytes(
+      tagPath: TagPathTag,
+      vr: VR,
+      value: ByteString,
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value(value), bigEndian, explicitVR)
+  def setNestedBytes(
+      tagPath: TagPathTag,
+      value: ByteString,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedBytes(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedStrings(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[String],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromStrings(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedStrings(
+      tagPath: TagPathTag,
+      values: Seq[String],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedStrings(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedString(tagPath: TagPathTag, vr: VR, value: String, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromString(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedString(
+      tagPath: TagPathTag,
+      value: String,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedString(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedShorts(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[Short],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromShorts(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedShorts(
+      tagPath: TagPathTag,
+      values: Seq[Short],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedShorts(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedShort(tagPath: TagPathTag, vr: VR, value: Short, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromShort(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedShort(
+      tagPath: TagPathTag,
+      value: Short,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedShort(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedInts(tagPath: TagPathTag, vr: VR, values: Seq[Int], bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromInts(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedInts(
+      tagPath: TagPathTag,
+      values: Seq[Int],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedInts(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedInt(tagPath: TagPathTag, vr: VR, value: Int, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromInt(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedInt(tagPath: TagPathTag, value: Int, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setNestedInt(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedLongs(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[Long],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromLongs(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedLongs(
+      tagPath: TagPathTag,
+      values: Seq[Long],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedLongs(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedLong(tagPath: TagPathTag, vr: VR, value: Long, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromLong(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedLong(
+      tagPath: TagPathTag,
+      value: Long,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedLong(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedVeryLongs(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[BigInteger],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromVeryLongs(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedVeryLongs(
+      tagPath: TagPathTag,
+      values: Seq[BigInteger],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedVeryLongs(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedVeryLong(
+      tagPath: TagPathTag,
+      vr: VR,
+      value: BigInteger,
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromVeryLong(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedVeryLong(
+      tagPath: TagPathTag,
+      value: BigInteger,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedVeryLong(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedFloats(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[Float],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromFloats(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedFloats(
+      tagPath: TagPathTag,
+      values: Seq[Float],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedFloats(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedFloat(tagPath: TagPathTag, vr: VR, value: Float, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromFloat(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedFloat(
+      tagPath: TagPathTag,
+      value: Float,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedFloat(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedDoubles(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[Double],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromDoubles(vr, values, bigEndian), bigEndian, explicitVR)
+  def setNestedDoubles(
+      tagPath: TagPathTag,
+      values: Seq[Double],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDoubles(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedDouble(tagPath: TagPathTag, vr: VR, value: Double, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromDouble(vr, value, bigEndian), bigEndian, explicitVR)
+  def setNestedDouble(
+      tagPath: TagPathTag,
+      value: Double,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDouble(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedDates(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[LocalDate],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromDates(vr, values), bigEndian, explicitVR)
+  def setNestedDates(
+      tagPath: TagPathTag,
+      values: Seq[LocalDate],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDates(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedDate(tagPath: TagPathTag, vr: VR, value: LocalDate, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromDate(vr, value), bigEndian, explicitVR)
+  def setNestedDate(
+      tagPath: TagPathTag,
+      value: LocalDate,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDate(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedTimes(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[LocalTime],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromTimes(vr, values), bigEndian, explicitVR)
+  def setNestedTimes(
+      tagPath: TagPathTag,
+      values: Seq[LocalTime],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedTimes(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedTime(tagPath: TagPathTag, vr: VR, value: LocalTime, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromTime(vr, value), bigEndian, explicitVR)
+  def setNestedTime(
+      tagPath: TagPathTag,
+      value: LocalTime,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedTime(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedDateTimes(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[ZonedDateTime],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromDateTimes(vr, values), bigEndian, explicitVR)
+  def setNestedDateTimes(
+      tagPath: TagPathTag,
+      values: Seq[ZonedDateTime],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDateTimes(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedDateTime(
+      tagPath: TagPathTag,
+      vr: VR,
+      value: ZonedDateTime,
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromDateTime(vr, value), bigEndian, explicitVR)
+  def setNestedDateTime(
+      tagPath: TagPathTag,
+      value: ZonedDateTime,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedDateTime(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedPersonNames(
+      tagPath: TagPathTag,
+      vr: VR,
+      values: Seq[PersonName],
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromPersonNames(vr, values), bigEndian, explicitVR)
+  def setNestedPersonNames(
+      tagPath: TagPathTag,
+      values: Seq[PersonName],
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedPersonNames(tagPath, Lookup.vrOf(tagPath.tag), values, bigEndian, explicitVR)
+  def setNestedPersonName(
+      tagPath: TagPathTag,
+      vr: VR,
+      value: PersonName,
+      bigEndian: Boolean,
+      explicitVR: Boolean
+  ): Elements =
+    setNestedValue(tagPath, vr, Value.fromPersonName(vr, value), bigEndian, explicitVR)
+  def setNestedPersonName(
+      tagPath: TagPathTag,
+      value: PersonName,
+      bigEndian: Boolean = false,
+      explicitVR: Boolean = true
+  ): Elements =
+    setNestedPersonName(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
+
+  def setNestedURI(tagPath: TagPathTag, vr: VR, value: URI, bigEndian: Boolean, explicitVR: Boolean): Elements =
+    setNestedValue(tagPath, vr, Value.fromURI(vr, value), bigEndian, explicitVR)
+  def setNestedURI(tagPath: TagPathTag, value: URI, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+    setNestedURI(tagPath, Lookup.vrOf(tagPath.tag), value, bigEndian, explicitVR)
 
   def remove(tag: Int): Elements = filter(_.tag != tag)
   def remove(tagPath: TagPath): Elements =
