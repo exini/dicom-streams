@@ -25,7 +25,7 @@ resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snap
 
 The library is included by
 ```scala
-libraryDependencies += "com.exini" %% "dicom-streams" % "1.0.0"
+libraryDependencies += "com.exini" %% "dicom-streams" % "2.0.2"
 ```
 
 ### Data Model
