@@ -360,7 +360,7 @@ object ParseFlow {
         val parser2 = new ParseFlow(chunkSize)
 
         val decider = builder.add(
-          Flow[DicomPart]
+          partFlow
             .statefulMapConcat { () =>
               var route = 0
 

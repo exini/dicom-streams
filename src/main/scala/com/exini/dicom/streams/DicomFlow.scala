@@ -17,11 +17,11 @@
 package com.exini.dicom.streams
 
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
+import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath._
-import com.exini.dicom.data.{Tag, TagPath, isGroupLength}
+import com.exini.dicom.data.{ Tag, TagPath, isGroupLength }
 
 /**
   * This class defines events for modular construction of DICOM flows. Events correspond to the DICOM parts commonly
@@ -33,7 +33,7 @@ abstract class DicomFlow[Out] extends GraphStage[FlowShape[DicomPart, Out]] {
   val name: String = getClass.getSimpleName
 
   val in: Inlet[DicomPart] = Inlet[DicomPart](s"$name.in")
-  val out: Outlet[Out] = Outlet[Out](s"$name.out")
+  val out: Outlet[Out]     = Outlet[Out](s"$name.out")
 
   override val shape: FlowShape[DicomPart, Out] = FlowShape.of(in, out)
 
@@ -106,17 +106,17 @@ abstract class DicomFlow[Out] extends GraphStage[FlowShape[DicomPart, Out]] {
 class IdentityFlow extends DicomFlow[DicomPart] {
 
   class IdentityLogic extends DicomLogic {
-    def onPreamble(part: PreamblePart): List[DicomPart] = part :: Nil
-    def onHeader(part: HeaderPart): List[DicomPart] = part :: Nil
-    def onValueChunk(part: ValueChunk): List[DicomPart] = part :: Nil
-    def onSequence(part: SequencePart): List[DicomPart] = part :: Nil
+    def onPreamble(part: PreamblePart): List[DicomPart]                         = part :: Nil
+    def onHeader(part: HeaderPart): List[DicomPart]                             = part :: Nil
+    def onValueChunk(part: ValueChunk): List[DicomPart]                         = part :: Nil
+    def onSequence(part: SequencePart): List[DicomPart]                         = part :: Nil
     def onSequenceDelimitation(part: SequenceDelimitationPart): List[DicomPart] = part :: Nil
-    def onFragments(part: FragmentsPart): List[DicomPart] = part :: Nil
-    def onItem(part: ItemPart): List[DicomPart] = part :: Nil
-    def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] = part :: Nil
-    def onDeflatedChunk(part: DeflatedChunk): List[DicomPart] = part :: Nil
-    def onUnknown(part: UnknownPart): List[DicomPart] = part :: Nil
-    def onPart(part: DicomPart): List[DicomPart] = part :: Nil
+    def onFragments(part: FragmentsPart): List[DicomPart]                       = part :: Nil
+    def onItem(part: ItemPart): List[DicomPart]                                 = part :: Nil
+    def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart]         = part :: Nil
+    def onDeflatedChunk(part: DeflatedChunk): List[DicomPart]                   = part :: Nil
+    def onUnknown(part: UnknownPart): List[DicomPart]                           = part :: Nil
+    def onPart(part: DicomPart): List[DicomPart]                                = part :: Nil
   }
 
   override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic()
@@ -130,16 +130,16 @@ class IdentityFlow extends DicomFlow[DicomPart] {
 abstract class DeferToPartFlow[Out] extends DicomFlow[Out] {
 
   abstract class DeferToPartLogic extends DicomLogic {
-    def onPreamble(part: PreamblePart): List[Out] = onPart(part)
-    def onHeader(part: HeaderPart): List[Out] = onPart(part)
-    def onValueChunk(part: ValueChunk): List[Out] = onPart(part)
-    def onSequence(part: SequencePart): List[Out] = onPart(part)
+    def onPreamble(part: PreamblePart): List[Out]                         = onPart(part)
+    def onHeader(part: HeaderPart): List[Out]                             = onPart(part)
+    def onValueChunk(part: ValueChunk): List[Out]                         = onPart(part)
+    def onSequence(part: SequencePart): List[Out]                         = onPart(part)
     def onSequenceDelimitation(part: SequenceDelimitationPart): List[Out] = onPart(part)
-    def onFragments(part: FragmentsPart): List[Out] = onPart(part)
-    def onDeflatedChunk(part: DeflatedChunk): List[Out] = onPart(part)
-    def onUnknown(part: UnknownPart): List[Out] = onPart(part)
-    def onItem(part: ItemPart): List[Out] = onPart(part)
-    def onItemDelimitation(part: ItemDelimitationPart): List[Out] = onPart(part)
+    def onFragments(part: FragmentsPart): List[Out]                       = onPart(part)
+    def onDeflatedChunk(part: DeflatedChunk): List[Out]                   = onPart(part)
+    def onUnknown(part: UnknownPart): List[Out]                           = onPart(part)
+    def onItem(part: ItemPart): List[Out]                                 = onPart(part)
+    def onItemDelimitation(part: ItemDelimitationPart): List[Out]         = onPart(part)
   }
 }
 
@@ -269,14 +269,14 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
     def maybeDelimit(): List[Out] = {
       val delimits: List[DicomPart] = partStack
         .filter(_._2 <= 0) // find items and sequences that have ended
-        .map { // create delimiters for those
+        .map {             // create delimiters for those
           case (item: ItemPart, _) => new ItemDelimitationPartMarker(item.index)
-          case (_, _) => SequenceDelimitationPartMarker
+          case (_, _)              => SequenceDelimitationPartMarker
         }
       partStack = partStack.filter(_._2 > 0) // only keep items and sequences with bytes left to subtract
-      delimits.flatMap { // call events, any items will be inserted in stream
+      delimits.flatMap {                     // call events, any items will be inserted in stream
         case d: SequenceDelimitationPart => onSequenceDelimitation(d)
-        case d: ItemDelimitationPart => onItemDelimitation(d)
+        case d: ItemDelimitationPart     => onItemDelimitation(d)
       }
     }
 
@@ -309,8 +309,8 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
         (p: ItemDelimitationPart) => super.onItemDelimitation(p).filterNot(_.isInstanceOf[ItemDelimitationPartMarker])
       )
 
-    abstract override def onHeader(part: HeaderPart): List[Out] = subtractAndEmit(part, super.onHeader)
-    abstract override def onValueChunk(part: ValueChunk): List[Out] = subtractAndEmit(part, super.onValueChunk)
+    abstract override def onHeader(part: HeaderPart): List[Out]       = subtractAndEmit(part, super.onHeader)
+    abstract override def onValueChunk(part: ValueChunk): List[Out]   = subtractAndEmit(part, super.onValueChunk)
     abstract override def onFragments(part: FragmentsPart): List[Out] = subtractAndEmit(part, super.onFragments)
   }
 }
@@ -331,7 +331,7 @@ trait TagPathTracking[Out]
     abstract override def onHeader(part: HeaderPart): List[Out] = {
       tagPath = tagPath match {
         case t: TagPathItem => t.thenTag(part.tag)
-        case t => t.previous.thenTag(part.tag)
+        case t              => t.previous.thenTag(part.tag)
       }
       super.onHeader(part)
     }
@@ -339,7 +339,7 @@ trait TagPathTracking[Out]
     abstract override def onFragments(part: FragmentsPart): List[Out] = {
       tagPath = tagPath match {
         case t: TagPathItem => t.thenTag(part.tag)
-        case t => t.previous.thenTag(part.tag)
+        case t              => t.previous.thenTag(part.tag)
       }
       super.onFragments(part)
     }
@@ -347,7 +347,7 @@ trait TagPathTracking[Out]
     abstract override def onSequence(part: SequencePart): List[Out] = {
       tagPath = tagPath match {
         case t: TagPathItem => t.thenSequence(part.tag)
-        case t => t.previous.thenSequence(part.tag)
+        case t              => t.previous.thenSequence(part.tag)
       }
       super.onSequence(part)
     }
@@ -368,7 +368,7 @@ trait TagPathTracking[Out]
         case t =>
           t.previous match {
             case ti: TagPathItem => ti.previous.thenItemEnd(ti.tag, ti.item)
-            case _ => tagPath // should never get delimitation when not inside item
+            case _               => tagPath // should never get delimitation when not inside item
           }
       }
       super.onItemDelimitation(part)
@@ -389,7 +389,9 @@ trait GroupLengthWarnings[Out] extends DicomFlow[Out] with InFragments[Out] {
 
     abstract override def onHeader(part: HeaderPart): List[Out] = {
       if (!silent && isGroupLength(part.tag) && part.tag != Tag.FileMetaInformationGroupLength)
-        log.warning("Group length attribute detected, consider removing group lengths to maintain valid DICOM information")
+        log.warning(
+          "Group length attribute detected, consider removing group lengths to maintain valid DICOM information"
+        )
       super.onHeader(part)
     }
 

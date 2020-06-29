@@ -22,7 +22,7 @@ import akka.stream.stage.GraphStageLogic
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
-import com.exini.dicom.data.{Elements, _}
+import com.exini.dicom.data.{ Elements, _ }
 
 object CollectFlow {
 
@@ -77,106 +77,108 @@ object CollectFlow {
       label: String,
       maxBufferSize: Int
   ): PartFlow =
-    Flow[DicomPart]
+    partFlow
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with EndEvent[DicomPart] {
 
-        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with EndEventLogic {
-          var buffer: List[DicomPart] = Nil
-          var currentBufferSize = 0
-          var hasEmitted = false
-          var bytes: ByteString = ByteString.empty
-          var currentValue: Option[ValueElement] = None
-          var currentFragment: Option[FragmentElement] = None
+        override def createLogic(attr: Attributes): GraphStageLogic =
+          new DeferToPartLogic with TagPathTrackingLogic with EndEventLogic {
+            var buffer: List[DicomPart]                  = Nil
+            var currentBufferSize                        = 0
+            var hasEmitted                               = false
+            var bytes: ByteString                        = ByteString.empty
+            var currentValue: Option[ValueElement]       = None
+            var currentFragment: Option[FragmentElement] = None
 
-          val builder: ElementsBuilder = Elements.newBuilder()
+            val builder: ElementsBuilder = Elements.newBuilder()
 
-          def elementsAndBuffer(): List[DicomPart] = {
-            val parts = ElementsPart(label, builder.build()) :: buffer
+            def elementsAndBuffer(): List[DicomPart] = {
+              val parts = ElementsPart(label, builder.build()) :: buffer
 
-            hasEmitted = true
-            buffer = Nil
-            currentBufferSize = 0
+              hasEmitted = true
+              buffer = Nil
+              currentBufferSize = 0
 
-            parts
-          }
-
-          def maybeAdd(element: Element): ElementsBuilder =
-            if (tagCondition(tagPath))
-              builder += element
-            else
-              builder !! element
-
-          override def onEnd(): List[DicomPart] =
-            if (hasEmitted)
-              Nil
-            else
-              elementsAndBuffer()
-
-          override def onPart(part: DicomPart): List[DicomPart] =
-            if (hasEmitted)
-              part :: Nil
-            else {
-              if (maxBufferSize > 0 && currentBufferSize > maxBufferSize)
-                throw new DicomStreamException("Error collecting elements: max buffer size exceeded")
-
-              part match {
-                case ValueChunkMarker =>
-                case SequenceDelimitationPartMarker =>
-                case _: ItemDelimitationPartMarker =>
-                case _ =>
-                  buffer = buffer :+ part
-                  currentBufferSize = currentBufferSize + part.bytes.size
-              }
-
-              part match {
-                case _: TagPart if stopCondition(tagPath) =>
-                  elementsAndBuffer()
-
-                case header: HeaderPart =>
-                  currentValue = Option(ValueElement.empty(header.tag, header.vr, header.bigEndian, header.explicitVR))
-                  bytes = ByteString.empty
-                  Nil
-
-                case item: ItemPart if inFragments =>
-                  currentFragment = Option(FragmentElement.empty(item.index, item.length, item.bigEndian))
-                  bytes = ByteString.empty
-                  Nil
-
-                case valueChunk: ValueChunk =>
-                  bytes = bytes ++ valueChunk.bytes
-                  if (valueChunk.last) {
-                    if (inFragments)
-                      currentFragment.map(_.copy(value = Value(bytes))).foreach(maybeAdd)
-                    else
-                      currentValue.map(_.copy(value = Value(bytes))).foreach(maybeAdd)
-                    currentFragment = None
-                    currentValue = None
-                  }
-                  Nil
-
-                case sequence: SequencePart =>
-                  maybeAdd(SequenceElement(sequence.tag, sequence.length, sequence.bigEndian, sequence.explicitVR))
-                  Nil
-                case fragments: FragmentsPart =>
-                  maybeAdd(FragmentsElement(fragments.tag, fragments.vr, fragments.bigEndian, fragments.explicitVR))
-                  Nil
-                case item: ItemPart =>
-                  maybeAdd(ItemElement(item.index, item.length, item.bigEndian))
-                  Nil
-                case _: ItemDelimitationPartMarker =>
-                  Nil
-                case itemDelimitation: ItemDelimitationPart =>
-                  maybeAdd(ItemDelimitationElement(itemDelimitation.index, itemDelimitation.bigEndian))
-                  Nil
-                case SequenceDelimitationPartMarker =>
-                  Nil
-                case sequenceDelimitation: SequenceDelimitationPart =>
-                  maybeAdd(SequenceDelimitationElement(sequenceDelimitation.bigEndian))
-                  Nil
-                case _ =>
-                  Nil
-              }
+              parts
             }
-        }
+
+            def maybeAdd(element: Element): ElementsBuilder =
+              if (tagCondition(tagPath))
+                builder += element
+              else
+                builder !! element
+
+            override def onEnd(): List[DicomPart] =
+              if (hasEmitted)
+                Nil
+              else
+                elementsAndBuffer()
+
+            override def onPart(part: DicomPart): List[DicomPart] =
+              if (hasEmitted)
+                part :: Nil
+              else {
+                if (maxBufferSize > 0 && currentBufferSize > maxBufferSize)
+                  throw new DicomStreamException("Error collecting elements: max buffer size exceeded")
+
+                part match {
+                  case ValueChunkMarker               =>
+                  case SequenceDelimitationPartMarker =>
+                  case _: ItemDelimitationPartMarker  =>
+                  case _ =>
+                    buffer = buffer :+ part
+                    currentBufferSize = currentBufferSize + part.bytes.size
+                }
+
+                part match {
+                  case _: TagPart if stopCondition(tagPath) =>
+                    elementsAndBuffer()
+
+                  case header: HeaderPart =>
+                    currentValue =
+                      Option(ValueElement.empty(header.tag, header.vr, header.bigEndian, header.explicitVR))
+                    bytes = ByteString.empty
+                    Nil
+
+                  case item: ItemPart if inFragments =>
+                    currentFragment = Option(FragmentElement.empty(item.index, item.length, item.bigEndian))
+                    bytes = ByteString.empty
+                    Nil
+
+                  case valueChunk: ValueChunk =>
+                    bytes = bytes ++ valueChunk.bytes
+                    if (valueChunk.last) {
+                      if (inFragments)
+                        currentFragment.map(_.copy(value = Value(bytes))).foreach(maybeAdd)
+                      else
+                        currentValue.map(_.copy(value = Value(bytes))).foreach(maybeAdd)
+                      currentFragment = None
+                      currentValue = None
+                    }
+                    Nil
+
+                  case sequence: SequencePart =>
+                    maybeAdd(SequenceElement(sequence.tag, sequence.length, sequence.bigEndian, sequence.explicitVR))
+                    Nil
+                  case fragments: FragmentsPart =>
+                    maybeAdd(FragmentsElement(fragments.tag, fragments.vr, fragments.bigEndian, fragments.explicitVR))
+                    Nil
+                  case item: ItemPart =>
+                    maybeAdd(ItemElement(item.index, item.length, item.bigEndian))
+                    Nil
+                  case _: ItemDelimitationPartMarker =>
+                    Nil
+                  case itemDelimitation: ItemDelimitationPart =>
+                    maybeAdd(ItemDelimitationElement(itemDelimitation.index, itemDelimitation.bigEndian))
+                    Nil
+                  case SequenceDelimitationPartMarker =>
+                    Nil
+                  case sequenceDelimitation: SequenceDelimitationPart =>
+                    maybeAdd(SequenceDelimitationElement(sequenceDelimitation.bigEndian))
+                    Nil
+                  case _ =>
+                    Nil
+                }
+              }
+          }
       })
 }
