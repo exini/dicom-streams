@@ -9,7 +9,7 @@ class Chunker(val chunkSize: Int) extends GraphStage[FlowShape[ByteString, ByteS
   val out: Outlet[ByteString]                           = Outlet[ByteString]("Chunker.out")
   override val shape: FlowShape[ByteString, ByteString] = FlowShape.of(in, out)
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+  override def createLogic(attr: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
       private var buffer = ByteString.empty
 

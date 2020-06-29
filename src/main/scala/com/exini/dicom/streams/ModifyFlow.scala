@@ -108,7 +108,7 @@ object ModifyFlow {
         with TagPathTracking[DicomPart]
         with GroupLengthWarnings[DicomPart] {
 
-          override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with EndEventLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
+          override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with EndEventLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
             silent = !logGroupLengthWarnings
 
             var currentModifications: List[TagModification] = Nil

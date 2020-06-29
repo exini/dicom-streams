@@ -45,7 +45,7 @@ class DicomFlowTest
       .single(bytes)
       .via(parseFlow)
       .via(new DicomFlow[DicomPart] {
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DicomLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DicomLogic {
           override def onFragments(part: FragmentsPart): List[DicomPart] = TestPart("Fragments Start") :: Nil
           override def onHeader(part: HeaderPart): List[DicomPart] = TestPart("Header") :: Nil
           override def onPreamble(part: PreamblePart): List[DicomPart] = TestPart("Preamble") :: Nil
@@ -105,7 +105,7 @@ class DicomFlowTest
       .single(bytes)
       .via(parseFlow)
       .via(new DeferToPartFlow[DicomPart] with InSequence[DicomPart] {
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with InSequenceLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with InSequenceLogic {
           override def onPart(part: DicomPart): List[DicomPart] = {
             check(sequenceDepth, inSequence)
             part :: Nil
@@ -134,7 +134,7 @@ class DicomFlowTest
       .single(bytes)
       .via(parseFlow)
       .via(new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] {
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
           override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] = {
             part.bytes.length shouldBe expectedDelimitationLengths.head
             expectedDelimitationLengths = expectedDelimitationLengths.tail
@@ -285,7 +285,7 @@ class DicomFlowTest
 
     val flow1 = new IdentityFlow with GuaranteedDelimitationEvents[DicomPart]
     val flow2 = new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] {
-      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
+      override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
         override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] = {
           nItemDelims += 1
           super.onItemDelimitation(part)
@@ -318,7 +318,7 @@ class DicomFlowTest
       .single(bytes)
       .via(parseFlow)
       .via(new IdentityFlow with GuaranteedValueEvent[DicomPart] {
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedValueEventLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedValueEventLogic {
           override def onValueChunk(part: ValueChunk): List[DicomPart] = {
             part.bytes.length shouldBe expectedChunkLengths.head
             expectedChunkLengths = expectedChunkLengths.tail
@@ -342,7 +342,7 @@ class DicomFlowTest
 
     val flow1 = new IdentityFlow with GuaranteedValueEvent[DicomPart]
     val flow2 = new IdentityFlow with GuaranteedValueEvent[DicomPart] {
-      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedValueEventLogic {
+      override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedValueEventLogic {
         override def onValueChunk(part: ValueChunk): List[DicomPart] = {
           nEvents += 1
           super.onValueChunk(part)
@@ -364,7 +364,7 @@ class DicomFlowTest
     val bytes = personNameJohnDoe()
 
     val flow = new IdentityFlow with StartEvent[DicomPart] {
-      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with StartEventLogic {
+      override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with StartEventLogic {
         override def onStart(): List[DicomPart] = DicomStartMarker :: Nil
       }
     }
@@ -387,7 +387,7 @@ class DicomFlowTest
 
   it should "call onStart for all combined flow stages" in {
     val flow = new DeferToPartFlow[DicomPart] with StartEvent[DicomPart] {
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with StartEventLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with StartEventLogic {
           var state = 1
           override def onStart(): List[DicomPart] = {
             state = 0
@@ -413,7 +413,7 @@ class DicomFlowTest
 
   it should "call onStart once for flows with more than one capability using the onStart event" in {
     val flow = new DeferToPartFlow[DicomPart] with GuaranteedDelimitationEvents[DicomPart] with StartEvent[DicomPart] {
-      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with GuaranteedDelimitationEventsLogic with StartEventLogic {
+      override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with GuaranteedDelimitationEventsLogic with StartEventLogic {
         var nCalls = 0
         override def onStart(): List[DicomPart] = {
           nCalls += 1
@@ -441,7 +441,7 @@ class DicomFlowTest
     val bytes = personNameJohnDoe()
 
     val flow = new IdentityFlow with EndEvent[DicomPart] {
-      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with EndEventLogic {
+      override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with EndEventLogic {
         override def onEnd(): List[DicomPart] = DicomEndMarker :: Nil
       }
     }
@@ -524,7 +524,7 @@ class DicomFlowTest
       .single(bytes)
       .via(parseFlow)
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic {
           override def onPart(part: DicomPart): List[DicomPart] = {
             check(tagPath)
             part :: Nil
@@ -597,7 +597,7 @@ class DicomFlowTest
       .single(bytes)
       .via(parseFlow)
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic {
           override def onPart(part: DicomPart): List[DicomPart] = {
             check(tagPath)
             part :: Nil
@@ -689,7 +689,7 @@ class DicomFlowTest
       .single(bytes)
       .via(parseFlow)
       .via(new IdentityFlow with GroupLengthWarnings[DicomPart] {
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GroupLengthWarningsLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with GroupLengthWarningsLogic {
           silent = true
         }
       })

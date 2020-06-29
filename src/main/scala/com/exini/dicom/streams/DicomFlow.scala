@@ -119,7 +119,7 @@ class IdentityFlow extends DicomFlow[DicomPart] {
     def onPart(part: DicomPart): List[DicomPart] = part :: Nil
   }
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic()
+  override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic()
 }
 
 /**

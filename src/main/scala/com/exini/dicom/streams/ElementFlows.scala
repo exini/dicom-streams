@@ -36,7 +36,7 @@ object ElementFlows {
     Flow[DicomPart]
     .via(new DeferToPartFlow[Element] with GuaranteedValueEvent[Element] {
 
-      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with GuaranteedValueEventLogic {
+      override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with GuaranteedValueEventLogic {
         var bytes: ByteString = ByteString.empty
         var currentValue: Option[ValueElement] = None
         var currentFragment: Option[FragmentElement] = None

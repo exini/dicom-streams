@@ -80,7 +80,7 @@ object CollectFlow {
     Flow[DicomPart]
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with EndEvent[DicomPart] {
 
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with EndEventLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with EndEventLogic {
           var buffer: List[DicomPart] = Nil
           var currentBufferSize = 0
           var hasEmitted = false

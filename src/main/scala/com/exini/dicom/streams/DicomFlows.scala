@@ -59,7 +59,7 @@ object DicomFlows {
     Flow[DicomPart]
       .via(new IdentityFlow with InSequence[DicomPart] {
 
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with InSequenceLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with InSequenceLogic {
           override def onHeader(part: HeaderPart): List[DicomPart] =
             if (!inSequence && part.tag >= tag)
               DicomEndMarker :: Nil
@@ -164,7 +164,7 @@ object DicomFlows {
     Flow[DicomPart]
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
           silent = !logGroupLengthWarnings
 
           override def onPart(part: DicomPart): List[DicomPart] = {
@@ -191,7 +191,7 @@ object DicomFlows {
     Flow[DicomPart]
       .via(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with GroupLengthWarningsLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with GroupLengthWarningsLogic {
           silent = !logGroupLengthWarnings
           var keeping = true
 
@@ -216,7 +216,7 @@ object DicomFlows {
     Flow[DicomPart]
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
           silent = !logGroupLengthWarnings
           var keeping = true
 
@@ -410,7 +410,7 @@ object DicomFlows {
       .via(tagFilter(tagPath => !isFileMetaInformation(tagPath.tag), _ => true, logGroupLengthWarnings = false))
       .via(new DeferToPartFlow[DicomPart] with EndEvent[DicomPart] {
 
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with EndEventLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with EndEventLogic {
           var fmi = List.empty[DicomPart]
           var hasEmitted = false
 
@@ -461,7 +461,7 @@ object DicomFlows {
     Flow[DicomPart]
       .via(new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] { // map to indeterminate length
 
-        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
+        override def createLogic(attr: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
           val indeterminateBytes: ByteString = ByteString(0xff, 0xff, 0xff, 0xff)
 
           override def onSequence(part: SequencePart): List[DicomPart] =
