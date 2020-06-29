@@ -19,7 +19,9 @@ package com.exini.dicom.streams
 import java.util.zip.Deflater
 
 import akka.NotUsed
-import akka.stream.scaladsl.{ Flow, Source }
+import akka.stream.Attributes
+import akka.stream.scaladsl.{Flow, Source}
+import akka.stream.stage.GraphStageLogic
 import akka.util.ByteString
 import com.exini.dicom.data.CharacterSets.utf8Charset
 import com.exini.dicom.data.DicomElements.ValueElement
@@ -54,13 +56,16 @@ object DicomFlows {
     * @return the associated flow
     */
   def stopTagFlow(tag: Int): PartFlow =
-    DicomFlowFactory
-      .create(new IdentityFlow with InSequence[DicomPart] {
-        override def onHeader(part: HeaderPart): List[DicomPart] =
-          if (!inSequence && part.tag >= tag)
-            DicomEndMarker :: Nil
-          else
-            super.onHeader(part)
+    Flow[DicomPart]
+      .via(new IdentityFlow with InSequence[DicomPart] {
+
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with InSequenceLogic {
+          override def onHeader(part: HeaderPart): List[DicomPart] =
+            if (!inSequence && part.tag >= tag)
+              DicomEndMarker :: Nil
+            else
+              super.onHeader(part)
+        }
       })
       .takeWhile(_ != DicomEndMarker)
 
@@ -113,7 +118,7 @@ object DicomFlows {
     *
     * @return the associated filter Flow
     */
-  def groupLengthDiscardFilter: PartFlow =
+  val groupLengthDiscardFilter: PartFlow =
     tagFilter(
       tagPath => !isGroupLength(tagPath.tag) || tagPath.tag == Tag.FileMetaInformationGroupLength,
       _ => true,
@@ -125,7 +130,7 @@ object DicomFlows {
     *
     * @return the associated filter Flow
     */
-  def fmiDiscardFilter: PartFlow =
+  val fmiDiscardFilter: PartFlow =
     tagFilter(
       tagPath => !isFileMetaInformation(tagPath.tag),
       {
@@ -156,19 +161,21 @@ object DicomFlows {
       defaultCondition: DicomPart => Boolean = _ => true,
       logGroupLengthWarnings: Boolean = true
   ): PartFlow =
-    DicomFlowFactory.create(
-      new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
-        silent = !logGroupLengthWarnings
+    Flow[DicomPart]
+      .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-        override def onPart(part: DicomPart): List[DicomPart] = {
-          val keeping = tagPath match {
-            case EmptyTagPath => defaultCondition(part)
-            case path         => keepCondition(path)
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
+          silent = !logGroupLengthWarnings
+
+          override def onPart(part: DicomPart): List[DicomPart] = {
+            val keeping = tagPath match {
+              case EmptyTagPath => defaultCondition(part)
+              case path => keepCondition(path)
+            }
+            if (keeping) part :: Nil else Nil
           }
-          if (keeping) part :: Nil else Nil
         }
-      }
-    )
+      })
 
   /**
     * Filter a stream of DICOM elements based on its element header and the associated keep condition. All other
@@ -181,20 +188,24 @@ object DicomFlows {
     * @return the filtered flow
     */
   def headerFilter(keepCondition: HeaderPart => Boolean, logGroupLengthWarnings: Boolean = true): PartFlow =
-    DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {
-      silent = !logGroupLengthWarnings
-      var keeping = true
+    Flow[DicomPart]
+      .via(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-      override def onPart(part: DicomPart): List[DicomPart] =
-        part match {
-          case p: HeaderPart =>
-            keeping = keepCondition(p)
-            if (keeping) p :: Nil else Nil
-          case p: ValueChunk =>
-            if (keeping) p :: Nil else Nil
-          case p =>
-            keeping = true
-            p :: Nil
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with GroupLengthWarningsLogic {
+          silent = !logGroupLengthWarnings
+          var keeping = true
+
+          override def onPart(part: DicomPart): List[DicomPart] =
+            part match {
+              case p: HeaderPart =>
+                keeping = keepCondition(p)
+                if (keeping) p :: Nil else Nil
+              case p: ValueChunk =>
+                if (keeping) p :: Nil else Nil
+              case p =>
+                keeping = true
+                p :: Nil
+            }
         }
     })
 
@@ -202,22 +213,25 @@ object DicomFlows {
       keepCondition: (TagPath, HeaderPart) => Boolean,
       logGroupLengthWarnings: Boolean = true
   ): PartFlow =
-    DicomFlowFactory.create(
-      new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
-        silent = !logGroupLengthWarnings
-        var keeping = true
+    Flow[DicomPart]
+      .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-        override def onPart(part: DicomPart): List[DicomPart] =
-          part match {
-            case p: HeaderPart =>
-              keeping = keepCondition(tagPath, p)
-              if (keeping) p :: Nil else Nil
-            case p: ValueChunk =>
-              if (keeping) p :: Nil else Nil
-            case p =>
-              keeping = true
-              p :: Nil
-          }
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
+          silent = !logGroupLengthWarnings
+          var keeping = true
+
+          override def onPart(part: DicomPart): List[DicomPart] =
+            part match {
+              case p: HeaderPart =>
+                keeping = keepCondition(tagPath, p)
+                if (keeping) p :: Nil else Nil
+              case p: ValueChunk =>
+                if (keeping) p :: Nil else Nil
+              case p =>
+                keeping = true
+                p :: Nil
+            }
+        }
       }
     )
 
@@ -383,7 +397,7 @@ object DicomFlows {
     * Buffers all file meta information elements and calculates their lengths, then emits the correct file meta
     * information group length attribute followed by remaining FMI.
     */
-  def fmiGroupLengthFlow: PartFlow =
+  val fmiGroupLengthFlow: PartFlow =
     Flow[DicomPart]
       .via(
         collectFlow(
@@ -394,43 +408,46 @@ object DicomFlows {
         )
       )
       .via(tagFilter(tagPath => !isFileMetaInformation(tagPath.tag), _ => true, logGroupLengthWarnings = false))
-      .via(DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with EndEvent[DicomPart] {
-        var fmi        = List.empty[DicomPart]
-        var hasEmitted = false
+      .via(new DeferToPartFlow[DicomPart] with EndEvent[DicomPart] {
 
-        override def onEnd(): List[DicomPart] =
-          if (this.hasEmitted) Nil else fmi
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with EndEventLogic {
+          var fmi = List.empty[DicomPart]
+          var hasEmitted = false
 
-        override def onPart(part: DicomPart): List[DicomPart] =
-          part match {
+          override def onEnd(): List[DicomPart] =
+            if (this.hasEmitted) Nil else fmi
 
-            case fmiElements: ElementsPart if fmiElements.label == "fmigrouplength" =>
-              val elements = fmiElements.elements
-              if (elements.data.nonEmpty) {
-                val bigEndian           = elements.data.headOption.exists(_.bigEndian)
-                val explicitVR          = elements.data.headOption.forall(_.explicitVR)
-                val fmiElementsNoLength = elements.filter(_.tag != Tag.FileMetaInformationGroupLength)
-                val length              = fmiElementsNoLength.data.map(_.toBytes.length).sum
-                val lengthHeader =
-                  HeaderPart(Tag.FileMetaInformationGroupLength, VR.UL, 4, isFmi = true, bigEndian, explicitVR)
-                val lengthChunk = ValueChunk(bigEndian, intToBytes(length, bigEndian), last = true)
-                fmi = lengthHeader :: lengthChunk :: fmiElementsNoLength.toParts(false)
-              }
-              Nil
+          override def onPart(part: DicomPart): List[DicomPart] =
+            part match {
 
-            case p if !hasEmitted && p.bytes.nonEmpty =>
-              hasEmitted = true
-              p match {
-                case preamble: PreamblePart =>
-                  preamble :: fmi
-                case _ =>
-                  fmi ::: p :: Nil
-              }
+              case fmiElements: ElementsPart if fmiElements.label == "fmigrouplength" =>
+                val elements = fmiElements.elements
+                if (elements.data.nonEmpty) {
+                  val bigEndian = elements.data.headOption.exists(_.bigEndian)
+                  val explicitVR = elements.data.headOption.forall(_.explicitVR)
+                  val fmiElementsNoLength = elements.filter(_.tag != Tag.FileMetaInformationGroupLength)
+                  val length = fmiElementsNoLength.data.map(_.toBytes.length).sum
+                  val lengthHeader =
+                    HeaderPart(Tag.FileMetaInformationGroupLength, VR.UL, 4, isFmi = true, bigEndian, explicitVR)
+                  val lengthChunk = ValueChunk(bigEndian, intToBytes(length, bigEndian), last = true)
+                  fmi = lengthHeader :: lengthChunk :: fmiElementsNoLength.toParts(false)
+                }
+                Nil
 
-            case p =>
-              p :: Nil
-          }
-      }))
+              case p if !hasEmitted && p.bytes.nonEmpty =>
+                hasEmitted = true
+                p match {
+                  case preamble: PreamblePart =>
+                    preamble :: fmi
+                  case _ =>
+                    fmi ::: p :: Nil
+                }
+
+              case p =>
+                p :: Nil
+            }
+        }
+      })
 
   /**
     * Remove all DICOM parts that do not contribute to file bytes
@@ -440,43 +457,46 @@ object DicomFlows {
   /**
     * Sets any sequences and/or items with known length to indeterminate length and inserts delimiters.
     */
-  def toIndeterminateLengthSequences: PartFlow =
-    DicomFlowFactory.create(
-      new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] { // map to indeterminate length
-        val indeterminateBytes: ByteString = ByteString(0xff, 0xff, 0xff, 0xff)
+  val toIndeterminateLengthSequences: PartFlow =
+    Flow[DicomPart]
+      .via(new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] { // map to indeterminate length
 
-        override def onSequence(part: SequencePart): List[DicomPart] =
-          super.onSequence(part).map {
-            case s: SequencePart if !s.indeterminate =>
-              part.copy(length = indeterminateLength, bytes = part.bytes.dropRight(4) ++ indeterminateBytes)
-            case p => p
-          }
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
+          val indeterminateBytes: ByteString = ByteString(0xff, 0xff, 0xff, 0xff)
 
-        override def onSequenceDelimitation(part: SequenceDelimitationPart): List[DicomPart] =
-          super.onSequenceDelimitation(part) ::: (if (part.bytes.isEmpty)
-                                                    SequenceDelimitationPart(
-                                                      part.bigEndian,
-                                                      sequenceDelimitation(part.bigEndian)
-                                                    ) :: Nil
-                                                  else
-                                                    Nil)
+          override def onSequence(part: SequencePart): List[DicomPart] =
+            super.onSequence(part).map {
+              case s: SequencePart if !s.indeterminate =>
+                part.copy(length = indeterminateLength, bytes = part.bytes.dropRight(4) ++ indeterminateBytes)
+              case p => p
+            }
 
-        override def onItem(part: ItemPart): List[DicomPart] =
-          super.onItem(part).map {
-            case i: ItemPart if !inFragments && !i.indeterminate =>
-              part.copy(length = indeterminateLength, bytes = part.bytes.dropRight(4) ++ indeterminateBytes)
-            case p => p
-          }
+          override def onSequenceDelimitation(part: SequenceDelimitationPart): List[DicomPart] =
+            super.onSequenceDelimitation(part) ::: (if (part.bytes.isEmpty)
+              SequenceDelimitationPart(
+                part.bigEndian,
+                sequenceDelimitation(part.bigEndian)
+              ) :: Nil
+            else
+              Nil)
 
-        override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] =
-          super.onItemDelimitation(part) ::: (if (part.bytes.isEmpty)
-                                                ItemDelimitationPart(
-                                                  part.index,
-                                                  part.bigEndian,
-                                                  itemDelimitation(part.bigEndian)
-                                                ) :: Nil
-                                              else
-                                                Nil)
+          override def onItem(part: ItemPart): List[DicomPart] =
+            super.onItem(part).map {
+              case i: ItemPart if !inFragments && !i.indeterminate =>
+                part.copy(length = indeterminateLength, bytes = part.bytes.dropRight(4) ++ indeterminateBytes)
+              case p => p
+            }
+
+          override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] =
+            super.onItemDelimitation(part) ::: (if (part.bytes.isEmpty)
+              ItemDelimitationPart(
+                part.index,
+                part.bigEndian,
+                itemDelimitation(part.bigEndian)
+              ) :: Nil
+            else
+              Nil)
+        }
       }
     )
 
@@ -491,7 +511,7 @@ object DicomFlows {
     *
     * @return the associated DicomPart Flow
     */
-  def toUtf8Flow: PartFlow =
+  val toUtf8Flow: PartFlow =
     Flow[DicomPart]
       .via(collectFlow(Set(TagTree.fromTag(Tag.SpecificCharacterSet)), "toutf8"))
       .via(
@@ -548,7 +568,7 @@ object DicomFlows {
     *
     * @return the associated DicomPart Flow
     */
-  def toExplicitVrLittleEndianFlow: PartFlow =
+  val toExplicitVrLittleEndianFlow: PartFlow =
     modifyFlow(modifications =
       Seq(
         TagModification.equals(

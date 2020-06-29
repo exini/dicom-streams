@@ -3,19 +3,21 @@ package com.exini.dicom.streams
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{ FileIO, Flow, Sink, Source }
+import akka.stream.Attributes
+import akka.stream.scaladsl.{FileIO, Flow, Sink, Source}
+import akka.stream.stage.GraphStageLogic
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.TagPath.EmptyTagPath
-import com.exini.dicom.data.{ Tag, TagPath, _ }
+import com.exini.dicom.data.{Tag, TagPath, _}
 import com.exini.dicom.streams.ParseFlow.parseFlow
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ Await, ExecutionContextExecutor }
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 class DicomFlowTest
     extends TestKit(ActorSystem("DicomFlowSpec"))
@@ -42,20 +44,22 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new DicomFlow[DicomPart] {
-        override def onFragments(part: FragmentsPart): List[DicomPart] = TestPart("Fragments Start") :: Nil
-        override def onHeader(part: HeaderPart): List[DicomPart]       = TestPart("Header") :: Nil
-        override def onPreamble(part: PreamblePart): List[DicomPart]   = TestPart("Preamble") :: Nil
-        override def onSequenceDelimitation(part: SequenceDelimitationPart): List[DicomPart] =
-          TestPart("Sequence End") :: Nil
-        override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] = TestPart("Item End") :: Nil
-        override def onItem(part: ItemPart): List[DicomPart]                         = TestPart("Item Start") :: Nil
-        override def onSequence(part: SequencePart): List[DicomPart]                 = TestPart("Sequence Start") :: Nil
-        override def onValueChunk(part: ValueChunk): List[DicomPart]                 = TestPart("Value Chunk") :: Nil
-        override def onDeflatedChunk(part: DeflatedChunk): List[DicomPart]           = Nil
-        override def onUnknown(part: UnknownPart): List[DicomPart]                   = Nil
-        override def onPart(part: DicomPart): List[DicomPart]                        = Nil
-      }))
+      .via(new DicomFlow[DicomPart] {
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DicomLogic {
+          override def onFragments(part: FragmentsPart): List[DicomPart] = TestPart("Fragments Start") :: Nil
+          override def onHeader(part: HeaderPart): List[DicomPart] = TestPart("Header") :: Nil
+          override def onPreamble(part: PreamblePart): List[DicomPart] = TestPart("Preamble") :: Nil
+          override def onSequenceDelimitation(part: SequenceDelimitationPart): List[DicomPart] =
+            TestPart("Sequence End") :: Nil
+          override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] = TestPart("Item End") :: Nil
+          override def onItem(part: ItemPart): List[DicomPart] = TestPart("Item Start") :: Nil
+          override def onSequence(part: SequencePart): List[DicomPart] = TestPart("Sequence Start") :: Nil
+          override def onValueChunk(part: ValueChunk): List[DicomPart] = TestPart("Value Chunk") :: Nil
+          override def onDeflatedChunk(part: DeflatedChunk): List[DicomPart] = Nil
+          override def onUnknown(part: UnknownPart): List[DicomPart] = Nil
+          override def onPart(part: DicomPart): List[DicomPart] = Nil
+        }
+      })
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -100,12 +104,14 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with InSequence[DicomPart] {
-        override def onPart(part: DicomPart): List[DicomPart] = {
-          check(sequenceDepth, inSequence)
-          part :: Nil
+      .via(new DeferToPartFlow[DicomPart] with InSequence[DicomPart] {
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with InSequenceLogic {
+          override def onPart(part: DicomPart): List[DicomPart] = {
+            check(sequenceDepth, inSequence)
+            part :: Nil
+          }
         }
-      }))
+      })
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -127,18 +133,20 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] {
-        override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] = {
-          part.bytes.length shouldBe expectedDelimitationLengths.head
-          expectedDelimitationLengths = expectedDelimitationLengths.tail
-          super.onItemDelimitation(part)
+      .via(new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] {
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
+          override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] = {
+            part.bytes.length shouldBe expectedDelimitationLengths.head
+            expectedDelimitationLengths = expectedDelimitationLengths.tail
+            super.onItemDelimitation(part)
+          }
+          override def onSequenceDelimitation(part: SequenceDelimitationPart): List[DicomPart] = {
+            part.bytes.length shouldBe expectedDelimitationLengths.head
+            expectedDelimitationLengths = expectedDelimitationLengths.tail
+            super.onSequenceDelimitation(part)
+          }
         }
-        override def onSequenceDelimitation(part: SequenceDelimitationPart): List[DicomPart] = {
-          part.bytes.length shouldBe expectedDelimitationLengths.head
-          expectedDelimitationLengths = expectedDelimitationLengths.tail
-          super.onSequenceDelimitation(part)
-        }
-      }))
+      })
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -275,11 +283,9 @@ class DicomFlowTest
     var nItemDelims = 0
     var nSeqDelims  = 0
 
-    val source = Source
-      .single(bytes)
-      .via(parseFlow)
-      .via(DicomFlowFactory.create(new IdentityFlow with GuaranteedDelimitationEvents[DicomPart]))
-      .via(DicomFlowFactory.create(new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] {
+    val flow1 = new IdentityFlow with GuaranteedDelimitationEvents[DicomPart]
+    val flow2 = new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] {
+      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedDelimitationEventsLogic {
         override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] = {
           nItemDelims += 1
           super.onItemDelimitation(part)
@@ -288,7 +294,14 @@ class DicomFlowTest
           nSeqDelims += 1
           super.onSequenceDelimitation(part)
         }
-      }))
+      }
+    }
+
+    val source = Source
+      .single(bytes)
+      .via(parseFlow)
+      .via(flow1)
+      .via(flow2)
 
     Await.ready(source.runWith(Sink.ignore), 5.seconds)
 
@@ -304,13 +317,15 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new IdentityFlow with GuaranteedValueEvent[DicomPart] {
-        override def onValueChunk(part: ValueChunk): List[DicomPart] = {
-          part.bytes.length shouldBe expectedChunkLengths.head
-          expectedChunkLengths = expectedChunkLengths.tail
-          super.onValueChunk(part)
+      .via(new IdentityFlow with GuaranteedValueEvent[DicomPart] {
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedValueEventLogic {
+          override def onValueChunk(part: ValueChunk): List[DicomPart] = {
+            part.bytes.length shouldBe expectedChunkLengths.head
+            expectedChunkLengths = expectedChunkLengths.tail
+            super.onValueChunk(part)
+          }
         }
-      }))
+      })
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -325,16 +340,21 @@ class DicomFlowTest
 
     var nEvents = 0
 
-    val source = Source
-      .single(bytes)
-      .via(parseFlow)
-      .via(DicomFlowFactory.create(new IdentityFlow with GuaranteedValueEvent[DicomPart]))
-      .via(DicomFlowFactory.create(new IdentityFlow with GuaranteedValueEvent[DicomPart] {
+    val flow1 = new IdentityFlow with GuaranteedValueEvent[DicomPart]
+    val flow2 = new IdentityFlow with GuaranteedValueEvent[DicomPart] {
+      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GuaranteedValueEventLogic {
         override def onValueChunk(part: ValueChunk): List[DicomPart] = {
           nEvents += 1
           super.onValueChunk(part)
         }
-      }))
+      }
+    }
+
+    val source = Source
+      .single(bytes)
+      .via(parseFlow)
+      .via(flow1)
+      .via(flow2)
 
     Await.ready(source.runWith(Sink.ignore), 5.seconds)
     nEvents shouldBe 1
@@ -343,15 +363,16 @@ class DicomFlowTest
   "The start event flow" should "notify when dicom stream starts" in {
     val bytes = personNameJohnDoe()
 
-    val startEventTestFlow: PartFlow =
-      DicomFlowFactory.create(new IdentityFlow with StartEvent[DicomPart] {
+    val flow = new IdentityFlow with StartEvent[DicomPart] {
+      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with StartEventLogic {
         override def onStart(): List[DicomPart] = DicomStartMarker :: Nil
-      })
+      }
+    }
 
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(startEventTestFlow)
+      .via(flow)
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -365,20 +386,21 @@ class DicomFlowTest
   }
 
   it should "call onStart for all combined flow stages" in {
-    def flow() =
-      DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with StartEvent[DicomPart] {
-        var state = 1
-        override def onStart(): List[DicomPart] = {
-          state = 0
-          super.onStart()
+    val flow = new DeferToPartFlow[DicomPart] with StartEvent[DicomPart] {
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with StartEventLogic {
+          var state = 1
+          override def onStart(): List[DicomPart] = {
+            state = 0
+            super.onStart()
+          }
+          override def onPart(part: DicomPart): List[DicomPart] = {
+            state shouldBe 0
+            part :: Nil
+          }
         }
-        override def onPart(part: DicomPart): List[DicomPart] = {
-          state shouldBe 0
-          part :: Nil
-        }
-      })
+      }
 
-    val source = Source.single(DicomEndMarker).via(flow()).via(flow()).via(flow())
+    val source = Source.single(DicomEndMarker).via(flow).via(flow).via(flow)
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -390,8 +412,8 @@ class DicomFlowTest
   }
 
   it should "call onStart once for flows with more than one capability using the onStart event" in {
-    val flow = DicomFlowFactory.create(
-      new DeferToPartFlow[DicomPart] with GuaranteedDelimitationEvents[DicomPart] with StartEvent[DicomPart] {
+    val flow = new DeferToPartFlow[DicomPart] with GuaranteedDelimitationEvents[DicomPart] with StartEvent[DicomPart] {
+      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with GuaranteedDelimitationEventsLogic with StartEventLogic {
         var nCalls = 0
         override def onStart(): List[DicomPart] = {
           nCalls += 1
@@ -402,7 +424,7 @@ class DicomFlowTest
           part :: Nil
         }
       }
-    )
+    }
 
     val source = Source.single(DicomEndMarker).via(flow)
 
@@ -418,15 +440,16 @@ class DicomFlowTest
   "The end event flow" should "notify when dicom stream ends" in {
     val bytes = personNameJohnDoe()
 
-    val endEventTestFlow: PartFlow =
-      DicomFlowFactory.create(new IdentityFlow with EndEvent[DicomPart] {
+    val flow = new IdentityFlow with EndEvent[DicomPart] {
+      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with EndEventLogic {
         override def onEnd(): List[DicomPart] = DicomEndMarker :: Nil
-      })
+      }
+    }
 
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(endEventTestFlow)
+      .via(flow)
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -500,12 +523,14 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
-        override def onPart(part: DicomPart): List[DicomPart] = {
-          check(tagPath)
-          part :: Nil
+      .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic {
+          override def onPart(part: DicomPart): List[DicomPart] = {
+            check(tagPath)
+            part :: Nil
+          }
         }
-      }))
+      })
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -517,7 +542,7 @@ class DicomFlowTest
     val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ personNameJohnDoe()
 
     // must be def, not val
-    def flow = DicomFlowFactory.create(new IdentityFlow with TagPathTracking[DicomPart])
+    val flow = new IdentityFlow with TagPathTracking[DicomPart]
 
     val source = Source
       .single(bytes)
@@ -571,12 +596,14 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
-        override def onPart(part: DicomPart): List[DicomPart] = {
-          check(tagPath)
-          part :: Nil
+      .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic {
+          override def onPart(part: DicomPart): List[DicomPart] = {
+            check(tagPath)
+            part :: Nil
+          }
         }
-      }))
+      })
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -589,7 +616,7 @@ class DicomFlowTest
     val source = FileIO
       .fromPath(file.toPath)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new IdentityFlow with TagPathTracking[DicomPart]))
+      .via(new IdentityFlow with TagPathTracking[DicomPart])
 
     Await.result(source.runWith(Sink.ignore), 5.seconds)
     succeed
@@ -624,7 +651,7 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new IdentityFlow with GroupLengthWarnings[DicomPart]))
+      .via(new IdentityFlow with GroupLengthWarnings[DicomPart])
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -645,7 +672,7 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new IdentityFlow with GroupLengthWarnings[DicomPart]))
+      .via(new IdentityFlow with GroupLengthWarnings[DicomPart])
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -661,9 +688,11 @@ class DicomFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(DicomFlowFactory.create(new IdentityFlow with GroupLengthWarnings[DicomPart] {
-        silent = true
-      }))
+      .via(new IdentityFlow with GroupLengthWarnings[DicomPart] {
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new IdentityLogic with GroupLengthWarningsLogic {
+          silent = true
+        }
+      })
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -680,7 +709,7 @@ class DicomFlowTest
       .single(bytes)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
-      .via(DicomFlowFactory.create(new IdentityFlow with GroupLengthWarnings[DicomPart]))
+      .via(new IdentityFlow with GroupLengthWarnings[DicomPart])
 
     source
       .runWith(TestSink.probe[DicomPart])

@@ -17,12 +17,14 @@
 package com.exini.dicom.streams
 
 import akka.NotUsed
+import akka.stream.Attributes
 import akka.stream.scaladsl.Flow
+import akka.stream.stage.GraphStageLogic
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath._
-import com.exini.dicom.data.{ TagPath, Value }
+import com.exini.dicom.data.{TagPath, Value}
 
 object ElementFlows {
 
@@ -31,10 +33,12 @@ object ElementFlows {
     *         information.
     */
   def elementFlow: Flow[DicomPart, Element, NotUsed] =
-    DicomFlowFactory.create(
-      new DeferToPartFlow[Element] with GuaranteedValueEvent[Element] {
-        var bytes: ByteString                        = ByteString.empty
-        var currentValue: Option[ValueElement]       = None
+    Flow[DicomPart]
+    .via(new DeferToPartFlow[Element] with GuaranteedValueEvent[Element] {
+
+      override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new DeferToPartLogic with GuaranteedValueEventLogic {
+        var bytes: ByteString = ByteString.empty
+        var currentValue: Option[ValueElement] = None
         var currentFragment: Option[FragmentElement] = None
 
         override def onPart(part: DicomPart): List[Element] =
@@ -78,7 +82,7 @@ object ElementFlows {
             case _ => Nil
           }
       }
-    )
+    })
 
   def tagPathFlow: Flow[Element, (TagPath, Element), NotUsed] =
     Flow[Element]

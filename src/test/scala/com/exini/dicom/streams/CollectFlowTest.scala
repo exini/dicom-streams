@@ -33,6 +33,7 @@ class CollectFlowTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
+      .via(DicomFlows.printFlow)
       .via(collectFlow(tags, "tag"))
 
     source
