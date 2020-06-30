@@ -4,26 +4,28 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.stream.Attributes
-import akka.stream.scaladsl.{ FileIO, Flow, Sink, Source }
+import akka.stream.scaladsl.{FileIO, Flow, Sink, Source}
 import akka.stream.stage.GraphStageLogic
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.TagPath.EmptyTagPath
-import com.exini.dicom.data.{ Tag, TagPath, _ }
+import com.exini.dicom.data.{Tag, TagPath, _}
 import com.exini.dicom.streams.ParseFlow.parseFlow
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ Await, ExecutionContextExecutor }
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 class DicomFlowTest
     extends TestKit(ActorSystem("DicomFlowSpec"))
     with AnyFlatSpecLike
     with Matchers
-    with BeforeAndAfterAll {
+    with BeforeAndAfterAll
+    with ScalaFutures {
 
   import DicomFlows._
   import TestUtils._
@@ -733,5 +735,18 @@ class DicomFlowTest
       .expectItemDelimitation()
       .expectSequenceDelimitation()
       .expectDicomComplete()
+  }
+
+  "ParseFlow" should "parse two streams properly without recreating the instance" in {
+    val file = new File(getClass.getResource("../data/test001.dcm").toURI)
+    val source = FileIO
+      .fromPath(file.toPath)
+      .via(parseFlow)
+      .via(new IdentityFlow with TagPathTracking[DicomPart])
+
+    val runResult1 = source.runWith(Sink.seq).futureValue
+    val runResult2 = source.runWith(Sink.seq).futureValue
+
+    runResult1 shouldBe runResult2
   }
 }
