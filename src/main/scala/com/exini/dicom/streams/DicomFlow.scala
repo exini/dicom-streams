@@ -143,8 +143,6 @@ abstract class DeferToPartFlow[Out] extends DicomFlow[Out] {
   }
 }
 
-case object DicomStartMarker extends MetaPart
-
 /**
   * This mixin adds an event marking the start of the DICOM stream. It does not add DICOM parts to the stream.
   */
@@ -165,8 +163,6 @@ trait StartEvent[Out] extends DicomFlow[Out] {
       }
   }
 }
-
-case object DicomEndMarker extends MetaPart
 
 /**
   * This mixin adds an event marking the end of the DICOM stream. It does not add DICOM parts to the stream.

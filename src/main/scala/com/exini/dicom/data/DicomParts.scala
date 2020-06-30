@@ -164,4 +164,14 @@ object DicomParts {
     */
   case class ElementsPart(label: String, elements: Elements) extends MetaPart
 
+  /**
+    * Meta-part that can be used to mark the start of a DICOM file, e.g. using `.prepend(Source.single(DicomStartMarker)`
+    */
+  case object DicomStartMarker extends MetaPart
+
+  /**
+    * Meta-part that can be used to mark the end of a DICOM file, e.g. using `.concat(Source.single(DicomEndMarker)`
+    */
+  case object DicomEndMarker extends MetaPart
+
 }
