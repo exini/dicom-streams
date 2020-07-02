@@ -17,7 +17,6 @@
 package com.exini.dicom.streams
 
 import akka.stream.Attributes
-import akka.stream.scaladsl.Flow
 import akka.stream.stage.GraphStageLogic
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._

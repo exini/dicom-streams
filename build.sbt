@@ -16,8 +16,7 @@ developers := List(
   )
 )
 
-scalaVersion := "2.13.2"
-crossScalaVersions := Seq("2.12.10", "2.13.2")
+crossScalaVersions := Seq("2.12.10", "2.13.3")
 scalacOptions := Seq("-encoding", "UTF-8", "-Xlint", "-deprecation", "-unchecked", "-feature", "-target:jvm-1.8")
 scalacOptions in(Compile, doc) ++= Seq(
   "-no-link-warnings" // Suppresses problems with Scaladoc @throws links
@@ -37,14 +36,14 @@ resolvers ++= Seq(
 // deps
 
 libraryDependencies ++= {
-  val akkaVersion = "2.6.4"
+  val akkaVersion = "2.6.6"
   Seq(
     "org.scala-lang.modules" %% "scala-xml" % "1.3.0",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "org.slf4j" % "slf4j-simple" % "1.7.30",
     "com.beachape" %% "enumeratum" % "1.6.1",
-    "org.scalatest" %% "scalatest" % "3.1.1" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.0" % "test",
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test"
   )
 }
