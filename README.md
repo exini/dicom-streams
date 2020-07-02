@@ -25,7 +25,7 @@ resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snap
 
 The library is included by
 ```scala
-libraryDependencies += "com.exini" %% "dicom-streams" % "2.0.2"
+libraryDependencies += "com.exini" %% "dicom-streams" % "x.y.z"
 ```
 
 ### Data Model
@@ -147,6 +147,18 @@ has `depth = 0`.
 ```
 In this example, we chose to use `DeferToPartFlow` as the core class and mixed in the `TagPathTracking` capability
 which gives access to a `tagPath: TagPath` variable at all times which is automatically updated as the flow progresses.
+
+### Releasing
+
+The plugin [sbt-ci-release](https://github.com/olafurpg/sbt-ci-release) is used to manage releasing to Sonatype. The
+library is automatically released on each push to the master branch. The version is derived from the tag closet to the
+latest commit to master. Given this, the following procedure should be used:
+1. Merge develop into master via a new branch
+1. Tag the new release as `vx.y.z`, e.g. using `git tag v3.2.1`, following semantic versioning recommendations
+1. Push tags to origin by `git push --tags`
+1. Push release commit to origin by `git push`, this will trigger the release using the tagged version
+1. From the Github project page, create a new release using the existing release tag describing your changes
+1. Merge master into develop via a new branch
 
 ### License
 
