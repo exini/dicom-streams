@@ -34,6 +34,8 @@ package object streams {
 
   type PartFlow = Flow[DicomPart, DicomPart, NotUsed]
 
+  final val partFlow: PartFlow = Flow[DicomPart]
+
   def toElements(source: Source[ByteString, Any])(implicit ec: ExecutionContext, mat: Materializer): Future[Elements] =
     source
       .via(parseFlow)

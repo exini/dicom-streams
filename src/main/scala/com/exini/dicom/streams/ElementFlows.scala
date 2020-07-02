@@ -17,7 +17,9 @@
 package com.exini.dicom.streams
 
 import akka.NotUsed
+import akka.stream.Attributes
 import akka.stream.scaladsl.Flow
+import akka.stream.stage.GraphStageLogic
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
@@ -31,54 +33,57 @@ object ElementFlows {
     *         information.
     */
   def elementFlow: Flow[DicomPart, Element, NotUsed] =
-    DicomFlowFactory.create(
-      new DeferToPartFlow[Element] with GuaranteedValueEvent[Element] {
-        var bytes: ByteString                        = ByteString.empty
-        var currentValue: Option[ValueElement]       = None
-        var currentFragment: Option[FragmentElement] = None
+    partFlow
+      .via(new DeferToPartFlow[Element] with GuaranteedValueEvent[Element] {
 
-        override def onPart(part: DicomPart): List[Element] =
-          part match {
+        override def createLogic(attr: Attributes): GraphStageLogic =
+          new DeferToPartLogic with GuaranteedValueEventLogic {
+            var bytes: ByteString                        = ByteString.empty
+            var currentValue: Option[ValueElement]       = None
+            var currentFragment: Option[FragmentElement] = None
 
-            case _: PreamblePart => PreambleElement :: Nil
+            override def onPart(part: DicomPart): List[Element] =
+              part match {
 
-            // Begin aggregate values
-            case header: HeaderPart =>
-              currentValue = Option(ValueElement.empty(header.tag, header.vr, header.bigEndian, header.explicitVR))
-              bytes = ByteString.empty
-              Nil
-            case item: ItemPart if inFragments =>
-              currentFragment = Option(FragmentElement.empty(item.index, item.length, item.bigEndian))
-              bytes = ByteString.empty
-              Nil
+                case _: PreamblePart => PreambleElement :: Nil
 
-            // aggregate, emit if at end
-            case valueChunk: ValueChunk =>
-              bytes = bytes ++ valueChunk.bytes
-              if (valueChunk.last)
-                if (inFragments)
-                  currentFragment.map(_.copy(value = Value(bytes)) :: Nil).getOrElse(Nil)
-                else
-                  currentValue.map(_.copy(value = Value(bytes)) :: Nil).getOrElse(Nil)
-              else
-                Nil
+                // Begin aggregate values
+                case header: HeaderPart =>
+                  currentValue = Option(ValueElement.empty(header.tag, header.vr, header.bigEndian, header.explicitVR))
+                  bytes = ByteString.empty
+                  Nil
+                case item: ItemPart if inFragments =>
+                  currentFragment = Option(FragmentElement.empty(item.index, item.length, item.bigEndian))
+                  bytes = ByteString.empty
+                  Nil
 
-            // types that directly map to elements
-            case sequence: SequencePart =>
-              SequenceElement(sequence.tag, sequence.length, sequence.bigEndian, sequence.explicitVR) :: Nil
-            case fragments: FragmentsPart =>
-              FragmentsElement(fragments.tag, fragments.vr, fragments.bigEndian, fragments.explicitVR) :: Nil
-            case item: ItemPart =>
-              ItemElement(item.index, item.length, item.bigEndian) :: Nil
-            case itemDelimitation: ItemDelimitationPart =>
-              ItemDelimitationElement(itemDelimitation.index, itemDelimitation.bigEndian) :: Nil
-            case sequenceDelimitation: SequenceDelimitationPart =>
-              SequenceDelimitationElement(sequenceDelimitation.bigEndian) :: Nil
+                // aggregate, emit if at end
+                case valueChunk: ValueChunk =>
+                  bytes = bytes ++ valueChunk.bytes
+                  if (valueChunk.last)
+                    if (inFragments)
+                      currentFragment.map(_.copy(value = Value(bytes)) :: Nil).getOrElse(Nil)
+                    else
+                      currentValue.map(_.copy(value = Value(bytes)) :: Nil).getOrElse(Nil)
+                  else
+                    Nil
 
-            case _ => Nil
+                // types that directly map to elements
+                case sequence: SequencePart =>
+                  SequenceElement(sequence.tag, sequence.length, sequence.bigEndian, sequence.explicitVR) :: Nil
+                case fragments: FragmentsPart =>
+                  FragmentsElement(fragments.tag, fragments.vr, fragments.bigEndian, fragments.explicitVR) :: Nil
+                case item: ItemPart =>
+                  ItemElement(item.index, item.length, item.bigEndian) :: Nil
+                case itemDelimitation: ItemDelimitationPart =>
+                  ItemDelimitationElement(itemDelimitation.index, itemDelimitation.bigEndian) :: Nil
+                case sequenceDelimitation: SequenceDelimitationPart =>
+                  SequenceDelimitationElement(sequenceDelimitation.bigEndian) :: Nil
+
+                case _ => Nil
+              }
           }
-      }
-    )
+      })
 
   def tagPathFlow: Flow[Element, (TagPath, Element), NotUsed] =
     Flow[Element]

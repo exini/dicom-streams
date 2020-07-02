@@ -107,9 +107,10 @@ FileIO.fromPath(Paths.get("source-file.dcm"))
 
 ### Custom Processing
 New non-trivial DICOM flows can be built using a modular system of capabilities that are mixed in as appropriate with a 
-core class implementing a common base interface. The base interface for DICOM flows is `DicomFlow` and new flows are 
-created using the `DicomFlowFactory.create` method. The `DicomFlow` interface defines a series of events, one for each
-type of `DicomPart` that is produced when parsing DICOM data with `DicomParseFlow`. The core events are:
+core class implementing a common base interface. The base interface for DICOM flows is `DicomFlow`. It provides an
+associated logic class `DicomLogic` that should be similarly extended and is where the state and logic of the flow should
+reside. The `DicomLogic` base class defines a series of events, one for each type of `DicomPart` that is produced when 
+parsing DICOM data with `DicomParseFlow`. The core events are:
 ```scala
   def onPreamble(part: PreamblePart): List[DicomPart]
   def onHeader(part: HeaderPart): List[DicomPart]
@@ -138,14 +139,14 @@ To give an example of a custom flow, here is the implementation of a filter that
 nested sequences from a dataset. We define a nested dataset as a sequence with `depth > 1` given that the root dataset 
 has `depth = 0`.
 ```scala
-  def nestedSequencesFilter() = DicomFlowFactory.create(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
-    override def onPart(part: DicomPart): List[DicomPart] = if (tagPath.depth > 1) Nil else part :: Nil
-  })
+  def nestedSequencesFilter() = new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
+    override def createLogic(attr: Attributes): GraphStageLogic = new DeferToPartLogic with TagPathTrackingLogic {
+      override def onPart(part: DicomPart): List[DicomPart] = if (tagPath.depth > 1) Nil else part :: Nil
+    }
+  }
 ```
 In this example, we chose to use `DeferToPartFlow` as the core class and mixed in the `TagPathTracking` capability
 which gives access to a `tagPath: TagPath` variable at all times which is automatically updated as the flow progresses.
-Note that flows with internal state should be defined as functions (`def`) rather than constants/variables `val`/`var`
-to avoid shared state within or between flows.
 
 ### License
 

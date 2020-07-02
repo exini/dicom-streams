@@ -16,11 +16,13 @@
 
 package com.exini.dicom.streams
 
+import akka.stream.Attributes
+import akka.stream.scaladsl.Flow
+import akka.stream.stage.GraphStageLogic
 import akka.util.ByteString
-import com.exini.dicom.data._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath.{ EmptyTagPath, TagPathTag }
-import com.exini.dicom.data.{ Lookup, TagPath, VR, isFileMetaInformation }
+import com.exini.dicom.data.{ Lookup, TagPath, VR, isFileMetaInformation, _ }
 
 object ModifyFlow {
 
@@ -100,134 +102,140 @@ object ModifyFlow {
       insertions: Seq[TagInsertion] = Seq.empty,
       logGroupLengthWarnings: Boolean = true
   ): PartFlow =
-    DicomFlowFactory.create(
-      new DeferToPartFlow[DicomPart]
-        with EndEvent[DicomPart]
-        with TagPathTracking[DicomPart]
-        with GroupLengthWarnings[DicomPart] {
-        silent = !logGroupLengthWarnings
+    partFlow
+      .via(
+        new DeferToPartFlow[DicomPart]
+          with EndEvent[DicomPart]
+          with TagPathTracking[DicomPart]
+          with GroupLengthWarnings[DicomPart] {
 
-        var currentModifications: List[TagModification] = Nil
-        var currentInsertions: List[TagInsertion]       = Nil
-        set(modifications, insertions)
+          override def createLogic(attr: Attributes): GraphStageLogic =
+            new DeferToPartLogic with EndEventLogic with TagPathTrackingLogic with GroupLengthWarningsLogic {
+              silent = !logGroupLengthWarnings
 
-        var currentModification: Option[TagModification] = None             // current modification
-        var currentHeader: Option[HeaderPart]            = None             // header of current element being modified
-        var latestTagPath: TagPath                       = EmptyTagPath     // last seen new tag path
-        var value: ByteString                            = ByteString.empty // value of current element being modified
-        var bigEndian                                    = false            // endianness of current element
-        var explicitVR                                   = true             // VR representation of current element
+              var currentModifications: List[TagModification] = Nil
+              var currentInsertions: List[TagInsertion]       = Nil
+              set(modifications, insertions)
 
-        def set(m: Seq[TagModification], i: Seq[TagInsertion]): Unit = {
-          currentModifications = m.toList
-          currentInsertions = i
-            .groupBy(_.tagPath)
-            .flatMap(_._2.headOption)
-            .toList                                    // distinct on tag path
-            .sortWith((a, b) => a.tagPath < b.tagPath) // sorted by tag path
-        }
+              var currentModification: Option[TagModification] = None             // current modification
+              var currentHeader: Option[HeaderPart]            = None             // header of current element being modified
+              var latestTagPath: TagPath                       = EmptyTagPath     // last seen new tag path
+              var value: ByteString                            = ByteString.empty // value of current element being modified
+              var bigEndian                                    = false            // endianness of current element
+              var explicitVR                                   = true             // VR representation of current element
 
-        def updateSyntax(header: HeaderPart): Unit = {
-          bigEndian = header.bigEndian
-          explicitVR = header.explicitVR
-        }
+              def set(m: Seq[TagModification], i: Seq[TagInsertion]): Unit = {
+                currentModifications = m.toList
+                currentInsertions = i
+                  .groupBy(_.tagPath)
+                  .flatMap(_._2.headOption)
+                  .toList                                    // distinct on tag path
+                  .sortWith((a, b) => a.tagPath < b.tagPath) // sorted by tag path
+              }
 
-        def valueOrNot(bytes: ByteString): List[DicomPart] =
-          if (bytes.isEmpty) Nil else ValueChunk(bigEndian, bytes, last = true) :: Nil
+              def updateSyntax(header: HeaderPart): Unit = {
+                bigEndian = header.bigEndian
+                explicitVR = header.explicitVR
+              }
 
-        def headerAndValueParts(tagPath: TagPath, valueBytes: ByteString): List[DicomPart] = {
-          val vr = Lookup.vrOf(tagPath.tag)
-          if (vr == VR.UN)
-            throw new IllegalArgumentException(
-              "Tag is not present in dictionary, cannot determine value representation"
-            )
-          if (vr == VR.SQ) throw new IllegalArgumentException("Cannot insert sequences")
-          val isFmi  = isFileMetaInformation(tagPath.tag)
-          val header = HeaderPart(tagPath.tag, vr, valueBytes.length, isFmi, bigEndian, explicitVR)
-          header :: valueOrNot(valueBytes)
-        }
+              def valueOrNot(bytes: ByteString): List[DicomPart] =
+                if (bytes.isEmpty) Nil else ValueChunk(bigEndian, bytes, last = true) :: Nil
 
-        def isBetween(lowerTag: TagPath, tagToTest: TagPath, upperTag: TagPath): Boolean =
-          lowerTag < tagToTest && tagToTest < upperTag
+              def headerAndValueParts(tagPath: TagPath, valueBytes: ByteString): List[DicomPart] = {
+                val vr = Lookup.vrOf(tagPath.tag)
+                if (vr == VR.UN)
+                  throw new IllegalArgumentException(
+                    "Tag is not present in dictionary, cannot determine value representation"
+                  )
+                if (vr == VR.SQ) throw new IllegalArgumentException("Cannot insert sequences")
+                val isFmi  = isFileMetaInformation(tagPath.tag)
+                val header = HeaderPart(tagPath.tag, vr, valueBytes.length, isFmi, bigEndian, explicitVR)
+                header :: valueOrNot(valueBytes)
+              }
 
-        def isInDataset(tagToTest: TagPath, tagPath: TagPath): Boolean =
-          tagToTest.previous == tagPath.previous
+              def isBetween(lowerTag: TagPath, tagToTest: TagPath, upperTag: TagPath): Boolean =
+                lowerTag < tagToTest && tagToTest < upperTag
 
-        def findInsertParts: List[DicomPart] =
-          currentInsertions
-            .filter(i => isBetween(latestTagPath, i.tagPath, tagPath))
-            .filter(i => isInDataset(i.tagPath, tagPath))
-            .flatMap(i => headerAndValueParts(i.tagPath, padToEvenLength(i.insertion(None), i.tagPath.tag)))
+              def isInDataset(tagToTest: TagPath, tagPath: TagPath): Boolean =
+                tagToTest.previous == tagPath.previous
 
-        def findModifyPart(header: HeaderPart): List[DicomPart] =
-          currentModifications
-            .find(m => m.matches(tagPath))
-            .map { tagModification =>
-              currentHeader = Some(header)
-              currentModification = Some(tagModification)
-              value = ByteString.empty
-              Nil
-            }
-            .orElse {
-              currentInsertions
-                .find(_.tagPath == tagPath)
-                .map { insertion =>
-                  currentHeader = Some(header)
-                  currentModification = Some(TagModification(_ == insertion.tagPath, v => insertion.insertion(Some(v))))
-                  value = ByteString.empty
-                  Nil
+              def findInsertParts: List[DicomPart] =
+                currentInsertions
+                  .filter(i => isBetween(latestTagPath, i.tagPath, tagPath))
+                  .filter(i => isInDataset(i.tagPath, tagPath))
+                  .flatMap(i => headerAndValueParts(i.tagPath, padToEvenLength(i.insertion(None), i.tagPath.tag)))
+
+              def findModifyPart(header: HeaderPart): List[DicomPart] =
+                currentModifications
+                  .find(m => m.matches(tagPath))
+                  .map { tagModification =>
+                    currentHeader = Some(header)
+                    currentModification = Some(tagModification)
+                    value = ByteString.empty
+                    Nil
+                  }
+                  .orElse {
+                    currentInsertions
+                      .find(_.tagPath == tagPath)
+                      .map { insertion =>
+                        currentHeader = Some(header)
+                        currentModification =
+                          Some(TagModification(_ == insertion.tagPath, v => insertion.insertion(Some(v))))
+                        value = ByteString.empty
+                        Nil
+                      }
+                  }
+                  .getOrElse(header :: Nil)
+
+              override def onPart(part: DicomPart): List[DicomPart] =
+                part match {
+                  case modsPart: TagModificationsPart =>
+                    if (modsPart.replace)
+                      set(modsPart.modifications, modsPart.insertions)
+                    else
+                      set(currentModifications ++ modsPart.modifications, currentInsertions ++ modsPart.insertions)
+                    Nil
+
+                  case header: HeaderPart =>
+                    updateSyntax(header)
+                    val insertParts = findInsertParts
+                    val modifyPart  = findModifyPart(header)
+                    latestTagPath = tagPath
+                    insertParts ::: modifyPart
+
+                  case sequence: SequencePart =>
+                    val insertParts = findInsertParts
+                    latestTagPath = tagPath
+                    insertParts ::: sequence :: Nil
+
+                  case chunk: ValueChunk =>
+                    if (currentModification.isDefined && currentHeader.isDefined) {
+                      value = value ++ chunk.bytes
+                      if (chunk.last) {
+                        val newValue =
+                          padToEvenLength(currentModification.get.modification(value), currentHeader.get.vr)
+                        val newHeader = currentHeader.get.withUpdatedLength(newValue.length)
+                        currentModification = None
+                        currentHeader = None
+                        newHeader :: valueOrNot(newValue)
+                      } else
+                        Nil
+                    } else
+                      chunk :: Nil
+
+                  case otherPart =>
+                    latestTagPath = tagPath
+                    otherPart :: Nil
                 }
+
+              override def onEnd(): List[DicomPart] =
+                if (latestTagPath.isEmpty) Nil
+                else
+                  currentInsertions
+                    .filter(_.tagPath.isRoot)
+                    .filter(m => latestTagPath < m.tagPath)
+                    .flatMap(m => headerAndValueParts(m.tagPath, padToEvenLength(m.insertion(None), m.tagPath.tag)))
             }
-            .getOrElse(header :: Nil)
-
-        override def onPart(part: DicomPart): List[DicomPart] =
-          part match {
-            case modsPart: TagModificationsPart =>
-              if (modsPart.replace)
-                set(modsPart.modifications, modsPart.insertions)
-              else
-                set(currentModifications ++ modsPart.modifications, currentInsertions ++ modsPart.insertions)
-              Nil
-
-            case header: HeaderPart =>
-              updateSyntax(header)
-              val insertParts = findInsertParts
-              val modifyPart  = findModifyPart(header)
-              latestTagPath = tagPath
-              insertParts ::: modifyPart
-
-            case sequence: SequencePart =>
-              val insertParts = findInsertParts
-              latestTagPath = tagPath
-              insertParts ::: sequence :: Nil
-
-            case chunk: ValueChunk =>
-              if (currentModification.isDefined && currentHeader.isDefined) {
-                value = value ++ chunk.bytes
-                if (chunk.last) {
-                  val newValue  = padToEvenLength(currentModification.get.modification(value), currentHeader.get.vr)
-                  val newHeader = currentHeader.get.withUpdatedLength(newValue.length)
-                  currentModification = None
-                  currentHeader = None
-                  newHeader :: valueOrNot(newValue)
-                } else
-                  Nil
-              } else
-                chunk :: Nil
-
-            case otherPart =>
-              latestTagPath = tagPath
-              otherPart :: Nil
-          }
-
-        override def onEnd(): List[DicomPart] =
-          if (latestTagPath.isEmpty) Nil
-          else
-            currentInsertions
-              .filter(_.tagPath.isRoot)
-              .filter(m => latestTagPath < m.tagPath)
-              .flatMap(m => headerAndValueParts(m.tagPath, padToEvenLength(m.insertion(None), m.tagPath.tag)))
-      }
-    )
-
+        }
+      )
 }

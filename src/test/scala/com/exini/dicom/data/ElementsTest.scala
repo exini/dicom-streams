@@ -600,7 +600,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getDateTimes(tagPath) shouldBe Seq(dateTimes.head)
   }
 
-  it should "set patient names" in {
+  it should "set person names" in {
     val names        = Seq("Doe^John", "Doe^Jane")
     val patientNames = names.flatMap(PersonName.parse)
     elements
@@ -611,7 +611,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       .getPersonNames(Tag.PatientName) shouldBe Seq(patientNames.head)
   }
 
-  it should "set nested patient names" in {
+  it should "set nested person names" in {
     val tagPath      = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.PatientName)
     val names        = Seq("Doe^John", "Doe^Jane")
     val patientNames = names.flatMap(PersonName.parse)
@@ -628,7 +628,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     elements.setURI(Tag.StorageURL, uri).getURI(Tag.StorageURL) shouldBe Some(uri)
   }
 
-  it should "set neested URI" in {
+  it should "set nested URI" in {
     val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StorageURL)
     val uri     = new URI("https://example.com:8080/path?q1=45")
     elements.setNestedURI(tagPath, uri).getURI(tagPath) shouldBe Some(uri)
