@@ -71,44 +71,44 @@ object DicomFlows {
       .takeWhile(_ != DicomEndMarker)
 
   /**
-    * Filter a stream of dicom parts such that all elements except those with tags in the white list are discarded.
+    * Filter a stream of dicom parts such that all elements except those with tags in the allow list are discarded.
     *
     * Note that it is up to the user of this function to make sure the modified DICOM data is valid.
     *
-    * @param whitelist        list of tag paths to keep.
+    * @param allowList        list of tag paths to keep.
     * @param defaultCondition determines whether to keep or discard elements with no tag path such as the preamble and
     *                         synthetic DICOM parts inserted to hold state.
     * @return the associated filter Flow
     */
-  def whitelistFilter(
-      whitelist: Set[_ <: TagTree],
+  def allowFilter(
+      allowList: Set[_ <: TagTree],
       defaultCondition: DicomPart => Boolean = _ => true,
       logGroupLengthWarnings: Boolean = true
   ): PartFlow =
     tagFilter(
-      currentPath => whitelist.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath)),
+      currentPath => allowList.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath)),
       defaultCondition,
       logGroupLengthWarnings
     )
 
   /**
-    * Filter a stream of dicom parts such that elements with tag paths in the black list are discarded. Tag paths in
-    * the blacklist are removed in the root dataset as well as any sequences, and entire sequences or items in sequences
+    * Filter a stream of dicom parts such that elements with tag paths in the deny list are discarded. Tag paths in
+    * the deny list are removed in the root dataset as well as any sequences, and entire sequences or items in sequences
     * can be removed.
     *
     * Note that it is up to the user of this function to make sure the modified DICOM data is valid.
     *
-    * @param blacklist        list of tag paths to discard.
+    * @param denylist        list of tag paths to discard.
     * @param defaultCondition determines whether to keep or discard elements with no tag path such as the preamble and
     *                         synthetic DICOM parts inserted to hold state.
     * @return the associated filter Flow
     */
-  def blacklistFilter(
-      blacklist: Set[_ <: TagTree],
+  def denyFilter(
+      denylist: Set[_ <: TagTree],
       defaultCondition: DicomPart => Boolean = _ => true,
       logGroupLengthWarnings: Boolean = true
   ): PartFlow =
-    tagFilter(currentPath => !blacklist.exists(_.isTrunkOf(currentPath)), defaultCondition, logGroupLengthWarnings)
+    tagFilter(currentPath => !denylist.exists(_.isTrunkOf(currentPath)), defaultCondition, logGroupLengthWarnings)
 
   /**
     * Filter a stream of dicom parts such that all elements that are group length elements except

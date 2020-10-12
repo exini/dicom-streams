@@ -251,7 +251,7 @@ class DicomFlowsTest
       .expectDicomComplete()
   }
 
-  it should "filter elements matching the blacklist condition when testing with sample dicom files" in {
+  it should "filter elements matching the deny condition when testing with sample dicom files" in {
     val file = new File(getClass.getResource("../data/test001.dcm").toURI)
     val source = FileIO
       .fromPath(file.toPath)
@@ -265,7 +265,7 @@ class DicomFlowsTest
       .expectHeader(Tag.ImageType)
   }
 
-  it should "filter leave the dicom file unchanged when blacklist condition does not match any elements" in {
+  it should "filter leave the dicom file unchanged when deny condition does not match any elements" in {
     val file = new File(getClass.getResource("../data/test001.dcm").toURI)
     val source = FileIO
       .fromPath(file.toPath)
@@ -281,14 +281,14 @@ class DicomFlowsTest
       .expectValueChunk()
   }
 
-  "The whitelist filter" should "block all elements not on the white list" in {
+  "The allow filter" should "block all elements not on the allow list" in {
     val bytes =
       preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
+      .via(allowFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -305,7 +305,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
+      .via(allowFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -319,7 +319,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set.empty, _ => false))
+      .via(allowFilter(Set.empty, _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -334,7 +334,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.StudyDate)), _ => false))
+      .via(allowFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.StudyDate)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -355,7 +355,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate)), _ => false))
+      .via(allowFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -368,7 +368,7 @@ class DicomFlowsTest
       .expectDicomComplete()
   }
 
-  "The blacklist filter" should "block the entire sequence when a sequence tag is on the black list" in {
+  "The deny filter" should "block the entire sequence when a sequence tag is on the deny list" in {
     val bytes = studyDate() ++
       (sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++
         (sequence(
@@ -380,7 +380,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(blacklistFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence)), _ => false))
+      .via(denyFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -401,7 +401,7 @@ class DicomFlowsTest
       .single(bytes)
       .via(parseFlow)
       .via(
-        blacklistFilter(
+        denyFilter(
           Set(TagTree.fromTag(Tag.StudyDate), TagTree.fromItem(Tag.DerivationCodeSequence, 1)),
           _ => false
         )
@@ -427,7 +427,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(blacklistFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate)), _ => true))
+      .via(denyFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate)), _ => true))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -766,7 +766,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(blacklistFilter(Set(TagTree.fromTag(Tag.FileMetaInformationVersion)), _ => true))
+      .via(denyFilter(Set(TagTree.fromTag(Tag.FileMetaInformationVersion)), _ => true))
       .via(fmiGroupLengthFlow)
 
     source
