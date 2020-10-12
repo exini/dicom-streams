@@ -3,12 +3,12 @@ package com.exini.dicom.streams
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{FileIO, Sink, Source}
+import akka.stream.scaladsl.{ FileIO, Sink, Source }
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements.ValueElement
-import com.exini.dicom.data.DicomParts.{DicomPart, MetaPart}
+import com.exini.dicom.data.DicomParts.{ DicomPart, MetaPart }
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
 import com.exini.dicom.streams.DicomFlows._
@@ -20,7 +20,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{ Await, ExecutionContextExecutor }
 
 class DicomFlowsTest
     extends TestKit(ActorSystem("DicomFlowsSpec"))

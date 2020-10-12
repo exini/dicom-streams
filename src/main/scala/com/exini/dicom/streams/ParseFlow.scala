@@ -183,7 +183,10 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
               else {
                 reader.ensure(valueLength.toInt + 2)
                 val firstTwoBytes = reader.remainingData.drop(valueLength.toInt).take(2)
-                if (!state.tsuid.contains(UID.DeflatedExplicitVRLittleEndian) && bytesToShort(firstTwoBytes, state.bigEndian) == 2) {
+                if (
+                  !state.tsuid
+                    .contains(UID.DeflatedExplicitVRLittleEndian) && bytesToShort(firstTwoBytes, state.bigEndian) == 2
+                ) {
                   log.warning("Wrong File Meta Information Group Length (0002,0000)")
                   InFmiHeader(updatedState)
                 } else {
