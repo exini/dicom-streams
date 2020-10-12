@@ -5,6 +5,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements.ValueElement
 import com.exini.dicom.data.{ Tag, UID, VR, _ }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
@@ -107,7 +108,7 @@ class ParseFlowTest
       .expectDicomComplete()
   }
 
-  it should "output a warning message when file meta information group length is wrong" in {
+  it should "output a warning message when file meta information group length is too long" in {
     val bytes = fmiGroupLength(transferSyntaxUID(), studyDate()) ++ transferSyntaxUID() ++ studyDate()
 
     val source = Source
@@ -117,6 +118,27 @@ class ParseFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.FileMetaInformationGroupLength)
+      .expectValueChunk()
+      .expectHeader(Tag.TransferSyntaxUID)
+      .expectValueChunk()
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectDicomComplete()
+  }
+
+  it should "output a warning message when file meta information group length is too short" in {
+    val bytes =
+      fmiGroupLength(mediaStorageSOPInstanceUID()) ++ mediaStorageSOPInstanceUID() ++ transferSyntaxUID() ++ studyDate()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.FileMetaInformationGroupLength)
+      .expectValueChunk()
+      .expectHeader(Tag.MediaStorageSOPInstanceUID)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
       .expectValueChunk()
@@ -464,9 +486,9 @@ class ParseFlowTest
   }
 
   it should "accept meta information encoded with implicit VR" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(explicitVR = false)) ++ transferSyntaxUID(explicitVR =
-      false
-    ) ++ personNameJohnDoe()
+    val bytes =
+      preamble ++ fmiGroupLengthImplicit(transferSyntaxUID(explicitVR = false)) ++
+        transferSyntaxUID(explicitVR = false) ++ personNameJohnDoe()
 
     val source = Source
       .single(bytes)
@@ -571,6 +593,37 @@ class ParseFlowTest
       .expectValueChunk()
       .expectHeader(Tag.CTExposureSequence, VR.UN, 24)
       .expectValueChunk()
+      .expectDicomComplete()
+  }
+
+  it should "handle odd-length attributes" in {
+
+    def element(tag: Int, value: String): ByteString =
+      ValueElement(tag, Lookup.vrOf(tag), Value(ByteString(value)), bigEndian = false, explicitVR = true).toBytes
+
+    val mediaSopUidOdd =
+      element(Tag.MediaStorageSOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val sopUidOdd     = element(Tag.SOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val personNameOdd = element(Tag.PatientName, "Jane^Mary")
+    val bytes = fmiGroupLength(mediaSopUidOdd) ++ mediaSopUidOdd ++ sopUidOdd ++
+      sequence(Tag.DerivationCodeSequence, 25) ++ item(17) ++ personNameOdd
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.FileMetaInformationGroupLength, VR.UL, 4)
+      .expectValueChunk(4)
+      .expectHeader(Tag.MediaStorageSOPInstanceUID, VR.UI, 55)
+      .expectValueChunk(55)
+      .expectHeader(Tag.SOPInstanceUID, VR.UI, 55)
+      .expectValueChunk(55)
+      .expectSequence(Tag.DerivationCodeSequence, 25)
+      .expectItem(1, 17)
+      .expectHeader(Tag.PatientName, VR.PN, 9)
+      .expectValueChunk(9)
       .expectDicomComplete()
   }
 }

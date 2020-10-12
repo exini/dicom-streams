@@ -3,11 +3,12 @@ package com.exini.dicom.streams
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{ FileIO, Source }
+import akka.stream.scaladsl.{FileIO, Sink, Source}
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.DicomParts.{ DicomPart, MetaPart }
+import com.exini.dicom.data.DicomElements.ValueElement
+import com.exini.dicom.data.DicomParts.{DicomPart, MetaPart}
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
 import com.exini.dicom.streams.DicomFlows._
@@ -18,7 +19,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 class DicomFlowsTest
     extends TestKit(ActorSystem("DicomFlowsSpec"))
@@ -311,12 +313,8 @@ class DicomFlowsTest
   }
 
   it should "also work on fragments" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++ ByteString(
-      5,
-      6,
-      7,
-      8
-    ) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
+      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
       .single(bytes)
@@ -1297,5 +1295,58 @@ class DicomFlowsTest
       .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.PatientName)
       .expectDicomComplete()
+  }
+
+  it should "update encoding also in FMI" in {
+    val bytes = preamble ++ fmiGroupLengthImplicit(transferSyntaxUID(explicitVR = false)) ++
+      transferSyntaxUID(explicitVR = false) ++ personNameJohnDoe()
+    val expectedBytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
+
+    val actualBytes = Await.result(
+      Source
+        .single(bytes)
+        .via(parseFlow)
+        .via(toExplicitVrLittleEndianFlow)
+        .map(_.bytes)
+        .runWith(Sink.fold(ByteString.empty)(_ ++ _)),
+      5.seconds
+    )
+
+    actualBytes shouldBe expectedBytes
+  }
+
+  "The even value length flow" should "pad odd length attributes" in {
+
+    def odd(tag: Int, value: String): ByteString =
+      ValueElement(tag, Lookup.vrOf(tag), Value(ByteString(value)), bigEndian = false, explicitVR = true).toBytes
+
+    val mediaSopUidOdd =
+      odd(Tag.MediaStorageSOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val mediaSopUid =
+      element(Tag.MediaStorageSOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val sopUidOdd     = odd(Tag.SOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val sopUid        = element(Tag.SOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val personNameOdd = odd(Tag.PatientName, "Jane^Mary")
+    val personName    = element(Tag.PatientName, "Jane^Mary")
+
+    val bytes = fmiGroupLength(mediaSopUidOdd) ++ mediaSopUidOdd ++ sopUidOdd ++
+      sequence(Tag.DerivationCodeSequence, 25) ++ item(17) ++ personNameOdd ++
+      pixeDataFragments() ++ item(3) ++ ByteString(1, 2, 3) ++ sequenceDelimitation()
+    val expectedBytes = fmiGroupLength(mediaSopUid) ++ mediaSopUid ++ sopUid ++
+      sequence(Tag.DerivationCodeSequence) ++ item() ++ personName ++ itemDelimitation() ++ sequenceDelimitation() ++
+      pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 0) ++ sequenceDelimitation()
+
+    val actualBytes = Await.result(
+      Source
+        .single(bytes)
+        .via(parseFlow)
+        .via(toIndeterminateLengthSequences)
+        .via(toEvenValueLengthFlow)
+        .map(_.bytes)
+        .runWith(Sink.fold(ByteString.empty)(_ ++ _)),
+      5.seconds
+    )
+
+    actualBytes shouldBe expectedBytes
   }
 }

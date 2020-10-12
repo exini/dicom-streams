@@ -802,7 +802,7 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
         val s       = strings.mkString(multiValueDelimiter)
         val vm      = strings.length.toString
         s"$indent${tagToString(e.tag)} ${e.vr} [$s] ${space1(s)} # ${space2(e.length)} ${e.length}, $vm ${Lookup
-          .keywordOf(e.tag)}" :: Nil
+          .keywordOf(e.tag).getOrElse("")}" :: Nil
 
       case s: Sequence =>
         val heading = {
@@ -810,7 +810,7 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
             if (s.length == indeterminateLength) "Sequence with indeterminate length"
             else s"Sequence with explicit length ${s.length}"
           s"$indent${tagToString(s.tag)} SQ ($description) ${space1(description)} # ${space2(s.length)} ${s.length}, 1 ${Lookup
-            .keywordOf(s.tag)}"
+            .keywordOf(s.tag).getOrElse("")}"
         }
         val items = s.items.flatMap { i =>
           val heading = {

@@ -164,12 +164,8 @@ object CollectFlow {
                   case item: ItemPart =>
                     maybeAdd(ItemElement(item.index, item.length, item.bigEndian))
                     Nil
-                  case _: ItemDelimitationPartMarker =>
-                    Nil
                   case itemDelimitation: ItemDelimitationPart =>
                     maybeAdd(ItemDelimitationElement(itemDelimitation.index, itemDelimitation.bigEndian))
-                    Nil
-                  case SequenceDelimitationPartMarker =>
                     Nil
                   case sequenceDelimitation: SequenceDelimitationPart =>
                     maybeAdd(SequenceDelimitationElement(sequenceDelimitation.bigEndian))

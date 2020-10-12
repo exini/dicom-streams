@@ -43,14 +43,17 @@ class ElementsBuilder() {
   def +=(element: Element): ElementsBuilder =
     element match {
 
+      case PreambleElement if builderStack.length == 1 && builderStack.head.isEmpty =>
+        this
+
       case e: ValueElement =>
-        subtractLength(e.length + e.vr.headerLength)
+        subtractLength(e.length + (if (e.explicitVR) e.vr.headerLength else 8))
         val builder = builderStack.head
         builder += e
         maybeDelimit()
 
       case e: FragmentsElement =>
-        subtractLength(e.vr.headerLength)
+        subtractLength(if (e.explicitVR) e.vr.headerLength else 8)
         updateFragments(Some(Fragments.empty(e.tag, e.vr, e.bigEndian, e.explicitVR)))
         maybeDelimit()
 
@@ -67,7 +70,7 @@ class ElementsBuilder() {
         maybeDelimit()
 
       case e: SequenceElement =>
-        subtractLength(12)
+        subtractLength(if (e.explicitVR) 12 else 8)
         if (!e.indeterminate)
           pushLength(e, e.length)
         pushSequence(Sequence.empty(e.tag, if (e.indeterminate) e.length else 0, e.bigEndian, e.explicitVR))
@@ -85,11 +88,15 @@ class ElementsBuilder() {
 
       case _: ItemDelimitationElement if hasSequence =>
         subtractLength(8)
+        if (!itemIsIndeterminate && lengthStack.nonEmpty)
+          lengthStack = lengthStack.tail // determinate length item with delimitation - handle gracefully
         endItem()
         maybeDelimit()
 
       case _: SequenceDelimitationElement if hasSequence =>
         subtractLength(8)
+        if (!sequenceIsIndeterminate && lengthStack.nonEmpty)
+          lengthStack = lengthStack.tail // determinate length sequence with delimitation - handle gracefully
         endSequence()
         maybeDelimit()
 
@@ -127,10 +134,12 @@ class ElementsBuilder() {
   private def pushSequence(sequence: Sequence): Unit     = sequenceStack = sequence :: sequenceStack
   private def pushLength(element: Element, length: Long): Unit =
     lengthStack = ElementAndLength(element, length) :: lengthStack
-  private def popBuilder(): Unit    = builderStack = builderStack.tail
-  private def popSequence(): Unit   = sequenceStack = sequenceStack.tail
-  private def hasSequence: Boolean  = sequenceStack.nonEmpty
-  private def hasFragments: Boolean = fragments.isDefined
+  private def popBuilder(): Unit               = builderStack = builderStack.tail
+  private def popSequence(): Unit              = sequenceStack = sequenceStack.tail
+  private def hasSequence: Boolean             = sequenceStack.nonEmpty
+  private def hasFragments: Boolean            = fragments.isDefined
+  private def sequenceIsIndeterminate: Boolean = sequenceStack.headOption.exists(_.indeterminate)
+  private def itemIsIndeterminate: Boolean     = sequenceStack.headOption.exists(_.items.lastOption.exists(_.indeterminate))
   private def endItem(): Unit = {
     val builder  = builderStack.head
     val sequence = sequenceStack.head
@@ -144,7 +153,7 @@ class ElementsBuilder() {
   }
   private def endSequence(): Unit = {
     val seq        = sequenceStack.head
-    val seqLength  = if (seq.indeterminate) seq.length else seq.toBytes.length - 12
+    val seqLength  = if (seq.indeterminate) seq.length else seq.toBytes.length - (if (seq.explicitVR) 12 else 8)
     val updatedSeq = new Sequence(seq.tag, seqLength, seq.items, seq.bigEndian, seq.explicitVR)
     val builder    = builderStack.head
     builder += updatedSeq
@@ -180,4 +189,6 @@ class DatasetBuilder(var characterSets: CharacterSets, var zoneOffset: ZoneOffse
   }
 
   def build(): Elements = new Elements(characterSets, zoneOffset, data.toVector)
+
+  def isEmpty: Boolean = data.isEmpty
 }

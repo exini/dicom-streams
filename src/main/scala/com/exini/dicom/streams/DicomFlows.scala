@@ -355,46 +355,43 @@ object DicomFlows {
     */
   val bulkDataFilter: PartFlow =
     partFlow
-      .statefulMapConcat {
+      .via(new DeferToPartFlow[DicomPart] with InSequence[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-        def normalizeRepeatingGroup(tag: Int) = {
+        def normalizeRepeatingGroup(tag: Int): Int = {
           val gg000000 = tag & 0xffe00000
           if (gg000000 == 0x50000000 || gg000000 == 0x60000000) tag & 0xffe0ffff else tag
         }
 
-        () =>
-          var sequenceStack = Seq.empty[SequencePart]
-          var discarding    = false
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
+          var discarding = false
 
-          {
-            case sq: SequencePart =>
-              sequenceStack = sq +: sequenceStack
-              sq :: Nil
-            case sqd: SequenceDelimitationPart =>
-              sequenceStack = sequenceStack.drop(1)
-              sqd :: Nil
-            case dh: HeaderPart =>
-              discarding = normalizeRepeatingGroup(dh.tag) match {
-                case Tag.PixelDataProviderURL => true
-                case Tag.AudioSampleData      => true
-                case Tag.CurveData            => true
-                case Tag.SpectroscopyData     => true
-                case Tag.OverlayData          => true
-                case Tag.EncapsulatedDocument => true
-                case Tag.FloatPixelData       => true
-                case Tag.DoubleFloatPixelData => true
-                case Tag.PixelData            => sequenceStack.isEmpty
-                case Tag.WaveformData         => sequenceStack.length == 1 && sequenceStack.head.tag == Tag.WaveformSequence
-                case _                        => false
+          new DeferToPartLogic with InSequenceLogic with GroupLengthWarningsLogic {
+            override def onPart(part: DicomPart): List[DicomPart] =
+              part match {
+                case dh: HeaderPart =>
+                  discarding = normalizeRepeatingGroup(dh.tag) match {
+                    case Tag.PixelDataProviderURL => true
+                    case Tag.AudioSampleData      => true
+                    case Tag.CurveData            => true
+                    case Tag.SpectroscopyData     => true
+                    case Tag.OverlayData          => true
+                    case Tag.EncapsulatedDocument => true
+                    case Tag.FloatPixelData       => true
+                    case Tag.DoubleFloatPixelData => true
+                    case Tag.PixelData            => !inSequence
+                    case Tag.WaveformData         => sequenceDepth == 1 && sequenceStack.head.tag == Tag.WaveformSequence
+                    case _                        => false
+                  }
+                  if (discarding) Nil else dh :: Nil
+                case dvc: ValueChunk =>
+                  if (discarding) Nil else dvc :: Nil
+                case p: DicomPart =>
+                  discarding = false
+                  p :: Nil
               }
-              if (discarding) Nil else dh :: Nil
-            case dvc: ValueChunk =>
-              if (discarding) Nil else dvc :: Nil
-            case p: DicomPart =>
-              discarding = false
-              p :: Nil
           }
-      }
+        }
+      })
 
   /**
     * Buffers all file meta information elements and calculates their lengths, then emits the correct file meta
@@ -570,6 +567,10 @@ object DicomFlows {
     * Ensure that the data has transfer syntax explicit VR little endian. Changes the TransferSyntaxUID, if present,
     * to 1.2.840.10008.1.2.1 to reflect this.
     *
+    * Changing transfer syntax may change and update the length of individual elements, but does not update group
+    * length elements and sequences and items with specified length. The recommended approach is to remove group
+    * length elements and make sure sequences and items have indeterminate length using appropriate flows.
+    *
     * @return the associated DicomPart Flow
     */
   val toExplicitVrLittleEndianFlow: PartFlow =
@@ -580,8 +581,7 @@ object DicomFlows {
           _ => padToEvenLength(ByteString(UID.ExplicitVRLittleEndian), VR.UI)
         )
       )
-    ).via(fmiGroupLengthFlow)
-      .statefulMapConcat {
+    ).statefulMapConcat {
 
         case class SwapResult(bytes: ByteString, carry: ByteString)
 
@@ -667,4 +667,40 @@ object DicomFlows {
             case p => p :: Nil
           }
       }
+      .via(fmiGroupLengthFlow)
+
+  /**
+    * Ensure that the attributes have even length values, pad them appropriately if they don't.
+    *
+    * This flow updates lengths of value attributes, but does not update group length elements, sequences and items with
+    * determinate length. The recommended approach is to remove group length elements and make sure sequences and items
+    * have indeterminate length using appropriate flows.
+    *
+    * @return the associated DicomPart Flow
+    */
+  val toEvenValueLengthFlow: PartFlow =
+    partFlow
+      .via(new DeferToPartFlow[DicomPart] with InFragments[DicomPart] {
+        override def createLogic(attr: Attributes): GraphStageLogic =
+          new DeferToPartLogic with InFragmentsLogic {
+            var isOdd: Boolean  = false
+            var pad: ByteString = ByteString(0)
+
+            override def onPart(part: DicomPart): List[DicomPart] =
+              part match {
+                case p: ValueChunk if p.last && isOdd =>
+                  p.copy(bytes = p.bytes ++ pad) :: Nil
+                case p: HeaderPart if p.length % 2 > 0 =>
+                  isOdd = true
+                  pad = if (p.vr == null) ByteString(0) else ByteString(p.vr.paddingByte)
+                  HeaderPart(p.tag, p.vr, p.length + 1, p.isFmi, p.bigEndian, p.explicitVR) :: Nil
+                case p: ItemPart if inFragments && p.length % 2 > 0 =>
+                  isOdd = true
+                  pad = ByteString(0)
+                  p.copy(length = p.length + 1, bytes = item((p.length + 1).toInt, p.bigEndian)) :: Nil
+                case p =>
+                  p :: Nil
+              }
+          }
+      })
 }
