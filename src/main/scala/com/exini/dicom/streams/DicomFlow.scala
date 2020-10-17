@@ -273,7 +273,7 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
       }
     }
 
-    def subtractAndEmit[A <: DicomPart](part: A, handle: A => List[Out], isDelimit: Boolean = false): List[Out] = {
+    def subtractAndEmit[A <: DicomPart](part: A, handle: A => List[Out]): List[Out] = {
       partStack = subtractLength(part)
       handle(part) ::: maybeDelimit()
     }

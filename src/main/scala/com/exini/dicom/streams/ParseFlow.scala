@@ -36,6 +36,10 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
 
   protected class DicomParsingLogic extends ParsingLogic with StageLogging {
 
+    private def warnIfOdd(tag: Int, vr: VR, valueLength: Long): Unit =
+      if (valueLength % 2 > 0 && valueLength != indeterminateLength && vr != null && vr != VR.SQ)
+        log.warning(s"Element ${tagToString(tag)} has odd length")
+
     sealed trait HeaderState {
       val bigEndian: Boolean
       val explicitVR: Boolean
@@ -142,8 +146,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
 
       def parse(reader: ByteReader): ParseResult[DicomPart] = {
         val (tag, vr, headerLength, valueLength) = readHeader(reader, state)
-        if (valueLength % 2 > 0)
-          log.warning(s"Element ${tagToString(tag)} has odd length")
+        warnIfOdd(tag, vr, valueLength)
         if (groupNumber(tag) != 2) {
           log.warning("Missing or wrong File Meta Information Group Length (0002,0000)")
           ParseResult(None, toDatasetStep(ByteString(0, 0), state))
@@ -210,8 +213,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
     case class InDatasetHeader(state: DatasetHeaderState) extends DicomParseStep {
       private def readDatasetHeader(reader: ByteReader, state: DatasetHeaderState): Option[DicomPart] = {
         val (tag, vr, headerLength, valueLength) = readHeader(reader, state)
-        if (valueLength % 2 > 0)
-          log.warning(s"Element ${tagToString(tag)} has odd length")
+        warnIfOdd(tag, vr, valueLength)
         if (vr != null) {
           val bytes = reader.take(headerLength)
           if (vr == VR.SQ || vr == VR.UN && valueLength == indeterminateLength)
@@ -275,8 +277,6 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
     case class InFragments(state: FragmentsState) extends DicomParseStep {
       def parse(reader: ByteReader): ParseResult[DicomPart] = {
         val (tag, _, headerLength, valueLength) = readHeader(reader, state)
-        if (valueLength % 2 > 0)
-          log.warning(s"Element ${tagToString(tag)} has odd length")
         tag match {
 
           case 0xfffee000 => // begin fragment
