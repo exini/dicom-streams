@@ -26,6 +26,14 @@ object TestData {
       explicitVR = true
     )
 
+  def fmiGroupLengthImplicit(fmis: ByteString*): ByteString =
+    element(
+      Tag.FileMetaInformationGroupLength,
+      intToBytesLE(fmis.map(fmi => fmi.length + (fmi.length % 2)).sum),
+      bigEndian = false,
+      explicitVR = false
+    )
+
   // File Meta Information Version
   def fmiVersion(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString =
     element(Tag.FileMetaInformationVersion, ByteString(0x00, 0x01), bigEndian, explicitVR)

@@ -202,17 +202,18 @@ trait InFragments[Out] extends DicomFlow[Out] {
 trait InSequence[Out] extends DicomFlow[Out] with GuaranteedDelimitationEvents[Out] {
 
   trait InSequenceLogic extends DicomLogic with GuaranteedDelimitationEventsLogic {
-    protected var sequenceDepth = 0
+    protected var sequenceStack: List[SequencePart] = Nil
 
-    def inSequence: Boolean = sequenceDepth > 0
+    def inSequence: Boolean = sequenceStack.nonEmpty
+    def sequenceDepth: Int  = sequenceStack.size
 
     abstract override def onSequence(part: SequencePart): List[Out] = {
-      sequenceDepth += 1
+      sequenceStack = part :: sequenceStack
       super.onSequence(part)
     }
 
     abstract override def onSequenceDelimitation(part: SequenceDelimitationPart): List[Out] = {
-      sequenceDepth -= 1
+      sequenceStack = sequenceStack.tail
       super.onSequenceDelimitation(part)
     }
   }
@@ -260,19 +261,15 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
     protected var partStack: List[(LengthPart, Long)] = Nil
 
     def subtractLength(part: DicomPart): List[(LengthPart, Long)] =
-      partStack.map { case (p, bytesLeft) => (p, bytesLeft - part.bytes.length) }
+      partStack
+        .map { case (p, bytesLeft) => if (p.indeterminate) (p, bytesLeft) else (p, bytesLeft - part.bytes.length) }
 
     def maybeDelimit(): List[Out] = {
-      val delimits: List[DicomPart] = partStack
-        .filter(_._2 <= 0) // find items and sequences that have ended
-        .map {             // create delimiters for those
-          case (item: ItemPart, _) => new ItemDelimitationPartMarker(item.index)
-          case (_, _)              => SequenceDelimitationPartMarker
-        }
-      partStack = partStack.filter(_._2 > 0) // only keep items and sequences with bytes left to subtract
-      delimits.flatMap {                     // call events, any items will be inserted in stream
-        case d: SequenceDelimitationPart => onSequenceDelimitation(d)
-        case d: ItemDelimitationPart     => onItemDelimitation(d)
+      val (inactive, active) = partStack.span { case (p, b) => !p.indeterminate && b <= 0 }
+      partStack = active // only keep items and sequences with bytes left to subtract
+      inactive.flatMap { // call events, any items will be inserted in stream
+        case (item: ItemPart, _) => onItemDelimitation(new ItemDelimitationPartMarker(item.index))
+        case _                   => onSequenceDelimitation(SequenceDelimitationPartMarker)
       }
     }
 
@@ -281,29 +278,33 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
       handle(part) ::: maybeDelimit()
     }
 
-    abstract override def onSequence(part: SequencePart): List[Out] =
-      if (!part.indeterminate) {
-        partStack = (part, part.length) +: subtractLength(part)
-        super.onSequence(part) ::: maybeDelimit()
-      } else subtractAndEmit(part, super.onSequence)
+    abstract override def onSequence(part: SequencePart): List[Out] = {
+      partStack = (part, part.length) :: subtractLength(part)
+      super.onSequence(part) ::: maybeDelimit()
+    }
 
-    abstract override def onItem(part: ItemPart): List[Out] =
-      if (!inFragments && !part.indeterminate) {
-        partStack = (part, part.length) +: subtractLength(part)
-        super.onItem(part) ::: maybeDelimit()
-      } else subtractAndEmit(part, super.onItem)
+    abstract override def onItem(part: ItemPart): List[Out] = {
+      partStack = if (!inFragments) (part, part.length) :: subtractLength(part) else subtractLength(part)
+      super.onItem(part) ::: maybeDelimit()
+    }
 
-    abstract override def onSequenceDelimitation(part: SequenceDelimitationPart): List[Out] =
+    abstract override def onSequenceDelimitation(part: SequenceDelimitationPart): List[Out] = {
+      if (partStack.nonEmpty && part != SequenceDelimitationPartMarker && !inFragments)
+        partStack = partStack.tail
       subtractAndEmit(
         part,
         (p: SequenceDelimitationPart) => super.onSequenceDelimitation(p).filterNot(_ == SequenceDelimitationPartMarker)
       )
+    }
 
-    abstract override def onItemDelimitation(part: ItemDelimitationPart): List[Out] =
+    abstract override def onItemDelimitation(part: ItemDelimitationPart): List[Out] = {
+      if (partStack.nonEmpty && !part.isInstanceOf[ItemDelimitationPartMarker])
+        partStack = partStack.tail
       subtractAndEmit(
         part,
         (p: ItemDelimitationPart) => super.onItemDelimitation(p).filterNot(_.isInstanceOf[ItemDelimitationPartMarker])
       )
+    }
 
     abstract override def onHeader(part: HeaderPart): List[Out]       = subtractAndEmit(part, super.onHeader)
     abstract override def onValueChunk(part: ValueChunk): List[Out]   = subtractAndEmit(part, super.onValueChunk)

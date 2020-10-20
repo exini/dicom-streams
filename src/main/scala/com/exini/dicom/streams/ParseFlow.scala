@@ -36,6 +36,10 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
 
   protected class DicomParsingLogic extends ParsingLogic with StageLogging {
 
+    private def warnIfOdd(tag: Int, vr: VR, valueLength: Long): Unit =
+      if (valueLength % 2 > 0 && valueLength != indeterminateLength && vr != null && vr != VR.SQ)
+        log.warning(s"Element ${tagToString(tag)} has odd length")
+
     sealed trait HeaderState {
       val bigEndian: Boolean
       val explicitVR: Boolean
@@ -103,9 +107,13 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
           tryReadHeader(reader.remainingData.take(8))
             .map { info =>
               val nextState =
-                if (info.hasFmi)
+                if (info.hasFmi) {
+                  if (!info.explicitVR)
+                    log.warning(s"File meta information uses implicit VR encoding")
+                  if (info.bigEndian)
+                    log.warning(s"File meta information uses big-endian encoding")
                   InFmiHeader(FmiHeaderState(None, info.bigEndian, info.explicitVR, info.hasFmi, 0, None))
-                else
+                } else
                   InDatasetHeader(DatasetHeaderState(0, info.bigEndian, info.explicitVR))
               ParseResult(maybePreamble, nextState)
             }
@@ -138,6 +146,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
 
       def parse(reader: ByteReader): ParseResult[DicomPart] = {
         val (tag, vr, headerLength, valueLength) = readHeader(reader, state)
+        warnIfOdd(tag, vr, valueLength)
         if (groupNumber(tag) != 2) {
           log.warning("Missing or wrong File Meta Information Group Length (0002,0000)")
           ParseResult(None, toDatasetStep(ByteString(0, 0), state))
@@ -176,7 +185,18 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
                 FinishedParser
               else {
                 reader.ensure(valueLength.toInt + 2)
-                toDatasetStep(reader.remainingData.drop(valueLength.toInt).take(2), updatedState)
+                val firstTwoBytes = reader.remainingData.drop(valueLength.toInt).take(2)
+                if (
+                  !state.tsuid
+                    .contains(UID.DeflatedExplicitVRLittleEndian) && bytesToShort(firstTwoBytes, state.bigEndian) == 2
+                ) {
+                  log.warning("Wrong File Meta Information Group Length (0002,0000)")
+                  InFmiHeader(updatedState)
+                } else {
+                  if (updatedState.fmiEndPos.exists(_ != updatedPos))
+                    log.warning(s"Wrong File Meta Information Group Length (0002,0000)")
+                  toDatasetStep(firstTwoBytes, updatedState)
+                }
               }
             case None =>
               InFmiHeader(updatedState)
@@ -193,6 +213,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
     case class InDatasetHeader(state: DatasetHeaderState) extends DicomParseStep {
       private def readDatasetHeader(reader: ByteReader, state: DatasetHeaderState): Option[DicomPart] = {
         val (tag, vr, headerLength, valueLength) = readHeader(reader, state)
+        warnIfOdd(tag, vr, valueLength)
         if (vr != null) {
           val bytes = reader.take(headerLength)
           if (vr == VR.SQ || vr == VR.UN && valueLength == indeterminateLength)

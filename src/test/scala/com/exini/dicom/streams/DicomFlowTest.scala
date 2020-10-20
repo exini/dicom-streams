@@ -315,6 +315,37 @@ class DicomFlowTest
     nSeqDelims shouldBe 1
   }
 
+  it should "gracefully handle determinate length sequences and items that end with a sequence delimiter" in {
+    val bytes = studyDate() ++ sequence(Tag.DerivationCodeSequence, 92) ++ item(84) ++ studyDate() ++
+      sequence(Tag.DerivationCodeSequence, 40) ++ item(24) ++ studyDate() ++ itemDelimitation() ++
+      sequenceDelimitation() ++ itemDelimitation() ++ sequenceDelimitation() ++ personNameJohnDoe()
+
+    val source = Source
+      .single(bytes)
+      .via(parseFlow)
+      .via(toIndeterminateLengthSequences)
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectSequence(Tag.DerivationCodeSequence)
+      .expectItem(1)
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectSequence(Tag.DerivationCodeSequence)
+      .expectItem(1)
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectDicomComplete()
+  }
+
   "The guaranteed value flow" should "call onValueChunk callback also after length zero headers" in {
     val bytes = personNameJohnDoe() ++ emptyPatientName()
 

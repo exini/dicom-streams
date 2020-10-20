@@ -3,10 +3,11 @@ package com.exini.dicom.streams
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{ FileIO, Source }
+import akka.stream.scaladsl.{ FileIO, Sink, Source }
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
+import com.exini.dicom.data.DicomElements.ValueElement
 import com.exini.dicom.data.DicomParts.{ DicomPart, MetaPart }
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
@@ -18,7 +19,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ Await, ExecutionContextExecutor }
 
 class DicomFlowsTest
     extends TestKit(ActorSystem("DicomFlowsSpec"))
@@ -249,7 +251,7 @@ class DicomFlowsTest
       .expectDicomComplete()
   }
 
-  it should "filter elements matching the blacklist condition when testing with sample dicom files" in {
+  it should "filter elements matching the deny condition when testing with sample dicom files" in {
     val file = new File(getClass.getResource("../data/test001.dcm").toURI)
     val source = FileIO
       .fromPath(file.toPath)
@@ -263,7 +265,7 @@ class DicomFlowsTest
       .expectHeader(Tag.ImageType)
   }
 
-  it should "filter leave the dicom file unchanged when blacklist condition does not match any elements" in {
+  it should "filter leave the dicom file unchanged when deny condition does not match any elements" in {
     val file = new File(getClass.getResource("../data/test001.dcm").toURI)
     val source = FileIO
       .fromPath(file.toPath)
@@ -279,14 +281,14 @@ class DicomFlowsTest
       .expectValueChunk()
   }
 
-  "The whitelist filter" should "block all elements not on the white list" in {
+  "The allow filter" should "block all elements not on the allow list" in {
     val bytes =
       preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
+      .via(allowFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -303,7 +305,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
+      .via(allowFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -311,17 +313,13 @@ class DicomFlowsTest
   }
 
   it should "also work on fragments" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++ ByteString(
-      5,
-      6,
-      7,
-      8
-    ) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
+      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set.empty, _ => false))
+      .via(allowFilter(Set.empty, _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -336,7 +334,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.StudyDate)), _ => false))
+      .via(allowFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.StudyDate)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -357,7 +355,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(whitelistFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate)), _ => false))
+      .via(allowFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -370,7 +368,7 @@ class DicomFlowsTest
       .expectDicomComplete()
   }
 
-  "The blacklist filter" should "block the entire sequence when a sequence tag is on the black list" in {
+  "The deny filter" should "block the entire sequence when a sequence tag is on the deny list" in {
     val bytes = studyDate() ++
       (sequence(Tag.DerivationCodeSequence) ++ item() ++ personNameJohnDoe() ++
         (sequence(
@@ -382,7 +380,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(blacklistFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence)), _ => false))
+      .via(denyFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence)), _ => false))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -403,7 +401,7 @@ class DicomFlowsTest
       .single(bytes)
       .via(parseFlow)
       .via(
-        blacklistFilter(
+        denyFilter(
           Set(TagTree.fromTag(Tag.StudyDate), TagTree.fromItem(Tag.DerivationCodeSequence, 1)),
           _ => false
         )
@@ -429,7 +427,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(blacklistFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate)), _ => true))
+      .via(denyFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate)), _ => true))
 
     source
       .runWith(TestSink.probe[DicomPart])
@@ -768,7 +766,7 @@ class DicomFlowsTest
     val source = Source
       .single(bytes)
       .via(parseFlow)
-      .via(blacklistFilter(Set(TagTree.fromTag(Tag.FileMetaInformationVersion)), _ => true))
+      .via(denyFilter(Set(TagTree.fromTag(Tag.FileMetaInformationVersion)), _ => true))
       .via(fmiGroupLengthFlow)
 
     source
@@ -1297,5 +1295,58 @@ class DicomFlowsTest
       .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.PatientName)
       .expectDicomComplete()
+  }
+
+  it should "update encoding also in FMI" in {
+    val bytes = preamble ++ fmiGroupLengthImplicit(transferSyntaxUID(explicitVR = false)) ++
+      transferSyntaxUID(explicitVR = false) ++ personNameJohnDoe()
+    val expectedBytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
+
+    val actualBytes = Await.result(
+      Source
+        .single(bytes)
+        .via(parseFlow)
+        .via(toExplicitVrLittleEndianFlow)
+        .map(_.bytes)
+        .runWith(Sink.fold(ByteString.empty)(_ ++ _)),
+      5.seconds
+    )
+
+    actualBytes shouldBe expectedBytes
+  }
+
+  "The even value length flow" should "pad odd length attributes" in {
+
+    def odd(tag: Int, value: String): ByteString =
+      ValueElement(tag, Lookup.vrOf(tag), Value(ByteString(value)), bigEndian = false, explicitVR = true).toBytes
+
+    val mediaSopUidOdd =
+      odd(Tag.MediaStorageSOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val mediaSopUid =
+      element(Tag.MediaStorageSOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val sopUidOdd     = odd(Tag.SOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val sopUid        = element(Tag.SOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")
+    val personNameOdd = odd(Tag.PatientName, "Jane^Mary")
+    val personName    = element(Tag.PatientName, "Jane^Mary")
+
+    val bytes = fmiGroupLength(mediaSopUidOdd) ++ mediaSopUidOdd ++ sopUidOdd ++
+      sequence(Tag.DerivationCodeSequence, 25) ++ item(17) ++ personNameOdd ++
+      pixeDataFragments() ++ item(3) ++ ByteString(1, 2, 3) ++ sequenceDelimitation()
+    val expectedBytes = fmiGroupLength(mediaSopUid) ++ mediaSopUid ++ sopUid ++
+      sequence(Tag.DerivationCodeSequence) ++ item() ++ personName ++ itemDelimitation() ++ sequenceDelimitation() ++
+      pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 0) ++ sequenceDelimitation()
+
+    val actualBytes = Await.result(
+      Source
+        .single(bytes)
+        .via(parseFlow)
+        .via(toIndeterminateLengthSequences)
+        .via(toEvenValueLengthFlow)
+        .map(_.bytes)
+        .runWith(Sink.fold(ByteString.empty)(_ ++ _)),
+      5.seconds
+    )
+
+    actualBytes shouldBe expectedBytes
   }
 }

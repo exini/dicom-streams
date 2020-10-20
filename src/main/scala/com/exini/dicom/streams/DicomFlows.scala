@@ -71,44 +71,44 @@ object DicomFlows {
       .takeWhile(_ != DicomEndMarker)
 
   /**
-    * Filter a stream of dicom parts such that all elements except those with tags in the white list are discarded.
+    * Filter a stream of dicom parts such that all elements except those with tags in the allow list are discarded.
     *
     * Note that it is up to the user of this function to make sure the modified DICOM data is valid.
     *
-    * @param whitelist        list of tag paths to keep.
+    * @param allowList        list of tag paths to keep.
     * @param defaultCondition determines whether to keep or discard elements with no tag path such as the preamble and
     *                         synthetic DICOM parts inserted to hold state.
     * @return the associated filter Flow
     */
-  def whitelistFilter(
-      whitelist: Set[_ <: TagTree],
+  def allowFilter(
+      allowList: Set[_ <: TagTree],
       defaultCondition: DicomPart => Boolean = _ => true,
       logGroupLengthWarnings: Boolean = true
   ): PartFlow =
     tagFilter(
-      currentPath => whitelist.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath)),
+      currentPath => allowList.exists(t => t.hasTrunk(currentPath) || t.isTrunkOf(currentPath)),
       defaultCondition,
       logGroupLengthWarnings
     )
 
   /**
-    * Filter a stream of dicom parts such that elements with tag paths in the black list are discarded. Tag paths in
-    * the blacklist are removed in the root dataset as well as any sequences, and entire sequences or items in sequences
+    * Filter a stream of dicom parts such that elements with tag paths in the deny list are discarded. Tag paths in
+    * the deny list are removed in the root dataset as well as any sequences, and entire sequences or items in sequences
     * can be removed.
     *
     * Note that it is up to the user of this function to make sure the modified DICOM data is valid.
     *
-    * @param blacklist        list of tag paths to discard.
+    * @param denylist        list of tag paths to discard.
     * @param defaultCondition determines whether to keep or discard elements with no tag path such as the preamble and
     *                         synthetic DICOM parts inserted to hold state.
     * @return the associated filter Flow
     */
-  def blacklistFilter(
-      blacklist: Set[_ <: TagTree],
+  def denyFilter(
+      denylist: Set[_ <: TagTree],
       defaultCondition: DicomPart => Boolean = _ => true,
       logGroupLengthWarnings: Boolean = true
   ): PartFlow =
-    tagFilter(currentPath => !blacklist.exists(_.isTrunkOf(currentPath)), defaultCondition, logGroupLengthWarnings)
+    tagFilter(currentPath => !denylist.exists(_.isTrunkOf(currentPath)), defaultCondition, logGroupLengthWarnings)
 
   /**
     * Filter a stream of dicom parts such that all elements that are group length elements except
@@ -355,46 +355,43 @@ object DicomFlows {
     */
   val bulkDataFilter: PartFlow =
     partFlow
-      .statefulMapConcat {
+      .via(new DeferToPartFlow[DicomPart] with InSequence[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-        def normalizeRepeatingGroup(tag: Int) = {
+        def normalizeRepeatingGroup(tag: Int): Int = {
           val gg000000 = tag & 0xffe00000
           if (gg000000 == 0x50000000 || gg000000 == 0x60000000) tag & 0xffe0ffff else tag
         }
 
-        () =>
-          var sequenceStack = Seq.empty[SequencePart]
-          var discarding    = false
+        override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
+          var discarding = false
 
-          {
-            case sq: SequencePart =>
-              sequenceStack = sq +: sequenceStack
-              sq :: Nil
-            case sqd: SequenceDelimitationPart =>
-              sequenceStack = sequenceStack.drop(1)
-              sqd :: Nil
-            case dh: HeaderPart =>
-              discarding = normalizeRepeatingGroup(dh.tag) match {
-                case Tag.PixelDataProviderURL => true
-                case Tag.AudioSampleData      => true
-                case Tag.CurveData            => true
-                case Tag.SpectroscopyData     => true
-                case Tag.OverlayData          => true
-                case Tag.EncapsulatedDocument => true
-                case Tag.FloatPixelData       => true
-                case Tag.DoubleFloatPixelData => true
-                case Tag.PixelData            => sequenceStack.isEmpty
-                case Tag.WaveformData         => sequenceStack.length == 1 && sequenceStack.head.tag == Tag.WaveformSequence
-                case _                        => false
+          new DeferToPartLogic with InSequenceLogic with GroupLengthWarningsLogic {
+            override def onPart(part: DicomPart): List[DicomPart] =
+              part match {
+                case dh: HeaderPart =>
+                  discarding = normalizeRepeatingGroup(dh.tag) match {
+                    case Tag.PixelDataProviderURL => true
+                    case Tag.AudioSampleData      => true
+                    case Tag.CurveData            => true
+                    case Tag.SpectroscopyData     => true
+                    case Tag.OverlayData          => true
+                    case Tag.EncapsulatedDocument => true
+                    case Tag.FloatPixelData       => true
+                    case Tag.DoubleFloatPixelData => true
+                    case Tag.PixelData            => !inSequence
+                    case Tag.WaveformData         => sequenceDepth == 1 && sequenceStack.head.tag == Tag.WaveformSequence
+                    case _                        => false
+                  }
+                  if (discarding) Nil else dh :: Nil
+                case dvc: ValueChunk =>
+                  if (discarding) Nil else dvc :: Nil
+                case p: DicomPart =>
+                  discarding = false
+                  p :: Nil
               }
-              if (discarding) Nil else dh :: Nil
-            case dvc: ValueChunk =>
-              if (discarding) Nil else dvc :: Nil
-            case p: DicomPart =>
-              discarding = false
-              p :: Nil
           }
-      }
+        }
+      })
 
   /**
     * Buffers all file meta information elements and calculates their lengths, then emits the correct file meta
@@ -523,52 +520,60 @@ object DicomFlows {
           Seq(TagInsertion(TagPath.fromTag(Tag.SpecificCharacterSet), _ => ByteString("ISO_IR 192")))
         )
       )
-      .statefulMapConcat { () =>
-        var characterSets: CharacterSets      = defaultCharacterSet
-        var currentHeader: Option[HeaderPart] = None
-        var currentValue                      = ByteString.empty
+      .via(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {
+        override def createLogic(attr: Attributes): GraphStageLogic =
+          new DeferToPartLogic with GroupLengthWarningsLogic {
+            var characterSets: CharacterSets      = defaultCharacterSet
+            var currentHeader: Option[HeaderPart] = None
+            var currentValue: ByteString          = ByteString.empty
 
-        {
-          case attr: ElementsPart if attr.label == "toutf8" =>
-            characterSets = attr
-              .elements(Tag.SpecificCharacterSet)
-              .map {
-                case e: ValueElement => CharacterSets(e)
-                case _               => characterSets
+            override def onPart(part: DicomPart): List[DicomPart] =
+              part match {
+                case attr: ElementsPart if attr.label == "toutf8" =>
+                  characterSets = attr
+                    .elements(Tag.SpecificCharacterSet)
+                    .map {
+                      case e: ValueElement => CharacterSets(e)
+                      case _               => characterSets
+                    }
+                    .getOrElse(characterSets)
+                  Nil
+                case header: HeaderPart =>
+                  if (header.length > 0 && CharacterSets.isVrAffectedBySpecificCharacterSet(header.vr)) {
+                    currentHeader = Some(header)
+                    currentValue = ByteString.empty
+                    Nil
+                  } else {
+                    currentHeader = None
+                    header :: Nil
+                  }
+                case value: ValueChunk if currentHeader.isDefined =>
+                  currentValue = currentValue ++ value.bytes
+                  if (value.last) {
+                    val newValue = currentHeader
+                      .map(h => characterSets.decode(h.vr, currentValue).getBytes(utf8Charset))
+                      .map(ByteString.apply)
+                    val newLength = newValue.map(_.length)
+                    val newElement = for {
+                      h <- currentHeader
+                      v <- newValue
+                      l <- newLength
+                    } yield h.withUpdatedLength(l) :: ValueChunk(h.bigEndian, v, last = true) :: Nil
+                    newElement.getOrElse(Nil)
+                  } else Nil
+                case p: DicomPart =>
+                  p :: Nil
               }
-              .getOrElse(characterSets)
-            Nil
-          case header: HeaderPart =>
-            if (header.length > 0 && CharacterSets.isVrAffectedBySpecificCharacterSet(header.vr)) {
-              currentHeader = Some(header)
-              currentValue = ByteString.empty
-              Nil
-            } else {
-              currentHeader = None
-              header :: Nil
-            }
-          case value: ValueChunk if currentHeader.isDefined =>
-            currentValue = currentValue ++ value.bytes
-            if (value.last) {
-              val newValue = currentHeader
-                .map(h => characterSets.decode(h.vr, currentValue).getBytes(utf8Charset))
-                .map(ByteString.apply)
-              val newLength = newValue.map(_.length)
-              val newElement = for {
-                h <- currentHeader
-                v <- newValue
-                l <- newLength
-              } yield h.withUpdatedLength(l) :: ValueChunk(h.bigEndian, v, last = true) :: Nil
-              newElement.getOrElse(Nil)
-            } else Nil
-          case p: DicomPart =>
-            p :: Nil
-        }
-      }
+          }
+      })
 
   /**
     * Ensure that the data has transfer syntax explicit VR little endian. Changes the TransferSyntaxUID, if present,
     * to 1.2.840.10008.1.2.1 to reflect this.
+    *
+    * Changing transfer syntax may change and update the length of individual elements, but does not update group
+    * length elements and sequences and items with specified length. The recommended approach is to remove group
+    * length elements and make sure sequences and items have indeterminate length using appropriate flows.
     *
     * @return the associated DicomPart Flow
     */
@@ -580,91 +585,129 @@ object DicomFlows {
           _ => padToEvenLength(ByteString(UID.ExplicitVRLittleEndian), VR.UI)
         )
       )
-    ).via(fmiGroupLengthFlow)
-      .statefulMapConcat {
+    ).via(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {
 
         case class SwapResult(bytes: ByteString, carry: ByteString)
 
         def swap(k: Int, b: ByteString): SwapResult =
           SwapResult(b.grouped(k).map(_.reverse).reduce(_ ++ _), b.takeRight(b.length % k))
 
-        () =>
-          var currentVr: Option[VR] = None
-          var carryBytes            = ByteString.empty
+        override def createLogic(attr: Attributes): GraphStageLogic =
+          new DeferToPartLogic with GroupLengthWarningsLogic {
+            var currentVr: Option[VR]  = None
+            var carryBytes: ByteString = ByteString.empty
 
-          def updatedValue(swapResult: SwapResult, last: Boolean): ValueChunk = {
-            carryBytes = swapResult.carry
-            if (last && carryBytes.nonEmpty)
-              throw new DicomStreamException("Dicom value length does not match length specified in header")
-            ValueChunk(bigEndian = false, swapResult.bytes, last = last)
-          }
+            def updatedValue(swapResult: SwapResult, last: Boolean): ValueChunk = {
+              carryBytes = swapResult.carry
+              if (last && carryBytes.nonEmpty)
+                throw new DicomStreamException("Dicom value length does not match length specified in header")
+              ValueChunk(bigEndian = false, swapResult.bytes, last = last)
+            }
 
-          {
-            case h: HeaderPart if h.bigEndian || !h.explicitVR =>
-              if (h.bigEndian) {
-                carryBytes = ByteString.empty
-                currentVr = Some(h.vr)
-              } else currentVr = None
-              HeaderPart(h.tag, h.vr, h.length, h.isFmi) :: Nil
+            override def onPart(part: DicomPart): List[DicomPart] =
+              part match {
+                case h: HeaderPart if h.bigEndian || !h.explicitVR =>
+                  if (h.bigEndian) {
+                    carryBytes = ByteString.empty
+                    currentVr = Some(h.vr)
+                  } else currentVr = None
+                  HeaderPart(h.tag, h.vr, h.length, h.isFmi) :: Nil
 
-            case v: ValueChunk if currentVr.isDefined && v.bigEndian =>
-              currentVr match {
-                case Some(vr) if vr == VR.US || vr == VR.SS || vr == VR.OW || vr == VR.AT => // 2 byte
-                  updatedValue(swap(2, carryBytes ++ v.bytes), v.last) :: Nil
-                case Some(vr) if vr == VR.OF || vr == VR.UL || vr == VR.SL || vr == VR.FL => // 4 bytes
-                  updatedValue(swap(4, carryBytes ++ v.bytes), v.last) :: Nil
-                case Some(vr) if vr == VR.OD || vr == VR.FD => // 8 bytes
-                  updatedValue(swap(8, carryBytes ++ v.bytes), v.last) :: Nil
-                case _ => v :: Nil
+                case v: ValueChunk if currentVr.isDefined && v.bigEndian =>
+                  currentVr match {
+                    case Some(vr) if vr == VR.US || vr == VR.SS || vr == VR.OW || vr == VR.AT => // 2 byte
+                      updatedValue(swap(2, carryBytes ++ v.bytes), v.last) :: Nil
+                    case Some(vr) if vr == VR.OF || vr == VR.UL || vr == VR.SL || vr == VR.FL => // 4 bytes
+                      updatedValue(swap(4, carryBytes ++ v.bytes), v.last) :: Nil
+                    case Some(vr) if vr == VR.OD || vr == VR.FD => // 8 bytes
+                      updatedValue(swap(8, carryBytes ++ v.bytes), v.last) :: Nil
+                    case _ => v :: Nil
+                  }
+
+                case p: DicomPart if !p.bigEndian => p :: Nil
+
+                case s: SequencePart =>
+                  SequencePart(
+                    s.tag,
+                    s.length,
+                    bigEndian = false,
+                    explicitVR = true,
+                    tagToBytesLE(s.tag) ++ ByteString('S', 'Q', 0, 0) ++ s.bytes.takeRight(4).reverse
+                  ) :: Nil
+
+                case _: SequenceDelimitationPart =>
+                  SequenceDelimitationPart(
+                    bigEndian = false,
+                    tagToBytesLE(Tag.SequenceDelimitationItem) ++ ByteString(0, 0, 0, 0)
+                  ) :: Nil
+
+                case i: ItemPart =>
+                  ItemPart(
+                    i.index,
+                    i.length,
+                    bigEndian = false,
+                    tagToBytesLE(Tag.Item) ++ i.bytes.takeRight(4).reverse
+                  ) :: Nil
+
+                case i: ItemDelimitationPart =>
+                  ItemDelimitationPart(
+                    i.index,
+                    bigEndian = false,
+                    tagToBytesLE(Tag.ItemDelimitationItem) ++ ByteString(0, 0, 0, 0)
+                  ) :: Nil
+
+                case f: FragmentsPart =>
+                  if (f.bigEndian) {
+                    carryBytes = ByteString.empty
+                    currentVr = Some(f.vr)
+                  } else currentVr = None
+                  FragmentsPart(
+                    f.tag,
+                    f.length,
+                    f.vr,
+                    bigEndian = false,
+                    explicitVR = true,
+                    tagToBytesLE(f.tag) ++ f.bytes.drop(4).take(4) ++ f.bytes.takeRight(4).reverse
+                  ) :: Nil
+
+                case p => p :: Nil
               }
-
-            case p: DicomPart if !p.bigEndian => p :: Nil
-
-            case s: SequencePart =>
-              SequencePart(
-                s.tag,
-                s.length,
-                bigEndian = false,
-                explicitVR = true,
-                tagToBytesLE(s.tag) ++ ByteString('S', 'Q', 0, 0) ++ s.bytes.takeRight(4).reverse
-              ) :: Nil
-
-            case _: SequenceDelimitationPart =>
-              SequenceDelimitationPart(
-                bigEndian = false,
-                tagToBytesLE(Tag.SequenceDelimitationItem) ++ ByteString(0, 0, 0, 0)
-              ) :: Nil
-
-            case i: ItemPart =>
-              ItemPart(
-                i.index,
-                i.length,
-                bigEndian = false,
-                tagToBytesLE(Tag.Item) ++ i.bytes.takeRight(4).reverse
-              ) :: Nil
-
-            case i: ItemDelimitationPart =>
-              ItemDelimitationPart(
-                i.index,
-                bigEndian = false,
-                tagToBytesLE(Tag.ItemDelimitationItem) ++ ByteString(0, 0, 0, 0)
-              ) :: Nil
-
-            case f: FragmentsPart =>
-              if (f.bigEndian) {
-                carryBytes = ByteString.empty
-                currentVr = Some(f.vr)
-              } else currentVr = None
-              FragmentsPart(
-                f.tag,
-                f.length,
-                f.vr,
-                bigEndian = false,
-                explicitVR = true,
-                tagToBytesLE(f.tag) ++ f.bytes.drop(4).take(4) ++ f.bytes.takeRight(4).reverse
-              ) :: Nil
-
-            case p => p :: Nil
           }
-      }
+      })
+      .via(fmiGroupLengthFlow)
+
+  /**
+    * Ensure that the attributes have even length values, pad them appropriately if they don't.
+    *
+    * This flow updates lengths of value attributes, but does not update group length elements, sequences and items with
+    * determinate length. The recommended approach is to remove group length elements and make sure sequences and items
+    * have indeterminate length using appropriate flows.
+    *
+    * @return the associated DicomPart Flow
+    */
+  val toEvenValueLengthFlow: PartFlow =
+    partFlow
+      .via(new DeferToPartFlow[DicomPart] with InFragments[DicomPart] with GroupLengthWarnings[DicomPart] {
+        override def createLogic(attr: Attributes): GraphStageLogic =
+          new DeferToPartLogic with InFragmentsLogic with GroupLengthWarningsLogic {
+            var isOdd: Boolean  = false
+            var pad: ByteString = ByteString(0)
+
+            override def onPart(part: DicomPart): List[DicomPart] =
+              part match {
+                case p: ValueChunk if p.last && isOdd =>
+                  p.copy(bytes = p.bytes ++ pad) :: Nil
+                case p: HeaderPart if p.length % 2 > 0 =>
+                  isOdd = true
+                  pad = if (p.vr == null) ByteString(0) else ByteString(p.vr.paddingByte)
+                  HeaderPart(p.tag, p.vr, p.length + 1, p.isFmi, p.bigEndian, p.explicitVR) :: Nil
+                case p: ItemPart if inFragments && p.length % 2 > 0 =>
+                  isOdd = true
+                  pad = ByteString(0)
+                  p.copy(length = p.length + 1, bytes = item((p.length + 1).toInt, p.bigEndian)) :: Nil
+                case p =>
+                  p :: Nil
+              }
+          }
+      })
 }

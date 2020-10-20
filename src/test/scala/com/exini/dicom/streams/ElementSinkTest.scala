@@ -5,8 +5,9 @@ import akka.stream.scaladsl.Source
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
-import com.exini.dicom.data.TestData.pixeDataFragments
+import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
+import com.exini.dicom.streams.ElementFlows.elementFlow
 import com.exini.dicom.streams.ElementSink.elementSink
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
@@ -80,6 +81,79 @@ class ElementSinkTest
     elements.toElements(false) shouldBe elementList
   }
 
+  it should "handle determinate length items and sequences" in {
+    val elementList = List(
+      SequenceElement(Tag.DerivationCodeSequence, 68),
+      ItemElement(1, 16),
+      ValueElement.fromString(Tag.StudyDate, "20040329"),
+      ItemElement(2, 36),
+      SequenceElement(Tag.DerivationCodeSequence, 24),
+      ItemElement(1, 16),
+      ValueElement.fromString(Tag.StudyDate, "20040329")
+    )
+
+    val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
+
+    elements.toElements(false) shouldBe elementList
+  }
+
+  it should "handle item and sequence delimitations in when items and sequences are of determinate length" in {
+    val elementList = List(
+      SequenceElement(Tag.DerivationCodeSequence, 108),
+      ItemElement(1, 24),
+      ValueElement.fromString(Tag.StudyDate, "20040329"),
+      ItemDelimitationElement(1),
+      ItemElement(2, 60),
+      SequenceElement(Tag.DerivationCodeSequence, 40),
+      ItemElement(1, 24),
+      ValueElement.fromString(Tag.StudyDate, "20040329"),
+      ItemDelimitationElement(1),
+      SequenceDelimitationElement(),
+      ItemDelimitationElement(2),
+      SequenceDelimitationElement()
+    )
+
+    val expectedElementList = List(
+      SequenceElement(Tag.DerivationCodeSequence, 68),
+      ItemElement(1, 16),
+      ValueElement.fromString(Tag.StudyDate, "20040329"),
+      ItemElement(2, 36),
+      SequenceElement(Tag.DerivationCodeSequence, 24),
+      ItemElement(1, 16),
+      ValueElement.fromString(Tag.StudyDate, "20040329")
+    )
+
+    val elements = Await.result(Source(elementList).runWith(elementSink), 5.seconds)
+
+    elements.toElements(false) shouldBe expectedElementList
+  }
+
+  it should "handle implicit VR encoding" in {
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID(UID.ImplicitVRLittleEndian)) ++
+      transferSyntaxUID(UID.ImplicitVRLittleEndian) ++ personNameJohnDoe(explicitVR = false) ++
+      sequence(Tag.DerivationCodeSequence, explicitVR = false) ++ item() ++ personNameJohnDoe(explicitVR = false) ++
+      studyDate(explicitVR = false) ++ itemDelimitation() ++ item() ++
+      sequence(Tag.DerivationCodeSequence, 24, bigEndian = false, explicitVR = false) ++ item(16) ++
+      personNameJohnDoe(explicitVR = false) ++ itemDelimitation() ++ sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+      .via(elementFlow)
+
+    val elements = Await.result(source.runWith(elementSink), 5.seconds)
+
+    elements.toBytes() shouldBe bytes
+  }
+
+  "Fragments" should "be empty" in {
+    val bytes = pixeDataFragments() ++ sequenceDelimitation()
+
+    val fragments = toElementsBlocking(Source.single(bytes)).getFragments(Tag.PixelData).get
+    fragments.size shouldBe 0
+    fragments.offsets shouldBe empty
+  }
+
   it should "convert an empty offsets table item to an empty list of offsets" in {
     val elementList = List(
       FragmentsElement(Tag.PixelData, VR.OB),
@@ -107,14 +181,6 @@ class ElementSinkTest
 
     fragments.offsets shouldBe defined
     fragments.offsets.get shouldBe List(1, 2, 3, 4)
-  }
-
-  "Fragments" should "be empty" in {
-    val bytes = pixeDataFragments() ++ sequenceDelimitation()
-
-    val fragments = toElementsBlocking(Source.single(bytes)).getFragments(Tag.PixelData).get
-    fragments.size shouldBe 0
-    fragments.offsets shouldBe empty
   }
 
   it should "convert an empty first item to an empty offsets list" in {
