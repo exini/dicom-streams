@@ -324,9 +324,11 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
       }
     }
 
+    def isSpecial(tag: Int): Boolean = tag == 0xfffee000 || tag == 0xfffee00d || tag == 0xfffee0dd
+
     def tagVr(data: ByteString, bigEndian: Boolean, explicitVr: Boolean): (Int, VR) = {
       val tag = bytesToTag(data, bigEndian)
-      if (tag == 0xfffee000 || tag == 0xfffee00d || tag == 0xfffee0dd)
+      if (isSpecial(tag))
         (tag, null)
       else if (explicitVr) {
         val vr = Try(VR.withValue(bytesToVR(data.drop(4)))).getOrElse(null)
@@ -338,10 +340,21 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
     private def readHeader(reader: ByteReader, state: HeaderState): (Int, VR, Int, Long) = {
       reader.ensure(8)
       val tagVrBytes = reader.remainingData.take(8)
-      val (tag, vr)  = tagVr(tagVrBytes, state.bigEndian, state.explicitVR)
+      val (tag, vr, explicitVR) = {
+        val (tag1, vr1) = tagVr(tagVrBytes, state.bigEndian, state.explicitVR)
+        if (vr1 == null && !isSpecial(tag1)) {
+          // cannot parse VR and not item or delimitation, try switching implicit/explicit as last resort
+          val (tag2, vr2) = tagVr(tagVrBytes, state.bigEndian, !state.explicitVR)
+          if (vr2 != null && vr2 != VR.UN)
+            (tag2, vr2, !state.explicitVR)
+          else
+            (tag1, vr1, state.explicitVR)
+        } else
+          (tag1, vr1, state.explicitVR)
+      }
       if (vr == null)
         (tag, vr, 8, lengthToLong(bytesToInt(tagVrBytes.drop(4), state.bigEndian)))
-      else if (state.explicitVR)
+      else if (explicitVR)
         if (vr.headerLength == 8)
           (tag, vr, 8, lengthToLong(bytesToUShort(tagVrBytes.drop(6), state.bigEndian)))
         else {

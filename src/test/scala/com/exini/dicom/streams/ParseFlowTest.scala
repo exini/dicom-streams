@@ -596,6 +596,35 @@ class ParseFlowTest
       .expectDicomComplete()
   }
 
+  it should "handle sequences of indefinite length with VR UN and implicit VR" in {
+    // see ftp://medical.nema.org/medical/dicom/final/cp246_ft.pdf for motivation
+    val unSequence = tagToBytes(Tag.CTDIPhantomTypeCodeSequence) ++ ByteString('U', 'N', 0, 0, 0xff, 0xff, 0xff, 0xff)
+    val bytes = personNameJohnDoe() ++ unSequence ++ item(60) ++
+      element(Tag.CodeValue, "113691", explicitVR = false) ++
+      element(Tag.CodingSchemeDesignator, "DCM", explicitVR = false) ++
+      element(Tag.CodeMeaning, "IEC Body Dosimetry Phantom", explicitVR = false) ++
+      sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
+      .expectItem(1, 60)
+      .expectHeader(Tag.CodeValue, VR.SH, 6)
+      .expectValueChunk()
+      .expectHeader(Tag.CodingSchemeDesignator, VR.SH, 4)
+      .expectValueChunk()
+      .expectHeader(Tag.CodeMeaning, VR.LO, 26)
+      .expectValueChunk()
+      .expectSequenceDelimitation()
+      .expectDicomComplete()
+  }
+
   it should "handle odd-length attributes" in {
 
     def element(tag: Int, value: String): ByteString =
