@@ -20,7 +20,8 @@ class LookupTest extends AnyFlatSpec with Matchers {
   }
 
   it should "support getting the tag for a keyword" in {
-    Lookup.tagOf("PatientName") shouldBe Tag.PatientName
+    Lookup.tagOf("PatientName") shouldBe Some(Tag.PatientName)
+    Lookup.tagOf("not-a-keyword") shouldBe None
   }
 
   it should "support listing all keywords" in {

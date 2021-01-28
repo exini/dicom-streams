@@ -24,7 +24,9 @@ object Lookup {
 
   def keywordOf(tag: Int): Option[String] = TagToKeyword.keywordOf(tag)
 
-  def tagOf(keyword: String): Int = KeywordToTag.tagOf(keyword)
+  def tagOf(keyword: String): Option[Int] = KeywordToTag.tagOf(keyword)
 
   def keywords(): List[String] = Tag.getClass.getMethods.map(_.getName).filter(_.head.isUpper).toList
+
+  def uidToName(uid: String): Option[String] = UIDToName.nameOf(uid)
 }
