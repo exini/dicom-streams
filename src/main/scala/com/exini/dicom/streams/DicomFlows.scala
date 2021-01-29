@@ -364,12 +364,13 @@ object DicomFlows {
 
         override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
           var discarding = false
+          var isFragments = false // inFragments does not work for DeferToPartFlow in seq delim
 
           new DeferToPartLogic with InSequenceLogic with GroupLengthWarningsLogic {
             override def onPart(part: DicomPart): List[DicomPart] =
               part match {
-                case dh: HeaderPart =>
-                  discarding = normalizeRepeatingGroup(dh.tag) match {
+                case p: HeaderPart =>
+                  discarding = normalizeRepeatingGroup(p.tag) match {
                     case Tag.PixelDataProviderURL => true
                     case Tag.AudioSampleData      => true
                     case Tag.CurveData            => true
@@ -382,9 +383,19 @@ object DicomFlows {
                     case Tag.WaveformData         => sequenceDepth == 1 && sequenceStack.head.tag == Tag.WaveformSequence
                     case _                        => false
                   }
-                  if (discarding) Nil else dh :: Nil
-                case dvc: ValueChunk =>
-                  if (discarding) Nil else dvc :: Nil
+                  if (discarding) Nil else p :: Nil
+                case _: FragmentsPart =>
+                  isFragments = true
+                  discarding = true
+                  Nil
+                case _: ItemPart if isFragments =>
+                  Nil
+                case _: SequenceDelimitationPart if isFragments =>
+                  isFragments = false
+                  discarding = false
+                  Nil
+                case p: ValueChunk =>
+                  if (discarding) Nil else p :: Nil
                 case p: DicomPart =>
                   discarding = false
                   p :: Nil
