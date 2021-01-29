@@ -120,7 +120,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
                     log.warning(s"File meta information uses big-endian encoding")
                   InFmiHeader(FmiHeaderState(None, info.bigEndian, info.explicitVR, info.hasFmi, 0, None))
                 } else
-                  InDatasetHeader(DatasetHeaderState(0, maySwitchTs = true, info.bigEndian, info.explicitVR))
+                  InDatasetHeader(DatasetHeaderState(0, maySwitchTs = false, info.bigEndian, info.explicitVR))
               ParseResult(maybePreamble, nextState)
             }
             .getOrElse(throw new DicomStreamException("Not a DICOM stream"))
