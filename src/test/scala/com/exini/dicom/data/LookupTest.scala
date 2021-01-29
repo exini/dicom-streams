@@ -29,4 +29,9 @@ class LookupTest extends AnyFlatSpec with Matchers {
     keywords.length should be > 4000
     keywords.contains("PatientName") shouldBe true
   }
+
+  it should "support getting the name for a UID" in {
+    Lookup.nameOf(UID.NuclearMedicineImageStorage) shouldBe Some("Nuclear Medicine Image Storage")
+    Lookup.nameOf("not a UID") shouldBe None
+  }
 }

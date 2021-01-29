@@ -28,5 +28,5 @@ object Lookup {
 
   def keywords(): List[String] = Tag.getClass.getMethods.map(_.getName).filter(_.head.isUpper).toList
 
-  def uidToName(uid: String): Option[String] = UIDToName.nameOf(uid)
+  def nameOf(uid: String): Option[String] = UIDToName.nameOf(uid)
 }
