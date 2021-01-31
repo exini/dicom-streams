@@ -16,8 +16,6 @@
 
 package com.exini.dicom.streams
 
-import java.util.zip.Deflater
-
 import akka.NotUsed
 import akka.stream.Attributes
 import akka.stream.scaladsl.{ Flow, Source }
@@ -30,6 +28,8 @@ import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data._
 import com.exini.dicom.streams.CollectFlow._
 import com.exini.dicom.streams.ModifyFlow._
+
+import java.util.zip.Deflater
 
 /**
   * Various flows for transforming data of <code>DicomPart</code>s.
@@ -490,14 +490,11 @@ object DicomFlows {
               }
 
             override def onItemDelimitation(part: ItemDelimitationPart): List[DicomPart] =
-              super.onItemDelimitation(part) ::: (if (part.bytes.isEmpty)
-                                                    ItemDelimitationPart(
-                                                      part.index,
-                                                      part.bigEndian,
-                                                      itemDelimitation(part.bigEndian)
-                                                    ) :: Nil
-                                                  else
-                                                    Nil)
+              super.onItemDelimitation(part) :::
+                (if (part.bytes.isEmpty)
+                   ItemDelimitationPart(part.bigEndian, itemDelimitation(part.bigEndian)) :: Nil
+                 else
+                   Nil)
           }
       })
 
@@ -642,16 +639,10 @@ object DicomFlows {
                   ) :: Nil
 
                 case i: ItemPart =>
-                  ItemPart(
-                    i.index,
-                    i.length,
-                    bigEndian = false,
-                    tagToBytesLE(Tag.Item) ++ i.bytes.takeRight(4).reverse
-                  ) :: Nil
+                  ItemPart(i.length, bigEndian = false, tagToBytesLE(Tag.Item) ++ i.bytes.takeRight(4).reverse) :: Nil
 
-                case i: ItemDelimitationPart =>
+                case _: ItemDelimitationPart =>
                   ItemDelimitationPart(
-                    i.index,
                     bigEndian = false,
                     tagToBytesLE(Tag.ItemDelimitationItem) ++ ByteString(0, 0, 0, 0)
                   ) :: Nil

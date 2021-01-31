@@ -1,7 +1,5 @@
 package com.exini.dicom.streams
 
-import java.io.File
-
 import akka.actor.ActorSystem
 import akka.stream.Attributes
 import akka.stream.scaladsl.{ FileIO, Flow, Sink, Source }
@@ -17,6 +15,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
+import java.io.File
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ Await, ExecutionContextExecutor }
 
@@ -156,21 +155,21 @@ class DicomFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence, 56)
-      .expectItem(1, 16)
+      .expectItem(16)
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       //.expectItemDelimitation() // delimitations not emitted by default
-      .expectItem(2)
+      .expectItem()
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectItemDelimitation()
       //.expectSequenceDelimitation()
-      .expectSequence(Tag.AbstractPriorCodeSequence, -1)
-      .expectItem(1, -1)
+      .expectSequence(Tag.AbstractPriorCodeSequence, indeterminateLength)
+      .expectItem(indeterminateLength)
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectItemDelimitation()
-      .expectItem(2, 16)
+      .expectItem(16)
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       //.expectItemDelimitation()
@@ -190,7 +189,7 @@ class DicomFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
-      .expectItem(1)
+      .expectItem()
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectItemDelimitation()
@@ -212,11 +211,11 @@ class DicomFlowTest
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence)
-      .expectItem(1)
+      .expectItem()
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence)
-      .expectItem(1)
+      .expectItem()
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectItemDelimitation()
@@ -243,13 +242,13 @@ class DicomFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
-      .expectItem(1)
+      .expectItem()
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectItemDelimitation()
-      .expectItem(2)
+      .expectItem()
       .expectItemDelimitation()
-      .expectItem(3)
+      .expectItem()
       .expectSequence(Tag.DerivationCodeSequence)
       .expectSequenceDelimitation()
       .expectItemDelimitation()
@@ -270,10 +269,10 @@ class DicomFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
-      .expectItem(1)
+      .expectItem()
       .expectHeader(Tag.PatientName)
       .expectSequence(Tag.DerivationCodeSequence)
-      .expectItem(1)
+      .expectItem()
       .expectHeader(Tag.PatientName)
       .expectItemDelimitation()
       .expectSequenceDelimitation()
@@ -330,11 +329,11 @@ class DicomFlowTest
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence)
-      .expectItem(1)
+      .expectItem()
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence)
-      .expectItem(1)
+      .expectItem()
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectItemDelimitation()
@@ -582,6 +581,57 @@ class DicomFlowTest
       .expectNextN(27 - 2)
   }
 
+  it should "support tracking through nested sequences" in {
+    val bytes = sequence(Tag.DerivationCodeSequence, 92) ++
+      item(16) ++ studyDate() ++ // first item
+      item(36) ++ sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate() ++ // second item, nested seq
+      item(16) ++ personNameJohnDoe() // third item
+
+    var expectedPaths = List(
+      TagPath.fromSequence(Tag.DerivationCodeSequence),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 1),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),
+      TagPath.fromItemEnd(Tag.DerivationCodeSequence, 1),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenSequence(Tag.DerivationCodeSequence),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.DerivationCodeSequence, 1),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenItemEnd(Tag.DerivationCodeSequence, 1),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenSequenceEnd(Tag.DerivationCodeSequence),
+      TagPath.fromItemEnd(Tag.DerivationCodeSequence, 2),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 3),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 3).thenTag(Tag.PatientName),
+      TagPath.fromItem(Tag.DerivationCodeSequence, 3).thenTag(Tag.PatientName),
+      TagPath.fromItemEnd(Tag.DerivationCodeSequence, 3),
+      TagPath.fromSequenceEnd(Tag.DerivationCodeSequence)
+    )
+
+    def check(tagPath: TagPath): Unit = {
+      tagPath shouldBe expectedPaths.head
+      expectedPaths = expectedPaths.tail
+    }
+
+    val source = Source
+      .single(bytes)
+      .via(parseFlow)
+      .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
+        override def createLogic(attr: Attributes): GraphStageLogic =
+          new DeferToPartLogic with TagPathTrackingLogic {
+            override def onPart(part: DicomPart): List[DicomPart] = {
+              check(tagPath)
+              part :: Nil
+            }
+          }
+      })
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .request(18 - 6) // six events inserted
+      .expectNextN(18 - 6)
+  }
+
   it should "support using tracking more than once within a flow" in {
     val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ personNameJohnDoe()
 
@@ -597,7 +647,7 @@ class DicomFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence, 24)
-      .expectItem(1, 16)
+      .expectItem(16)
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectDicomComplete()
@@ -722,7 +772,7 @@ class DicomFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence, 24)
-      .expectItem(1, 16)
+      .expectItem(16)
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectDicomComplete()
@@ -743,7 +793,7 @@ class DicomFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence, 24)
-      .expectItem(1, 16)
+      .expectItem(16)
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectDicomComplete()
@@ -760,7 +810,7 @@ class DicomFlowTest
     source
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence, indeterminateLength)
-      .expectItem(1, indeterminateLength)
+      .expectItem(indeterminateLength)
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectItemDelimitation()

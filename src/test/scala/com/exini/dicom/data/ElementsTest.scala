@@ -739,9 +739,9 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     ).bytes ++ ByteString("20010101")
     SequenceElement(Tag.DerivationCodeSequence, 10).toBytes shouldBe sequence(Tag.DerivationCodeSequence, 10)
     FragmentsElement(Tag.PixelData, VR.OW).toBytes shouldBe pixeDataFragments()
-    FragmentElement(1, 4, Value(ByteString(1, 2, 3, 4))).toBytes shouldBe item(4) ++ ByteString(1, 2, 3, 4)
-    ItemElement(1, 10).toBytes shouldBe item(10)
-    ItemDelimitationElement(1).toBytes shouldBe itemDelimitation()
+    FragmentElement(4, Value(ByteString(1, 2, 3, 4))).toBytes shouldBe item(4) ++ ByteString(1, 2, 3, 4)
+    ItemElement(10).toBytes shouldBe item(10)
+    ItemDelimitationElement().toBytes shouldBe itemDelimitation()
     SequenceDelimitationElement().toBytes shouldBe sequenceDelimitation()
     Sequence(Tag.DerivationCodeSequence, indeterminateLength, List(Item(Elements.empty()))).toBytes shouldBe sequence(
       Tag.DerivationCodeSequence
@@ -761,9 +761,9 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     checkString(ValueElement(Tag.StudyDate, Value.fromString(VR.DA, "20010101")).toString, 1)
     checkString(SequenceElement(Tag.DerivationCodeSequence, 10).toString, 1)
     checkString(FragmentsElement(Tag.PixelData, VR.OW).toString, 1)
-    checkString(FragmentElement(1, 4, Value(ByteString(1, 2, 3, 4))).toString, 1)
-    checkString(ItemElement(1, 10).toString, 1)
-    checkString(ItemDelimitationElement(1).toString, 1)
+    checkString(FragmentElement(4, Value(ByteString(1, 2, 3, 4))).toString, 1)
+    checkString(ItemElement(10).toString, 1)
+    checkString(ItemDelimitationElement.toString, 1)
     checkString(SequenceDelimitationElement().toString, 1)
     checkString(Sequence(Tag.DerivationCodeSequence, indeterminateLength, List(Item(Elements.empty()))).toString, 1)
     checkString(

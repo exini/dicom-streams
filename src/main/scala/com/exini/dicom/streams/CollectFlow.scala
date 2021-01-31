@@ -122,7 +122,7 @@ object CollectFlow {
                 part match {
                   case ValueChunkMarker               =>
                   case SequenceDelimitationPartMarker =>
-                  case _: ItemDelimitationPartMarker  =>
+                  case ItemDelimitationPartMarker     =>
                   case _ =>
                     buffer = buffer :+ part
                     currentBufferSize = currentBufferSize + part.bytes.size
@@ -139,7 +139,7 @@ object CollectFlow {
                     Nil
 
                   case item: ItemPart if inFragments =>
-                    currentFragment = Option(FragmentElement.empty(item.index, item.length, item.bigEndian))
+                    currentFragment = Option(FragmentElement.empty(item.length, item.bigEndian))
                     bytes = ByteString.empty
                     Nil
 
@@ -162,12 +162,12 @@ object CollectFlow {
                     maybeAdd(FragmentsElement(fragments.tag, fragments.vr, fragments.bigEndian, fragments.explicitVR))
                     Nil
                   case item: ItemPart =>
-                    maybeAdd(ItemElement(item.index, item.length, item.bigEndian))
+                    maybeAdd(ItemElement(item.length, item.bigEndian))
                     Nil
-                  case _: ItemDelimitationPartMarker =>
+                  case ItemDelimitationPartMarker =>
                     Nil
                   case itemDelimitation: ItemDelimitationPart =>
-                    maybeAdd(ItemDelimitationElement(itemDelimitation.index, itemDelimitation.bigEndian))
+                    maybeAdd(ItemDelimitationElement(itemDelimitation.bigEndian))
                     Nil
                   case SequenceDelimitationPartMarker =>
                     Nil

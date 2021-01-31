@@ -96,7 +96,7 @@ class ElementFlowsTest
     source
       .runWith(TestSink.probe[Element])
       .expectSequence(Tag.DerivationCodeSequence, 24)
-      .expectItem(1, 16)
+      .expectItem(16)
       .expectElement(Tag.PatientName)
       .expectDicomComplete()
   }
@@ -147,7 +147,7 @@ class ElementFlowsTest
       }
       .request(1)
       .expectNextChainingPF {
-        case (tp: TagPath, e: ItemElement) if e.index == 1 && tp == TagPath.fromItem(Tag.DerivationCodeSequence, 1) =>
+        case (tp: TagPath, _: ItemElement) if tp == TagPath.fromItem(Tag.DerivationCodeSequence, 1) =>
           true
       }
       .request(1)
@@ -160,8 +160,7 @@ class ElementFlowsTest
       }
       .request(1)
       .expectNextChainingPF {
-        case (tp: TagPath, e: ItemDelimitationElement)
-            if e.index == 1 && tp == TagPath.fromItemEnd(Tag.DerivationCodeSequence, 1) =>
+        case (tp: TagPath, _: ItemDelimitationElement) if tp == TagPath.fromItemEnd(Tag.DerivationCodeSequence, 1) =>
           true
       }
       .request(1)
@@ -177,7 +176,7 @@ class ElementFlowsTest
       }
       .request(1)
       .expectNextChainingPF {
-        case (tp: TagPath, e: FragmentElement) if e.index == 1 && tp == TagPath.fromTag(Tag.PixelData) => true
+        case (tp: TagPath, _: FragmentElement) if tp == TagPath.fromTag(Tag.PixelData) => true
       }
       .request(1)
       .expectNextChainingPF {
@@ -205,7 +204,7 @@ class ElementFlowsTest
       }
       .request(1)
       .expectNextChainingPF {
-        case (_: TagPath, e: ItemElement) if e.index == 1 => true
+        case (_: TagPath, _: ItemElement) => true
       }
       .request(1)
       .expectNextChainingPF {
@@ -222,12 +221,12 @@ class ElementFlowsTest
       SequenceDelimitationElement(),
       SequenceElement(Tag.DerivationCodeSequence, 0),
       SequenceElement(Tag.DerivationCodeSequence, indeterminateLength),
-      ItemElement(1, indeterminateLength),
-      ItemDelimitationElement(1),
-      ItemElement(2, 0),
+      ItemElement(indeterminateLength),
+      ItemDelimitationElement(),
+      ItemElement(0),
       SequenceDelimitationElement(),
       FragmentsElement(Tag.PixelData, VR.OB),
-      FragmentElement(1, 0, Value.empty),
+      FragmentElement(0, Value.empty),
       SequenceDelimitationElement(),
       FragmentsElement(Tag.PixelData, VR.OB),
       SequenceDelimitationElement()
