@@ -46,8 +46,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
       val explicitVR: Boolean
     }
 
-    case class DatasetHeaderState(itemIndex: Int, maySwitchTs: Boolean, bigEndian: Boolean, explicitVR: Boolean)
-        extends HeaderState
+    case class DatasetHeaderState(maySwitchTs: Boolean, bigEndian: Boolean, explicitVR: Boolean) extends HeaderState
 
     case class FmiHeaderState(
         tsuid: Option[String],
@@ -62,7 +61,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
 
     case class ValueState(bigEndian: Boolean, bytesLeft: Long, nextStep: ParseStep[DicomPart])
 
-    case class FragmentsState(fragmentIndex: Int, bigEndian: Boolean, explicitVR: Boolean) extends HeaderState {
+    case class FragmentsState(bigEndian: Boolean, explicitVR: Boolean) extends HeaderState {
       override val maySwitchTs: Boolean = false
     }
 
@@ -120,7 +119,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
                     log.warning(s"File meta information uses big-endian encoding")
                   InFmiHeader(FmiHeaderState(None, info.bigEndian, info.explicitVR, info.hasFmi, 0, None))
                 } else
-                  InDatasetHeader(DatasetHeaderState(0, maySwitchTs = false, info.bigEndian, info.explicitVR))
+                  InDatasetHeader(DatasetHeaderState(maySwitchTs = false, info.bigEndian, info.explicitVR))
               ParseResult(maybePreamble, nextState)
             }
             .getOrElse(throw new DicomStreamException("Not a DICOM stream"))
@@ -145,7 +144,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
           else
             InDeflatedData(DeflatedState(state.bigEndian, nowrap = true))
         else
-          InDatasetHeader(DatasetHeaderState(0, maySwitchTs = true, bigEndian, explicitVR))
+          InDatasetHeader(DatasetHeaderState(maySwitchTs = true, bigEndian, explicitVR))
       }
 
       private def hasZLIBHeader(firstTwoBytes: ByteString): Boolean = bytesToUShortBE(firstTwoBytes) == 0x789c
@@ -246,8 +245,8 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
             HeaderPart(tag, vr, valueLength, isFmi = false, state.bigEndian, state.explicitVR, bytes)
         } else
           tag match {
-            case 0xfffee000 => ItemPart(state.itemIndex + 1, valueLength, state.bigEndian, reader.take(8))
-            case 0xfffee00d => ItemDelimitationPart(state.itemIndex, state.bigEndian, reader.take(8))
+            case 0xfffee000 => ItemPart(valueLength, state.bigEndian, reader.take(8))
+            case 0xfffee00d => ItemDelimitationPart(state.bigEndian, reader.take(8))
             case 0xfffee0dd => SequenceDelimitationPart(state.bigEndian, reader.take(8))
             case _          => UnknownPart(state.bigEndian, reader.take(headerLength))
           }
@@ -264,12 +263,12 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
             else
               InDatasetHeader(state)
           case FragmentsPart(_, _, _, bigEndian, _, _) =>
-            InFragments(FragmentsState(fragmentIndex = 0, bigEndian, state.explicitVR))
-          case SequencePart(_, _, _, _, _)       => InDatasetHeader(state.copy(itemIndex = 0))
-          case ItemPart(index, _, _, _)          => InDatasetHeader(state.copy(itemIndex = index, maySwitchTs = true))
-          case ItemDelimitationPart(index, _, _) => InDatasetHeader(state.copy(itemIndex = index))
-          case SequenceDelimitationPart(_, _)    => InDatasetHeader(state.copy(maySwitchTs = true))
-          case _                                 => InDatasetHeader(state)
+            InFragments(FragmentsState(bigEndian, state.explicitVR))
+          case SequencePart(_, _, _, _, _)    => InDatasetHeader(state)
+          case ItemPart(_, _, _)              => InDatasetHeader(state.copy(maySwitchTs = true))
+          case ItemDelimitationPart(_, _)     => InDatasetHeader(state)
+          case SequenceDelimitationPart(_, _) => InDatasetHeader(state.copy(maySwitchTs = true))
+          case _                              => InDatasetHeader(state)
         }
         ParseResult(Some(part), nextState, acceptUpstreamFinish = !nextState.isInstanceOf[InValue])
       }
@@ -305,17 +304,11 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
           case 0xfffee000 => // begin fragment
             val nextState =
               if (valueLength > 0)
-                InValue(
-                  ValueState(
-                    state.bigEndian,
-                    valueLength,
-                    this.copy(state = state.copy(fragmentIndex = state.fragmentIndex + 1))
-                  )
-                )
+                InValue(ValueState(state.bigEndian, valueLength, this))
               else
-                this.copy(state = state.copy(fragmentIndex = state.fragmentIndex + 1))
+                this
             ParseResult(
-              Some(ItemPart(state.fragmentIndex + 1, valueLength, state.bigEndian, reader.take(headerLength))),
+              Some(ItemPart(valueLength, state.bigEndian, reader.take(headerLength))),
               nextState
             )
 
@@ -324,7 +317,7 @@ class ParseFlow private (chunkSize: Int) extends ByteStringParser[DicomPart] {
               log.warning(s"Unexpected fragments delimitation length $valueLength")
             ParseResult(
               Some(SequenceDelimitationPart(state.bigEndian, reader.take(headerLength))),
-              InDatasetHeader(DatasetHeaderState(0, maySwitchTs = false, state.bigEndian, state.explicitVR))
+              InDatasetHeader(DatasetHeaderState(maySwitchTs = false, state.bigEndian, state.explicitVR))
             )
 
           case _ =>

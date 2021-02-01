@@ -248,7 +248,7 @@ trait GuaranteedValueEvent[Out] extends DicomFlow[Out] with InFragments[Out] {
 
 object SequenceDelimitationPartMarker extends SequenceDelimitationPart(bigEndian = false, ByteString.empty)
 
-class ItemDelimitationPartMarker(item: Int) extends ItemDelimitationPart(item, bigEndian = false, ByteString.empty)
+object ItemDelimitationPartMarker extends ItemDelimitationPart(bigEndian = false, ByteString.empty)
 
 /**
   * By mixing in this trait, sequences and items with determinate length will be concluded by delimitation events, just
@@ -269,7 +269,7 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
       val (inactive, active) = partStack.span { case (p, b) => !p.indeterminate && b <= 0 }
       partStack = active // only keep items and sequences with bytes left to subtract
       inactive.flatMap { // call events, any items will be inserted in stream
-        case (item: ItemPart, _) => onItemDelimitation(new ItemDelimitationPartMarker(item.index))
+        case (item: ItemPart, _) => onItemDelimitation(ItemDelimitationPartMarker)
         case _                   => onSequenceDelimitation(SequenceDelimitationPartMarker)
       }
     }
@@ -299,11 +299,11 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
     }
 
     abstract override def onItemDelimitation(part: ItemDelimitationPart): List[Out] = {
-      if (partStack.nonEmpty && !part.isInstanceOf[ItemDelimitationPartMarker])
+      if (partStack.nonEmpty && part != ItemDelimitationPartMarker)
         partStack = partStack.tail
       subtractAndEmit(
         part,
-        (p: ItemDelimitationPart) => super.onItemDelimitation(p).filterNot(_.isInstanceOf[ItemDelimitationPartMarker])
+        (p: ItemDelimitationPart) => super.onItemDelimitation(p).filterNot(_ == ItemDelimitationPartMarker)
       )
     }
 
@@ -356,7 +356,12 @@ trait TagPathTracking[Out]
     }
 
     abstract override def onItem(part: ItemPart): List[Out] = {
-      if (!inFragments) tagPath = tagPath.previous.thenItem(tagPath.tag, part.index)
+      if (!inFragments)
+        tagPath = tagPath match {
+          case t: TagPathItemEnd =>
+            t.previous.thenItem(t.tag, t.item + 1)
+          case t => t.previous.thenItem(t.tag, 1)
+        }
       super.onItem(part)
     }
 

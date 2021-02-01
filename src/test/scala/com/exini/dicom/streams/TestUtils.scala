@@ -1,12 +1,12 @@
 package com.exini.dicom.streams
 
-import java.util.zip.Deflater
-
 import akka.stream.testkit.TestSubscriber
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data._
+
+import java.util.zip.Deflater
 
 object TestUtils {
 
@@ -64,20 +64,20 @@ object TestUtils {
           case p => throw new RuntimeException(s"Expected ValueChunk with bytes = $bytes, got $p")
         }
 
-    def expectItem(index: Int): PartProbe =
+    def expectItem(): PartProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case item: ItemPart if item.index == index => true
-          case p                                     => throw new RuntimeException(s"Expected ItemPart with index = $index, got $p")
+          case _: ItemPart => true
+          case p           => throw new RuntimeException(s"Expected ItemPart, got $p")
         }
 
-    def expectItem(index: Int, length: Int): PartProbe =
+    def expectItem(length: Int): PartProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case item: ItemPart if item.index == index && item.length == length => true
-          case p                                                              => throw new RuntimeException(s"Expected ItemPart with index = $index and length $length, got $p")
+          case item: ItemPart if item.length == length => true
+          case p                                       => throw new RuntimeException(s"Expected ItemPart with length $length, got $p")
         }
 
     def expectItemDelimitation(): PartProbe =
@@ -96,12 +96,12 @@ object TestUtils {
           case p                => throw new RuntimeException(s"Expected FragmentsPart, got $p")
         }
 
-    def expectFragment(index: Int, length: Int): PartProbe =
+    def expectFragment(length: Int): PartProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case item: ItemPart if item.index == index && item.length == length => true
-          case p                                                              => throw new RuntimeException(s"Expected FragmentsPart with index = $index and length $length, got $p")
+          case item: ItemPart if item.length == length => true
+          case p                                       => throw new RuntimeException(s"Expected FragmentsPart with length $length, got $p")
         }
 
     def expectFragmentsDelimitation(): PartProbe =
@@ -254,20 +254,20 @@ object TestUtils {
           case p                                                        => throw new RuntimeException(s"Expected SequenceElement, got $p")
         }
 
-    def expectItem(index: Int, length: Long): ElementProbe =
+    def expectItem(length: Long): ElementProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case e: ItemElement if e.index == index && e.length == length => true
-          case p                                                        => throw new RuntimeException(s"Expected ItemElement, got $p")
+          case e: ItemElement if e.length == length => true
+          case p                                    => throw new RuntimeException(s"Expected ItemElement, got $p")
         }
 
-    def expectItemDelimitation(index: Int): ElementProbe =
+    def expectItemDelimitation(): ElementProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case e: ItemDelimitationElement if e.index == index => true
-          case p                                              => throw new RuntimeException(s"Expected ItemDelimitationElement, got $p")
+          case _: ItemDelimitationElement => true
+          case p                          => throw new RuntimeException(s"Expected ItemDelimitationElement, got $p")
         }
 
     def expectSequenceDelimitation(): ElementProbe =

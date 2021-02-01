@@ -53,7 +53,7 @@ object ElementFlows {
                   bytes = ByteString.empty
                   Nil
                 case item: ItemPart if inFragments =>
-                  currentFragment = Option(FragmentElement.empty(item.index, item.length, item.bigEndian))
+                  currentFragment = Option(FragmentElement.empty(item.length, item.bigEndian))
                   bytes = ByteString.empty
                   Nil
 
@@ -74,9 +74,9 @@ object ElementFlows {
                 case fragments: FragmentsPart =>
                   FragmentsElement(fragments.tag, fragments.vr, fragments.bigEndian, fragments.explicitVR) :: Nil
                 case item: ItemPart =>
-                  ItemElement(item.index, item.length, item.bigEndian) :: Nil
+                  ItemElement(item.length, item.bigEndian) :: Nil
                 case itemDelimitation: ItemDelimitationPart =>
-                  ItemDelimitationElement(itemDelimitation.index, itemDelimitation.bigEndian) :: Nil
+                  ItemDelimitationElement(itemDelimitation.bigEndian) :: Nil
                 case sequenceDelimitation: SequenceDelimitationPart =>
                   SequenceDelimitationElement(sequenceDelimitation.bigEndian) :: Nil
 
@@ -116,7 +116,12 @@ object ElementFlows {
             inFragments = false
             (tagPath, e) :: Nil
           case e: ItemElement =>
-            if (!inFragments) tagPath = tagPath.previous.thenItem(tagPath.tag, e.index)
+            if (!inFragments)
+              tagPath = tagPath match {
+                case t: TagPathItemEnd =>
+                  t.previous.thenItem(t.tag, t.item + 1)
+                case t => t.previous.thenItem(t.tag, 1)
+              }
             (tagPath, e) :: Nil
           case e: ItemDelimitationElement =>
             tagPath = tagPath match {

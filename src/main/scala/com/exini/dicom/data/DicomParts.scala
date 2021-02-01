@@ -120,12 +120,12 @@ object DicomParts {
 
   case class DeflatedChunk(bigEndian: Boolean, bytes: ByteString, nowrap: Boolean) extends DicomPart
 
-  case class ItemPart(index: Int, length: Long, bigEndian: Boolean, bytes: ByteString) extends LengthPart {
+  case class ItemPart(length: Long, bigEndian: Boolean, bytes: ByteString) extends LengthPart {
     override def toString =
-      s"${getClass.getSimpleName} index = $index length = $length ${if (bigEndian) "(big endian) " else ""}$bytes"
+      s"${getClass.getSimpleName} length = $length ${if (bigEndian) "(big endian) " else ""}$bytes"
   }
 
-  case class ItemDelimitationPart(index: Int, bigEndian: Boolean, bytes: ByteString) extends DicomPart
+  case class ItemDelimitationPart(bigEndian: Boolean, bytes: ByteString) extends DicomPart
 
   case class SequencePart(tag: Int, length: Long, bigEndian: Boolean, explicitVR: Boolean, bytes: ByteString)
       extends DicomPart

@@ -31,21 +31,21 @@ class ElementSinkTest
       ValueElement.fromString(Tag.TransferSyntaxUID, UID.ExplicitVRLittleEndian),
       ValueElement.fromString(Tag.StudyDate, "20040329"),
       SequenceElement(Tag.DerivationCodeSequence, indeterminateLength),
-      ItemElement(1, indeterminateLength),
+      ItemElement(indeterminateLength),
       ValueElement.fromString(Tag.StudyDate, "20040329"),
-      ItemDelimitationElement(1),
-      ItemElement(2, indeterminateLength),
+      ItemDelimitationElement(),
+      ItemElement(indeterminateLength),
       SequenceElement(Tag.DerivationCodeSequence, indeterminateLength),
-      ItemElement(1, indeterminateLength),
+      ItemElement(indeterminateLength),
       ValueElement.fromString(Tag.StudyDate, "20040329"),
-      ItemDelimitationElement(1),
+      ItemDelimitationElement(),
       SequenceDelimitationElement(),
-      ItemDelimitationElement(2),
+      ItemDelimitationElement(),
       SequenceDelimitationElement(),
       ValueElement.fromString(Tag.PatientName, "Doe^John"),
       FragmentsElement(Tag.PixelData, VR.OB),
-      FragmentElement(1, 4, Value(ByteString(1, 2, 3, 4))),
-      FragmentElement(2, 4, Value(ByteString(1, 2, 3, 4))),
+      FragmentElement(4, Value(ByteString(1, 2, 3, 4))),
+      FragmentElement(4, Value(ByteString(1, 2, 3, 4))),
       SequenceDelimitationElement()
     )
 
@@ -61,16 +61,16 @@ class ElementSinkTest
       SequenceDelimitationElement(),
       SequenceElement(Tag.DerivationCodeSequence, 0),
       SequenceElement(Tag.DerivationCodeSequence, indeterminateLength),
-      ItemElement(1, indeterminateLength),
-      ItemDelimitationElement(1),
-      ItemElement(2, 0),
+      ItemElement(indeterminateLength),
+      ItemDelimitationElement(),
+      ItemElement(0),
       SequenceDelimitationElement(),
       SequenceElement(Tag.DerivationCodeSequence, 16 + 16 + 8),
-      ItemElement(1, 16 + 16),
+      ItemElement(16 + 16),
       ValueElement.fromString(Tag.StudyDate, "20200202"),
       ValueElement.fromString(Tag.PatientName, "John^Doe"),
       FragmentsElement(Tag.PixelData, VR.OB),
-      FragmentElement(1, 0, Value.empty),
+      FragmentElement(0, Value.empty),
       SequenceDelimitationElement(),
       FragmentsElement(Tag.PixelData, VR.OB),
       SequenceDelimitationElement()
@@ -84,11 +84,11 @@ class ElementSinkTest
   it should "handle determinate length items and sequences" in {
     val elementList = List(
       SequenceElement(Tag.DerivationCodeSequence, 68),
-      ItemElement(1, 16),
+      ItemElement(16),
       ValueElement.fromString(Tag.StudyDate, "20040329"),
-      ItemElement(2, 36),
+      ItemElement(36),
       SequenceElement(Tag.DerivationCodeSequence, 24),
-      ItemElement(1, 16),
+      ItemElement(16),
       ValueElement.fromString(Tag.StudyDate, "20040329")
     )
 
@@ -100,26 +100,26 @@ class ElementSinkTest
   it should "handle item and sequence delimitations in when items and sequences are of determinate length" in {
     val elementList = List(
       SequenceElement(Tag.DerivationCodeSequence, 108),
-      ItemElement(1, 24),
+      ItemElement(24),
       ValueElement.fromString(Tag.StudyDate, "20040329"),
-      ItemDelimitationElement(1),
-      ItemElement(2, 60),
+      ItemDelimitationElement(),
+      ItemElement(60),
       SequenceElement(Tag.DerivationCodeSequence, 40),
-      ItemElement(1, 24),
+      ItemElement(24),
       ValueElement.fromString(Tag.StudyDate, "20040329"),
-      ItemDelimitationElement(1),
+      ItemDelimitationElement(),
       SequenceDelimitationElement(),
-      ItemDelimitationElement(2),
+      ItemDelimitationElement(),
       SequenceDelimitationElement()
     )
 
     val expectedElementList = List(
       SequenceElement(Tag.DerivationCodeSequence, 68),
-      ItemElement(1, 16),
+      ItemElement(16),
       ValueElement.fromString(Tag.StudyDate, "20040329"),
-      ItemElement(2, 36),
+      ItemElement(36),
       SequenceElement(Tag.DerivationCodeSequence, 24),
-      ItemElement(1, 16),
+      ItemElement(16),
       ValueElement.fromString(Tag.StudyDate, "20040329")
     )
 
@@ -157,8 +157,8 @@ class ElementSinkTest
   it should "convert an empty offsets table item to an empty list of offsets" in {
     val elementList = List(
       FragmentsElement(Tag.PixelData, VR.OB),
-      FragmentElement(1, 0, Value.empty),
-      FragmentElement(2, 0, Value(ByteString(1, 2, 3, 4))),
+      FragmentElement(0, Value.empty),
+      FragmentElement(0, Value(ByteString(1, 2, 3, 4))),
       SequenceDelimitationElement()
     )
 
@@ -172,7 +172,7 @@ class ElementSinkTest
   it should "map an offsets table to a list of offsets" in {
     val elementList = List(
       FragmentsElement(Tag.PixelData, VR.OB),
-      FragmentElement(1, 0, Value(intToBytesLE(1) ++ intToBytesLE(2) ++ intToBytesLE(3) ++ intToBytesLE(4))),
+      FragmentElement(0, Value(intToBytesLE(1) ++ intToBytesLE(2) ++ intToBytesLE(3) ++ intToBytesLE(4))),
       SequenceDelimitationElement()
     )
 
