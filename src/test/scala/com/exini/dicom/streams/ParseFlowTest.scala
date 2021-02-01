@@ -579,7 +579,7 @@ class ParseFlowTest
       .expectDicomComplete()
   }
 
-  it should "parse sequences with VR UN, and where the nested data set(s) have implicit VR, as a block of bytes" in {
+  it should "parse sequences of determinate length with VR UN with contents in implicit VR as a block of bytes" in {
     val unSequence = tagToBytes(Tag.CTExposureSequence) ++ ByteString('U', 'N', 0, 0) ++ intToBytes(24)
     val bytes      = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate(explicitVR = false)
 
@@ -596,14 +596,13 @@ class ParseFlowTest
       .expectDicomComplete()
   }
 
-  it should "handle sequences of indefinite length with VR UN and implicit VR" in {
+  it should "handle sequences of indefinite length with VR UN with contents in implicit VR" in {
     // see ftp://medical.nema.org/medical/dicom/final/cp246_ft.pdf for motivation
-    val unSequence = tagToBytes(Tag.CTDIPhantomTypeCodeSequence) ++ ByteString('U', 'N', 0, 0, 0xff, 0xff, 0xff, 0xff)
-    val bytes = personNameJohnDoe() ++ unSequence ++ item(60) ++
+    val bytes = personNameJohnDoe() ++ cp264Sequence ++ item(60) ++
       element(Tag.CodeValue, "113691", explicitVR = false) ++
       element(Tag.CodingSchemeDesignator, "DCM", explicitVR = false) ++
       element(Tag.CodeMeaning, "IEC Body Dosimetry Phantom", explicitVR = false) ++
-      sequenceDelimitation()
+      sequenceDelimitation() ++ pixelData(10)
 
     val source = Source
       .single(bytes)
@@ -622,7 +621,161 @@ class ParseFlowTest
       .expectHeader(Tag.CodeMeaning, VR.LO, 26)
       .expectValueChunk()
       .expectSequenceDelimitation()
+      .expectHeader(Tag.PixelData)
+      .expectValueChunk(10)
       .expectDicomComplete()
+  }
+
+  it should "handle data ending with a CP-246 sequence" in {
+    val bytes = personNameJohnDoe() ++ cp264Sequence ++ item() ++ personNameJohnDoe(explicitVR = false) ++
+      itemDelimitation() ++ sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
+      .expectItem()
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectDicomComplete()
+  }
+
+  it should "handle a CP-246 sequence followed by a regular sequence" in {
+    val bytes = personNameJohnDoe() ++
+      cp264Sequence ++ item() ++ personNameJohnDoe(explicitVR =
+      false
+    ) ++ itemDelimitation() ++ sequenceDelimitation() ++
+      sequence(Tag.CollimatorShapeSequence) ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
+      .expectItem()
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectSequence(Tag.CollimatorShapeSequence)
+      .expectItem()
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectDicomComplete()
+  }
+
+  it should "handle a CP-246 sequence followed by a private attribute" in {
+    val bytes = personNameJohnDoe() ++
+      cp264Sequence ++ item() ++ personNameJohnDoe(explicitVR = false) ++ itemDelimitation() ++
+      sequenceDelimitation() ++
+      ValueElement(0x00990110, VR.SH, Value.fromString(VR.SH, "Value"), bigEndian = false, explicitVR = true).toBytes
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
+      .expectItem()
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectHeader(0x00990110)
+      .expectValueChunk()
+      .expectDicomComplete()
+  }
+
+  it should "handle a CP-246 sequence followed by fragments" in {
+    val bytes = personNameJohnDoe() ++
+      cp264Sequence ++ item() ++ personNameJohnDoe(explicitVR = false) ++ itemDelimitation() ++
+      sequenceDelimitation() ++ pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4)
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
+      .expectItem()
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectFragments()
+      .expectFragment(4)
+      .expectValueChunk(4)
+      .expectDicomComplete()
+  }
+
+  it should "handle nested CP-246 sequences" in {
+    val bytes = personNameJohnDoe() ++
+      cp264Sequence ++ item() ++ sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate(explicitVR = false) ++
+      itemDelimitation() ++ sequenceDelimitation() ++ itemDelimitation() ++ sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
+      .expectItem()
+      .expectSequence(Tag.DerivationCodeSequence)
+      .expectItem()
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectDicomComplete()
+  }
+
+  it should "fail parsing if length bytes matches a known VR when checking for transfer syntax switch" in {
+    // length of implicit attribute will be encoded as 0x4441 (little endian) which reads as VR 'DA'
+    // this is the smallest length that could lead to such problems
+    val bytes = personNameJohnDoe() ++ cp264Sequence ++ item() ++
+      element(Tag.CodeMeaning, ByteString(new Array[Byte](0x4144)), bigEndian = false, explicitVR = false) ++
+      itemDelimitation() ++ sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(ParseFlow())
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
+      .expectItem()
+      .expectHeader(Tag.CodeMeaning, VR.DA, 0)
+      .expectUnknownPart()
+      .expectUnknownPart()
+      .expectUnknownPart()
+      .expectUnknownPart()
+    // etc for many more unknown parts
   }
 
   it should "handle odd-length attributes" in {

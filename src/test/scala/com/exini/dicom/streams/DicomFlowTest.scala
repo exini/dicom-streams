@@ -583,9 +583,9 @@ class DicomFlowTest
 
   it should "support tracking through nested sequences" in {
     val bytes = sequence(Tag.DerivationCodeSequence, 92) ++
-      item(16) ++ studyDate() ++ // first item
+      item(16) ++ studyDate() ++                                                         // first item
       item(36) ++ sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate() ++ // second item, nested seq
-      item(16) ++ personNameJohnDoe() // third item
+      item(16) ++ personNameJohnDoe()                                                    // third item
 
     var expectedPaths = List(
       TagPath.fromSequence(Tag.DerivationCodeSequence),

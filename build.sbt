@@ -58,12 +58,14 @@ sourceGenerators in Compile += Def.task {
   val tagToVRFile = (sourceManaged in Compile).value / "sbt-dicomdata" / "TagToVR.scala"
   val tagToVMFile = (sourceManaged in Compile).value / "sbt-dicomdata" / "TagToVM.scala"
   val tagToKeywordFile = (sourceManaged in Compile).value / "sbt-dicomdata" / "TagToKeyword.scala"
+  val uidToNameFile = (sourceManaged in Compile).value / "sbt-dicomdata" / "UIDToName.scala"
   IO.write(tagFile, generateTag())
   IO.write(uidFile, generateUID())
   IO.write(tagToKeywordFile, generateTagToKeyword())
   IO.write(tagToVRFile, generateTagToVR())
   IO.write(tagToVMFile, generateTagToVM())
-  Seq(tagFile, uidFile, tagToKeywordFile, tagToVRFile, tagToVMFile)
+  IO.write(uidToNameFile, generateUIDToName())
+  Seq(tagFile, uidFile, tagToKeywordFile, tagToVRFile, tagToVMFile, uidToNameFile)
 }.taskValue
 
 // include managed sources among other sources when publishing
@@ -76,4 +78,4 @@ mappings in (Compile, packageSrc) ++= {
 
 // coverage
 
-coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*"
+coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*\\.UIDToName.*"

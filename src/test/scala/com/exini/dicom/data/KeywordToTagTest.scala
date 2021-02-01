@@ -8,12 +8,10 @@ class KeywordToTagTest extends AnyFlatSpec with Matchers {
   "A keyword" should "be correctly mapped to its corresponding tag" in {
     val realTag   = Tag.PatientName
     val mappedTag = KeywordToTag.tagOf("PatientName")
-    mappedTag shouldBe realTag
+    mappedTag shouldBe Some(realTag)
   }
 
-  it should "throw exception for unknown keywords" in {
-    intercept[IllegalArgumentException] {
-      KeywordToTag.tagOf("oups")
-    }
+  it should "return None for unknown keywords" in {
+    KeywordToTag.tagOf("oups") shouldBe None
   }
 }

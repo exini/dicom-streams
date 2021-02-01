@@ -20,12 +20,18 @@ class LookupTest extends AnyFlatSpec with Matchers {
   }
 
   it should "support getting the tag for a keyword" in {
-    Lookup.tagOf("PatientName") shouldBe Tag.PatientName
+    Lookup.tagOf("PatientName") shouldBe Some(Tag.PatientName)
+    Lookup.tagOf("not-a-keyword") shouldBe None
   }
 
   it should "support listing all keywords" in {
     val keywords = Lookup.keywords()
     keywords.length should be > 4000
     keywords.contains("PatientName") shouldBe true
+  }
+
+  it should "support getting the name for a UID" in {
+    Lookup.nameOf(UID.NuclearMedicineImageStorage) shouldBe Some("Nuclear Medicine Image Storage")
+    Lookup.nameOf("not a UID") shouldBe None
   }
 }
