@@ -171,7 +171,7 @@ object DicomSourceGenerators {
   }
 
   def generateTagToKeyword(): String = {
-    val (_, splitValue, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
+    val (_, _, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
     
     s"""package com.exini.dicom.data
        |
@@ -212,7 +212,7 @@ object DicomSourceGenerators {
   }
 
   def generateTagToVR(): String = {
-    val (_, splitValue, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
+    val (_, _, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
     
     s"""package com.exini.dicom.data
        |
@@ -260,7 +260,7 @@ object DicomSourceGenerators {
   }
   
   def generateTagToVM(): String = {
-    val (_, splitValue, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
+    val (_, _, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
     
     s"""package com.exini.dicom.data
        |
@@ -306,6 +306,23 @@ object DicomSourceGenerators {
        |  addLow()
        |  addHigh()
        |
+       |}""".stripMargin
+  }
+
+  def generateUIDToName(): String = {
+    val pairs = uids
+      .map(uid => (uid.uidValue, uid.uidName.replaceAll(":.*", "").trim))
+      .filter(_._2.nonEmpty)
+      .distinct
+
+    s"""package com.exini.dicom.data
+       |
+       |private[data] object UIDToName {
+       |
+       |  def nameOf(uid: String): Option[String] = uid match {
+       |${pairs.map(p => s"""    case "${p._1}" => Some("${p._2}")""").mkString("\r\n")}
+       |    case _ => None
+       |  }
        |}""".stripMargin
   }
 }
