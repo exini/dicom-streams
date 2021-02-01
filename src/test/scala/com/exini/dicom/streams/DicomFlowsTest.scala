@@ -756,6 +756,22 @@ class DicomFlowsTest
       .expectDicomComplete()
   }
 
+  it should "remove fragments data" in {
+    val bytes = personNameJohnDoe() ++ pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
+      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(parseFlow)
+      .via(bulkDataFilter)
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectDicomComplete()
+  }
+
   "The FMI group length flow" should "calculate and emit the correct group length attribute" in {
     val correctLength = transferSyntaxUID().length
     val bytes = preamble ++ fmiGroupLength(

@@ -213,7 +213,8 @@ trait InSequence[Out] extends DicomFlow[Out] with GuaranteedDelimitationEvents[O
     }
 
     abstract override def onSequenceDelimitation(part: SequenceDelimitationPart): List[Out] = {
-      sequenceStack = sequenceStack.tail
+      if (!inFragments)
+        sequenceStack = sequenceStack.tail
       super.onSequenceDelimitation(part)
     }
   }
