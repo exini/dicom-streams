@@ -106,6 +106,8 @@ object TestData {
       length,
       bigEndian
     )
+  val cp264Sequence: ByteString =
+    tagToBytes(Tag.CTDIPhantomTypeCodeSequence) ++ ByteString('U', 'N', 0, 0, 0xff, 0xff, 0xff, 0xff)
 
   def waveformSeqStart(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString =
     sequence(Tag.WaveformSequence, bigEndian)
