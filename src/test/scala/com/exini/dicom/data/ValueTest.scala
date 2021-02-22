@@ -472,7 +472,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   "Parsing a patient name" should "divide into parts and components" in {
     Value(
       ByteString(
-        "aFamily=iFamily=pFamily^aGiven=iGiven=pGiven^aMiddle=iMiddle=pMiddle^aPrefix=iPrefix=pPrefix^aSuffix=iSuffix=pSuffix"
+        "aFamily^aGiven^aMiddle^aPrefix^aSuffix=iFamily^iGiven^iMiddle^iPrefix^iSuffix=pFamily^pGiven^pMiddle^pPrefix^pSuffix"
       )
     ).toPersonNames() shouldBe Seq(
       PersonName(
@@ -486,7 +486,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "handle null components" in {
-    Value(ByteString("=iFamily=pFamily^^aMiddle^aPrefix==pPrefix^==pSuffix"))
+    Value(ByteString("^^aMiddle^aPrefix^=iFamily^^^^=pFamily^^^pPrefix^pSuffix"))
       .toPersonNames() shouldBe Seq(
       PersonName(
         ComponentGroup("", "iFamily", "pFamily"),
@@ -497,7 +497,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
       )
     )
 
-    Value(ByteString("aFamily=iFamily^^aMiddle"))
+    Value(ByteString("aFamily^^aMiddle=iFamily"))
       .toPersonNames() shouldBe Seq(
       PersonName(
         ComponentGroup("aFamily", "iFamily", ""),
@@ -510,7 +510,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "trim whitespace within each component" in {
-    Value(ByteString("   aFamily   =   iFamily   ^^   aMiddle   "))
+    Value(ByteString("   aFamily   ^^    aMiddle    =   iFamily"))
       .toPersonNames() shouldBe Seq(
       PersonName(
         ComponentGroup("aFamily", "iFamily", ""),
@@ -708,7 +708,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
     Value.fromPersonNames(VR.PN, Seq(pn1, pn2)).toPersonNames() shouldBe Seq(pn1, pn2)
 
     Value.fromPersonName(VR.PN, pn1).toString(VR.PN) shouldBe Some(
-      "family=i=p^given=i=p^middle=i=p^prefix=i=p^suffix=i=p"
+      "family^given^middle^prefix^suffix=i^i^i^i^i=p^p^p^p^p"
     )
   }
 
@@ -740,7 +740,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "parse components into alphabetic, ideographic and phonetic elements" in {
-    val pns = parsePN("F-Alphabetic=F-Ideographic=F-Phonetic^Given^==M-Phonetic^P-Alphabetic==P-Phonetic^")
+    val pns = parsePN("F-Alphabetic^Given^^P-Alphabetic^=F-Ideographic^^^^=F-Phonetic^^M-Phonetic^P-Phonetic^")
     pns should have length 1
     pns.head.familyName.alphabetic shouldBe "F-Alphabetic"
     pns.head.familyName.ideographic shouldBe "F-Ideographic"

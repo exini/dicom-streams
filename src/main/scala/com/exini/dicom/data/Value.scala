@@ -653,11 +653,14 @@ object Value {
   def parsePersonName(s: String): Option[PersonName] = {
     def ensureLength(ss: Seq[String], n: Int) = ss ++ Seq.fill(math.max(0, n - ss.length))("")
 
-    val comps = ensureLength(s.split("""\^""").toSeq, 5)
-      .map(s => ensureLength(s.split("=").toSeq, 3).map(trim))
-      .map(c => ComponentGroup(c.head, c(1), c(2)))
+    def transpose(matrix: Seq[Seq[String]]): Seq[Seq[String]] =
+      matrix(0).zipWithIndex.map { case (_, i) => matrix.map(col => col(i)) }
 
-    Option(PersonName(comps.head, comps(1), comps(2), comps(3), comps(4)))
+    val matrix = ensureLength(s.split("=").toSeq, 3)
+      .map(trim)
+      .map(s => ensureLength(s.split("""\^""").toSeq, 5).map(trim))
+    val comps = transpose(matrix).map(c => ComponentGroup(c(0), c(1), c(2)))
+    Option(PersonName(comps(0), comps(1), comps(2), comps(3), comps(4)))
   }
 
   def parseURI(s: String): Option[URI] =

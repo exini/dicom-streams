@@ -16,9 +16,7 @@
 
 package com.exini.dicom.data
 
-case class ComponentGroup(alphabetic: String, ideographic: String, phonetic: String) {
-  override def toString: String = s"$alphabetic=$ideographic=$phonetic".replaceAll("=+$", "")
-}
+case class ComponentGroup(alphabetic: String, ideographic: String, phonetic: String)
 
 case class PersonName(
     familyName: ComponentGroup,
@@ -27,7 +25,29 @@ case class PersonName(
     prefix: ComponentGroup,
     suffix: ComponentGroup
 ) {
-  override def toString: String = s"$familyName^$givenName^$middleName^$prefix^$suffix".replaceAll("\\^+$", "")
+  override def toString: String = {
+    val components = List(
+      familyName,
+      givenName,
+      middleName,
+      prefix,
+      suffix
+    )
+    val representations = List(
+      (c: ComponentGroup) => c.alphabetic,
+      (c: ComponentGroup) => c.ideographic,
+      (c: ComponentGroup) => c.phonetic
+    )
+    representations
+      .map(repr =>
+        components
+          .map(repr)
+          .mkString("^")
+          .replaceAll("\\^+$", "") // Trim trailing ^ separators
+      )
+      .mkString("=")
+      .replaceAll("=+$", "") // Trim trailing = separators
+  }
 }
 
 object PersonName {
