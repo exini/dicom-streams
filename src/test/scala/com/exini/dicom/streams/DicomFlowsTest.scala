@@ -1,7 +1,5 @@
 package com.exini.dicom.streams
 
-import java.io.File
-
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{ FileIO, Sink, Source }
 import akka.stream.testkit.scaladsl.TestSink
@@ -19,6 +17,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
+import java.io.File
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ Await, ExecutionContextExecutor }
 
@@ -1207,6 +1206,31 @@ class DicomFlowsTest
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectHeader(Tag.PatientName)
+      .expectDicomComplete()
+  }
+
+  it should "should handle fragments appearing just after an updated attribute" in {
+    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ ByteString("CS") ++
+      shortToBytesLE(0x001e.toShort) ++ padToEvenLength(ByteString("ISO 2022 IR 13\\ISO 2022 IR 87"), VR.CS)
+
+    val bytes = specificCharacterSet ++ personNameJohnDoe() ++ pixeDataFragments() ++ item(4) ++
+      ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+
+    val source = Source
+      .single(bytes)
+      .via(parseFlow)
+      .via(toUtf8Flow)
+
+    source
+      .runWith(TestSink.probe[DicomPart])
+      .expectHeader(Tag.SpecificCharacterSet)
+      .expectValueChunk(ByteString("ISO_IR 192"))
+      .expectHeader(Tag.PatientName)
+      .expectValueChunk()
+      .expectFragments()
+      .expectFragment(4)
+      .expectValueChunk(ByteString(1, 2, 3, 4))
+      .expectFragmentsDelimitation()
       .expectDicomComplete()
   }
 

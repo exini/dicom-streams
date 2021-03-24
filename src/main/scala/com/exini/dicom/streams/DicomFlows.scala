@@ -555,15 +555,17 @@ object DicomFlows {
                     currentHeader = None
                     header :: Nil
                   }
-                case value: ValueChunk if currentHeader.isDefined =>
+                case value: ValueChunk if currentHeader.isDefined && !inFragments =>
                   currentValue = currentValue ++ value.bytes
                   if (value.last) {
-                    val newValue = currentHeader
+                    val header = currentHeader
+                    currentHeader = None
+                    val newValue = header
                       .map(h => characterSets.decode(h.vr, currentValue).getBytes(utf8Charset))
                       .map(ByteString.apply)
                     val newLength = newValue.map(_.length)
                     val newElement = for {
-                      h <- currentHeader
+                      h <- header
                       v <- newValue
                       l <- newLength
                     } yield h.withUpdatedLength(l) :: ValueChunk(h.bigEndian, v, last = true) :: Nil
