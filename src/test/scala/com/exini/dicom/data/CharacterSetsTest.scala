@@ -123,6 +123,7 @@ class CharacterSetsTest extends AnyFlatSpecLike with Matchers {
       offset += Character.charCount(codePoint)
     }
     codePoints shouldBe expectedCodePoints
+    ()
   }
 
 }

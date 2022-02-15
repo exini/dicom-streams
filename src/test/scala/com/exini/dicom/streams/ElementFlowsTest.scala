@@ -15,7 +15,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ Await, ExecutionContextExecutor }
 
 class ElementFlowsTest
     extends TestKit(ActorSystem("ElementFlowsSpec"))
@@ -25,7 +26,10 @@ class ElementFlowsTest
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  override def afterAll(): Unit = system.terminate()
+  override def afterAll(): Unit = {
+    Await.ready(system.terminate(), 10.seconds)
+    ()
+  }
 
   "A DICOM elements flow" should "combine headers and value chunks into elements" in {
     val bytes = personNameJohnDoe() ++ studyDate()

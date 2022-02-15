@@ -148,7 +148,7 @@ object ModifyFlow {
                   )
                 if (vr == VR.SQ) throw new IllegalArgumentException("Cannot insert sequences")
                 val isFmi  = isFileMetaInformation(tagPath.tag)
-                val header = HeaderPart(tagPath.tag, vr, valueBytes.length, isFmi, bigEndian, explicitVR)
+                val header = HeaderPart(tagPath.tag, vr, valueBytes.length.toLong, isFmi, bigEndian, explicitVR)
                 header :: valueOrNot(valueBytes)
               }
 
@@ -213,7 +213,7 @@ object ModifyFlow {
                       if (chunk.last) {
                         val newValue =
                           padToEvenLength(currentModification.get.modification(value), currentHeader.get.vr)
-                        val newHeader = currentHeader.get.withUpdatedLength(newValue.length)
+                        val newHeader = currentHeader.get.withUpdatedLength(newValue.length.toLong)
                         currentModification = None
                         currentHeader = None
                         newHeader :: valueOrNot(newValue)

@@ -24,7 +24,10 @@ class ElementSinkTest
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  override def afterAll(): Unit = system.terminate()
+  override def afterAll(): Unit = {
+    Await.ready(system.terminate(), 10.seconds)
+    ()
+  }
 
   "An element sink" should "aggregate streamed elements into an Elements" in {
     val elementList = List(
@@ -207,9 +210,9 @@ class ElementSinkTest
 
     val iter = toElementsBlocking(Source.single(bytes)).getFragments(Tag.PixelData).get.frameIterator
     iter.hasNext shouldBe true
-    iter.next shouldBe ByteString(1, 2, 3, 4, 5, 6)
+    iter.next() shouldBe ByteString(1, 2, 3, 4, 5, 6)
     iter.hasNext shouldBe true
-    iter.next shouldBe ByteString(7, 8)
+    iter.next() shouldBe ByteString(7, 8)
     iter.hasNext shouldBe false
   }
 
@@ -245,12 +248,12 @@ class ElementSinkTest
     val iter1 = toElementsBlocking(Source.single(bytes1)).getFragments(Tag.PixelData).get.frameIterator
     val iter2 = toElementsBlocking(Source.single(bytes2)).getFragments(Tag.PixelData).get.frameIterator
 
-    iter1.next shouldBe ByteString(1, 2)
-    iter1.next shouldBe ByteString(3)
-    iter1.next shouldBe ByteString(4)
+    iter1.next() shouldBe ByteString(1, 2)
+    iter1.next() shouldBe ByteString(3)
+    iter1.next() shouldBe ByteString(4)
     iter1.hasNext shouldBe false
 
-    iter2.next shouldBe ByteString(1, 2, 1, 2, 1, 2, 1, 2)
+    iter2.next() shouldBe ByteString(1, 2, 1, 2, 1, 2, 1, 2)
     iter2.hasNext shouldBe false
   }
 }

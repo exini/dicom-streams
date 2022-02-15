@@ -568,7 +568,7 @@ object DicomFlows {
                       h <- header
                       v <- newValue
                       l <- newLength
-                    } yield h.withUpdatedLength(l) :: ValueChunk(h.bigEndian, v, last = true) :: Nil
+                    } yield h.withUpdatedLength(l.toLong) :: ValueChunk(h.bigEndian, v, last = true) :: Nil
                     newElement.getOrElse(Nil)
                   } else Nil
                 case p: DicomPart =>

@@ -215,8 +215,8 @@ case class Value private[data] (bytes: ByteString) {
     }
 
   /**
-    * @return this value as a sequence of 'PatientName`s. Casting is performed if necessary. If the value has no
-    *         `PatientName`` representation, an empty sequence is returned.
+    * @return this value as a sequence of `PatientName`s. Casting is performed if necessary. If the value has no
+    *         `PatientName` representation, an empty sequence is returned.
     */
   def toPersonNames(vr: VR = VR.PN, characterSets: CharacterSets = defaultCharacterSet): Seq[PersonName] =
     vr match {
@@ -460,7 +460,7 @@ object Value {
       case SV                     => longToBytes(value.toLong, bigEndian)
       case US                     => truncate(6, longToBytes(value.toLong, bigEndian), bigEndian)
       case UL                     => truncate(4, longToBytes(value.toLong, bigEndian), bigEndian)
-      case UV                     => toBytes(BigDecimal.valueOf(value).toBigInteger, 8, bigEndian)
+      case UV                     => toBytes(BigDecimal.valueOf(value.toDouble).toBigInteger, 8, bigEndian)
       case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from float")
       case _                      => ByteString(value.toString)
     }

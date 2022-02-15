@@ -269,8 +269,8 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
       val (inactive, active) = partStack.span { case (p, b) => !p.indeterminate && b <= 0 }
       partStack = active // only keep items and sequences with bytes left to subtract
       inactive.flatMap { // call events, any items will be inserted in stream
-        case (item: ItemPart, _) => onItemDelimitation(ItemDelimitationPartMarker)
-        case _                   => onSequenceDelimitation(SequenceDelimitationPartMarker)
+        case (_: ItemPart, _) => onItemDelimitation(ItemDelimitationPartMarker)
+        case _                => onSequenceDelimitation(SequenceDelimitationPartMarker)
       }
     }
 

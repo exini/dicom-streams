@@ -11,7 +11,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ Await, ExecutionContextExecutor }
 
 class ParseFlowTest
     extends TestKit(ActorSystem("ParseFlowSpec"))
@@ -25,7 +26,10 @@ class ParseFlowTest
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  override def afterAll(): Unit = system.terminate()
+  override def afterAll(): Unit = {
+    Await.ready(system.terminate(), 10.seconds)
+    ()
+  }
 
   "The parse flow" should "produce a preamble, FMI tags and dataset tags for a complete DICOM file" in {
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()

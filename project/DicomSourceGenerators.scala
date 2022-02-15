@@ -181,17 +181,17 @@ object DicomSourceGenerators {
        |
        |  def keywordOf(tag: Int): Option[String] = tag match {
        |    case t if (t & 0x0000FFFF) == 0 && (t & 0xFFFD0000) != 0 => Some("GroupLength")
-       |    case t if (tag & 0x00010000) != 0 =>
-       |      if ((tag & 0x0000FF00) == 0 && (tag & 0x000000F0) != 0) Some("PrivateCreatorID") else None
-       |    case t if (tag & 0xFFFFFF00) == Tag.SourceImageIDs => Some("SourceImageIDs")
+       |    case t if (t & 0x00010000) != 0 =>
+       |      if ((t & 0x0000FF00) == 0 && (t & 0x000000F0) != 0) Some("PrivateCreatorID") else None
+       |    case t if (t & 0xFFFFFF00) == Tag.SourceImageIDs => Some("SourceImageIDs")
        |    case t =>
        |      val t2: Int =
-       |        if ((tag & 0xFFE00000) == 0x50000000 || (tag & 0xFFE00000) == 0x60000000)
-       |          tag & 0xFFE0FFFF
-       |        else if ((tag & 0xFF000000) == 0x7F000000 && (tag & 0xFFFF0000) != 0x7FE00000)
-       |          tag & 0xFF00FFFF
+       |        if ((t & 0xFFE00000) == 0x50000000 || (t & 0xFFE00000) == 0x60000000)
+       |          t & 0xFFE0FFFF
+       |        else if ((t & 0xFF000000) == 0x7F000000 && (t & 0xFFFF0000) != 0x7FE00000)
+       |          t & 0xFF00FFFF
        |        else
-       |          tag
+       |          t
        |      map.get(t2)
        |  }
        |
@@ -224,7 +224,7 @@ object DicomSourceGenerators {
        |  def vrOf(tag: Int): VR = tag match {
        |    case t if (t & 0x0000FFFF) == 0 => UL // group length
        |    case t if (t & 0x00010000) != 0 => // private creator ID
-       |      if ((tag & 0x0000FF00) == 0 && (tag & 0x000000F0) != 0)
+       |      if ((t & 0x0000FF00) == 0 && (t & 0x000000F0) != 0)
        |        LO // private creator data element
        |      else
        |        UN // private tag
@@ -271,7 +271,7 @@ object DicomSourceGenerators {
        |  def vmOf(tag: Int): Option[Multiplicity] = tag match {
        |    case t if (t & 0x0000FFFF) == 0 => Some(Multiplicity.single) // group length
        |    case t if (t & 0x00010000) != 0 => // private creator ID
-       |      if ((tag & 0x0000FF00) == 0 && (tag & 0x000000F0) != 0)
+       |      if ((t & 0x0000FF00) == 0 && (t & 0x000000F0) != 0)
        |        Some(Multiplicity.single) // private creator data element
        |      else
        |        None // private tag
