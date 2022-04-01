@@ -10,7 +10,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ Await, ExecutionContextExecutor }
 
 class ModifyFlowTest
     extends TestKit(ActorSystem("ModifyFlowSpec"))
@@ -26,7 +27,10 @@ class ModifyFlowTest
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  override def afterAll(): Unit = system.terminate()
+  override def afterAll(): Unit = {
+    Await.ready(system.terminate(), 10.seconds)
+    ()
+  }
 
   "The modify flow" should "modify the value of the specified elements" in {
     val bytes = studyDate() ++ personNameJohnDoe()
@@ -47,8 +51,8 @@ class ModifyFlowTest
 
     source
       .runWith(TestSink.probe[DicomPart])
-      .expectHeader(Tag.StudyDate, VR.DA, 0)
-      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
+      .expectHeader(Tag.StudyDate, VR.DA, 0L)
+      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length.toLong)
       .expectValueChunk(mikeBytes)
       .expectDicomComplete()
   }
@@ -69,7 +73,7 @@ class ModifyFlowTest
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
-      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8L)
       .expectValueChunk(personNameJohnDoe().drop(8))
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
@@ -88,9 +92,9 @@ class ModifyFlowTest
 
     source
       .runWith(TestSink.probe[DicomPart])
-      .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
+      .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8L)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8L)
       .expectValueChunk(personNameJohnDoe().drop(8))
       .expectDicomComplete()
   }
@@ -107,9 +111,9 @@ class ModifyFlowTest
 
     source
       .runWith(TestSink.probe[DicomPart])
-      .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
+      .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8L)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8L)
       .expectValueChunk(personNameJohnDoe().drop(8))
       .expectDicomComplete()
   }
@@ -142,9 +146,9 @@ class ModifyFlowTest
 
     source
       .runWith(TestSink.probe[DicomPart])
-      .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
+      .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8L)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8L)
       .expectValueChunk(personNameJohnDoe().drop(8))
       .expectSequence(Tag.AbstractPriorCodeSequence)
       .expectSequenceDelimitation()
@@ -165,9 +169,9 @@ class ModifyFlowTest
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectSequenceDelimitation()
-      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8L)
       .expectValueChunk(personNameJohnDoe().drop(8))
-      .expectHeader(Tag.PatientID, VR.LO, patientID().length - 8)
+      .expectHeader(Tag.PatientID, VR.LO, patientID().length - 8L)
       .expectValueChunk(patientID().drop(8))
       .expectDicomComplete()
   }
@@ -188,7 +192,7 @@ class ModifyFlowTest
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectSequenceDelimitation()
-      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8L)
       .expectValueChunk(personNameJohnDoe().drop(8))
       .expectSequence(Tag.AbstractPriorCodeSequence)
       .expectSequenceDelimitation()
@@ -214,8 +218,8 @@ class ModifyFlowTest
 
     source
       .runWith(TestSink.probe[DicomPart])
-      .expectHeader(Tag.StudyDate, VR.DA, 0)
-      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
+      .expectHeader(Tag.StudyDate, VR.DA, 0L)
+      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length.toLong)
       .expectValueChunk(mikeBytes)
       .expectDicomComplete()
   }
@@ -258,11 +262,11 @@ class ModifyFlowTest
 
     source
       .runWith(TestSink.probe[DicomPart])
-      .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8)
+      .expectHeader(Tag.StudyDate, VR.DA, studyDate().length - 8L)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.SeriesDate, VR.DA, studyDate().length - 8)
+      .expectHeader(Tag.SeriesDate, VR.DA, studyDate().length - 8L)
       .expectValueChunk(studyDate().drop(8))
-      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().length - 8L)
       .expectValueChunk(personNameJohnDoe().drop(8))
       .expectDicomComplete()
   }
@@ -426,11 +430,11 @@ class ModifyFlowTest
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
-      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().drop(8).length)
+      .expectHeader(Tag.PatientName, VR.PN, personNameJohnDoe().drop(8).length.toLong)
       .expectValueChunk()
       .expectItemDelimitation()
       .expectItem()
-      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
+      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length.toLong)
       .expectValueChunk()
       .expectItemDelimitation()
       .expectSequenceDelimitation()
@@ -454,11 +458,11 @@ class ModifyFlowTest
       .runWith(TestSink.probe[DicomPart])
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
-      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
+      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length.toLong)
       .expectValueChunk()
       .expectItemDelimitation()
       .expectItem()
-      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
+      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length.toLong)
       .expectValueChunk()
       .expectItemDelimitation()
       .expectSequenceDelimitation()
@@ -483,7 +487,7 @@ class ModifyFlowTest
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
       .expectValueChunk()
-      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
+      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length.toLong)
       .expectValueChunk()
       .expectHeader(-1, VR.DA, 10)
       .expectValueChunk()
@@ -536,8 +540,8 @@ class ModifyFlowTest
 
     source
       .runWith(TestSink.probe[DicomPart])
-      .expectHeader(Tag.StudyDate, VR.DA, 0)
-      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
+      .expectHeader(Tag.StudyDate, VR.DA, 0L)
+      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length.toLong)
       .expectValueChunk(mikeBytes)
       .expectDicomComplete()
   }
@@ -567,7 +571,7 @@ class ModifyFlowTest
       .runWith(TestSink.probe[DicomPart])
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
-      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length)
+      .expectHeader(Tag.PatientName, VR.PN, mikeBytes.length.toLong)
       .expectValueChunk(mikeBytes)
       .expectDicomComplete()
   }

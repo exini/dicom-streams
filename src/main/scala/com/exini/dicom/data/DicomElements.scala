@@ -53,7 +53,7 @@ object DicomElements {
   case class ValueElement(tag: Int, vr: VR, value: Value, bigEndian: Boolean, explicitVR: Boolean)
       extends Element
       with ElementSet {
-    val length: Int                          = value.length
+    val length: Long                         = value.length.toLong
     def setValue(value: Value): ValueElement = copy(value = value.ensurePadding(vr))
     override def toBytes: ByteString         = toParts.map(_.bytes).reduce(_ ++ _)
     override def toParts: List[DicomPart] =
@@ -114,9 +114,9 @@ object DicomElements {
     override def toBytes: ByteString = toParts.map(_.bytes).reduce(_ ++ _)
     override def toParts: List[DicomPart] =
       if (value.length > 0)
-        ItemElement(value.length, bigEndian).toParts ::: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
+        ItemElement(value.length.toLong, bigEndian).toParts ::: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
       else
-        ItemElement(value.length, bigEndian).toParts ::: Nil
+        ItemElement(value.length.toLong, bigEndian).toParts ::: Nil
     override def toString: String = s"FragmentElement(length = $length)"
   }
 
@@ -213,7 +213,7 @@ object DicomElements {
     def toBytes: ByteString = toElements.map(_.toBytes).reduce(_ ++ _)
     def setElements(elements: Elements): Item = {
       val newLength = if (this.indeterminate) indeterminateLength else elements.toBytes(withPreamble = false).length
-      copy(elements = elements, length = newLength)
+      copy(elements = elements, length = newLength.toLong)
     }
     override def toString: String = s"Item(length = $length, elements size = ${elements.size})"
   }
@@ -318,9 +318,7 @@ object DicomElements {
               bigEndian
             ) :: Nil
           )
-          .getOrElse(Nil) :::
-        fragments.zipWithIndex.map { case (fragment, index) => fragment.toElement } :::
-        SequenceDelimitationElement(bigEndian) :: Nil
+          .getOrElse(Nil) ::: fragments.map(_.toElement) ::: SequenceDelimitationElement(bigEndian) :: Nil
     def setFragment(index: Int, fragment: Fragment): Fragments =
       copy(fragments = fragments.updated(index - 1, fragment))
     override def toString: String =

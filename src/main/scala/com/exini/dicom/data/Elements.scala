@@ -287,7 +287,7 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
           if (indeterminate)
             Item.fromElements(elements, indeterminateLength, bigEndian)
           else
-            Item.fromElements(elements, elements.toBytes(withPreamble = false).length, bigEndian)
+            Item.fromElements(elements, elements.toBytes(withPreamble = false).length.toLong, bigEndian)
         val updatedSequence = sequence + item
         tagPath.previous match {
           case EmptyTagPath    => setSequence(updatedSequence)
@@ -839,7 +839,7 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
         val offsets = f.offsets
           .map { o =>
             val description = s"Offsets table with ${o.length} offset(s)"
-            s"$indent  ${tagToString(Tag.Item)} na ($description) ${space1(description)} # ${space2(o.length * 4)} ${o.length * 4}, 1 Item" :: Nil
+            s"$indent  ${tagToString(Tag.Item)} na ($description) ${space1(description)} # ${space2(o.length * 4L)} ${o.length * 4}, 1 Item" :: Nil
           }
           .getOrElse(Nil)
         val fragments = f.fragments.map { f =>

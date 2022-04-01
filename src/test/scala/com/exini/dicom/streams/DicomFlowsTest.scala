@@ -29,7 +29,10 @@ class DicomFlowsTest
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  override def afterAll(): Unit = system.terminate()
+  override def afterAll(): Unit = {
+    Await.ready(system.terminate(), 10.seconds)
+    ()
+  }
 
   "A print flow" should "not change incoming elements" in {
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()

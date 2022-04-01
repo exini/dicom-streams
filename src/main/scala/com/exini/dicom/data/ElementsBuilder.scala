@@ -16,12 +16,11 @@
 
 package com.exini.dicom.data
 
-import java.time.ZoneOffset
-
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.Elements._
 import org.slf4j.{ Logger, LoggerFactory }
 
+import java.time.ZoneOffset
 import scala.collection.mutable.ArrayBuffer
 
 case class ElementAndLength(element: Element, var bytesLeft: Long)
@@ -47,13 +46,13 @@ class ElementsBuilder() {
         this
 
       case e: ValueElement =>
-        subtractLength(e.length + (if (e.explicitVR) e.vr.headerLength else 8))
+        subtractLength(e.length + (if (e.explicitVR) e.vr.headerLength.toLong else 8L))
         val builder = builderStack.head
         builder += e
         maybeDelimit()
 
       case e: FragmentsElement =>
-        subtractLength(if (e.explicitVR) e.vr.headerLength else 8)
+        subtractLength(if (e.explicitVR) e.vr.headerLength.toLong else 8L)
         updateFragments(Some(Fragments.empty(e.tag, e.vr, e.bigEndian, e.explicitVR)))
         maybeDelimit()
 
@@ -102,7 +101,7 @@ class ElementsBuilder() {
 
       case e =>
         log.warn(s"Unexpected element $e")
-        subtractLength(e.toBytes.length)
+        subtractLength(e.toBytes.length.toLong)
         maybeDelimit()
     }
 
@@ -113,7 +112,7 @@ class ElementsBuilder() {
     * @return this builder
     */
   def !!(element: Element): ElementsBuilder = {
-    subtractLength(element.toBytes.length)
+    subtractLength(element.toBytes.length.toLong)
     maybeDelimit()
   }
 
@@ -153,7 +152,7 @@ class ElementsBuilder() {
   }
   private def endSequence(): Unit = {
     val seq        = sequenceStack.head
-    val seqLength  = if (seq.indeterminate) seq.length else seq.toBytes.length - (if (seq.explicitVR) 12 else 8)
+    val seqLength  = if (seq.indeterminate) seq.length else seq.toBytes.length.toLong - (if (seq.explicitVR) 12L else 8L)
     val updatedSeq = new Sequence(seq.tag, seqLength, seq.items, seq.bigEndian, seq.explicitVR)
     val builder    = builderStack.head
     builder += updatedSeq

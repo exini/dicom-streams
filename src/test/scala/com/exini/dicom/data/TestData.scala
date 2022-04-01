@@ -110,7 +110,7 @@ object TestData {
     tagToBytes(Tag.CTDIPhantomTypeCodeSequence) ++ ByteString('U', 'N', 0, 0, 0xff, 0xff, 0xff, 0xff)
 
   def waveformSeqStart(bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString =
-    sequence(Tag.WaveformSequence, bigEndian)
+    sequence(Tag.WaveformSequence, bigEndian, explicitVR)
 
   def pixelData(length: Int, bigEndian: Boolean = false, explicitVR: Boolean = true): ByteString =
     element(Tag.PixelData, ByteString(new Array[Byte](length)), bigEndian, explicitVR)
