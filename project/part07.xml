@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xl="http://www.w3.org/1999/xlink" label="PS3.7" version="5.0" xml:id="PS3.7">
   <title>PS3.7</title>
-  <subtitle>DICOM PS3.7 2019c - Message Exchange</subtitle>
+  <subtitle>DICOM PS3.7 2023b - Message Exchange</subtitle>
   <info>
     <author>
       <orgname>DICOM Standards Committee</orgname>
     </author>
     <copyright>
-      <year>2019</year>
+      <year>2023</year>
       <holder>NEMA</holder>
     </copyright>
       <legalnotice>
@@ -419,35 +419,35 @@
                     <glossterm>Attribute</glossterm>
                     <glossdef>
                         <para xml:id="para_cf1c950d-06cd-4d93-bb87-08c5681125ee">
-<olink targetdoc="PS3.1" targetptr="glossentry_Attribute"/>.</para>
+<olink targetdoc="PS3.1" targetptr="glossentry_Attribute" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_Command" xreflabel="Command">
                     <glossterm>Command</glossterm>
                     <glossdef>
                         <para xml:id="para_9c77bff1-6371-4397-9e6b-042b7ad6277e">
-<olink targetdoc="PS3.1" targetptr="glossentry_Command"/>.</para>
+<olink targetdoc="PS3.1" targetptr="glossentry_Command" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_CommandStream" xreflabel="Command Stream">
                     <glossterm>Command Stream</glossterm>
                     <glossdef>
                         <para xml:id="para_d4e06e32-9ad2-42ee-b332-391260946139">
-<olink targetdoc="PS3.1" targetptr="glossentry_CommandStream"/>.</para>
+<olink targetdoc="PS3.1" targetptr="glossentry_CommandStream" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_DataStream" xreflabel="Data Stream">
                     <glossterm>Data Stream</glossterm>
                     <glossdef>
                         <para xml:id="para_e5fb897a-5aba-4911-997d-88a634a48dd5">
-<olink targetdoc="PS3.1" targetptr="glossentry_DataStream"/>.</para>
+<olink targetdoc="PS3.1" targetptr="glossentry_DataStream" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_Message" xreflabel="Message">
                     <glossterm>Message</glossterm>
                     <glossdef>
                         <para xml:id="para_3f8985fa-4622-4005-bb67-05cb04ac49fb">
-<olink targetdoc="PS3.1" targetptr="glossentry_Message"/>.</para>
+<olink targetdoc="PS3.1" targetptr="glossentry_Message" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_ServiceObjectPairClass" xreflabel="Service-Object Pair Class (SOP Class)">
@@ -455,7 +455,7 @@
                     <acronym>SOP Class</acronym>
                     <glossdef>
                         <para xml:id="para_d817266c-7b16-4f0d-b445-1cc5ac471535">
-<olink targetdoc="PS3.1" targetptr="glossentry_ServiceObjectPairClass"/>.</para>
+<olink targetdoc="PS3.1" targetptr="glossentry_ServiceObjectPairClass" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
 
@@ -467,7 +467,7 @@
                     <glossterm>DICOM Upper Layer Service</glossterm>
                     <glossdef>
                         <para xml:id="para_cbe60261-1d0b-4e56-9976-7a46e9d64e64">
-<olink targetdoc="PS3.8" targetptr="glossentry_DICOMUpperLayerService"/>.</para>
+<olink targetdoc="PS3.8" targetptr="glossentry_DICOMUpperLayerService" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
             </glossdiv>
@@ -479,7 +479,7 @@
                     <glossterm>Service Class</glossterm>
                     <glossdef>
                         <para xml:id="para_8eaf6120-8fa9-462b-83ea-17ca2a1ae13f">
-<olink targetdoc="PS3.4" targetptr="glossentry_ServiceClass"/>.</para>
+<olink targetdoc="PS3.4" targetptr="glossentry_ServiceClass" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_ServiceClassUser" xreflabel="Service Class User (SCU)">
@@ -487,7 +487,7 @@
                     <acronym>SCU</acronym>
                     <glossdef>
                         <para xml:id="para_64e262c0-ca44-4150-8964-65be3bb7602c">
-<olink targetdoc="PS3.4" targetptr="glossentry_ServiceClassUser"/>.</para>
+<olink targetdoc="PS3.4" targetptr="glossentry_ServiceClassUser" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_ServiceClassProvider" xreflabel="Service Class Provider (SCP)">
@@ -495,7 +495,7 @@
                     <acronym>SCP</acronym>
                     <glossdef>
                         <para xml:id="para_d9b29f4d-7253-4a1c-be92-acbc14a9c36a">
-<olink targetdoc="PS3.4" targetptr="glossentry_ServiceClassProvider"/>.</para>
+<olink targetdoc="PS3.4" targetptr="glossentry_ServiceClassProvider" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_ServiceObjectPairInstance" xreflabel="Service-Object Pair Instance (SOP Instance)">
@@ -503,14 +503,14 @@
                     <acronym>SOP Instance</acronym>
                     <glossdef>
                         <para xml:id="para_2e7e6955-0206-4cc4-94c7-88f02c7fe363">
-<olink targetdoc="PS3.4" targetptr="glossentry_ServiceObjectPairInstance"/>.</para>
+<olink targetdoc="PS3.4" targetptr="glossentry_ServiceObjectPairInstance" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_RelatedGeneralSOPClass" xreflabel="Related General SOP Class">
                     <glossterm>Related General SOP Class</glossterm>
                     <glossdef>
                         <para xml:id="para_f3a04b8a-0ff4-4fea-9dd2-a7df569f63b3">
-<olink targetdoc="PS3.4" targetptr="glossentry_RelatedGeneralSOPClass"/>.</para>
+<olink targetdoc="PS3.4" targetptr="glossentry_RelatedGeneralSOPClass" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
             </glossdiv>
@@ -522,14 +522,14 @@
                     <glossterm>Data Element</glossterm>
                     <glossdef>
                         <para xml:id="para_df12b47e-bab1-4176-a433-2b31e9f92a91">
-<olink targetdoc="PS3.5" targetptr="glossentry_DataElement"/>.</para>
+<olink targetdoc="PS3.5" targetptr="glossentry_DataElement" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_DataSet" xreflabel="Data Set">
                     <glossterm>Data Set</glossterm>
                     <glossdef>
                         <para xml:id="para_25abcf40-abfa-48dc-a604-66c17e1642a5">
-<olink targetdoc="PS3.5" targetptr="glossentry_DataSet"/>.</para>
+<olink targetdoc="PS3.5" targetptr="glossentry_DataSet" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
                 <glossentry xml:id="glossentry_UniqueIdentifier" xreflabel="Unique Identifier (UID)">
@@ -537,7 +537,7 @@
                     <acronym>UID</acronym>
                     <glossdef>
                         <para xml:id="para_1093a8dd-2fe3-4fbc-aae7-763f86229b9a">
-<olink targetdoc="PS3.8" targetptr="glossentry_UniqueIdentifier"/>.</para>
+<olink targetdoc="PS3.8" targetptr="glossentry_UniqueIdentifier" xrefstyle="template:See %t in %o"/>.</para>
                     </glossdef>
                 </glossentry>
 
@@ -732,7 +732,7 @@
   <varlistentry>
 <term>PDV</term>
 <listitem>
-<para xml:id="para_4e6c9796-0342-4afd-b2a3-34b137b64eef">Protocol Data Value</para>
+    <para xml:id="para_4e6c9796-0342-4afd-b2a3-34b137b64eef">Presentation Data Value</para>
 </listitem>
 </varlistentry>
   <varlistentry>
@@ -768,7 +768,7 @@
   <varlistentry>
 <term>UL</term>
 <listitem>
-<para xml:id="para_d62d31a3-46d9-47ec-845d-b09cc4ff62a1">Upper Layers</para>
+<para xml:id="para_d62d31a3-46d9-47ec-845d-b09cc4ff62a1">Upper Layer</para>
 </listitem>
 </varlistentry>
   </variablelist>
@@ -836,10 +836,13 @@
               <para xml:id="para_168e81ad-b03c-47db-9fd4-9260b97a465c">the DICOM Message Service and Upper Layer Service, which provides independence from specific physical networking communication support and protocols such as TCP/IP,</para>
           </listitem>
           <listitem>
-              <para xml:id="para_67456292-d103-484c-a998-8444e64544ec">the DICOM Web Service API and HTTP Service, which allows use of common hypertext and associated protocols for transport of DICOM services, or</para>
+              <para xml:id="para_67456292-d103-484c-a998-8444e64544ec">the DICOM Web Service API and HTTP Service, which allows use of common hypertext and associated protocols for transport of DICOM services,</para>
           </listitem>
           <listitem>
-              <para xml:id="para_f3864a75-5bc3-47fd-a2a7-ed2d35ec99b5">the Basic DICOM File Service, which provides access to Storage Media independently from specific physical media storage formats and file structures.</para>
+              <para xml:id="para_f3864a75-5bc3-47fd-a2a7-ed2d35ec99b5">the Basic DICOM File Service, which provides access to Storage Media independently from specific physical media storage formats and file structures, or</para>
+          </listitem>
+          <listitem>
+              <para xml:id="para_ccc9facf-8efc-4ba0-9f83-3b35987de5da">DICOM Real-Time Communication, which provides real-time transport of DICOM metadata based on SMPTE and RTP.</para>
           </listitem>
       </itemizedlist>
       <para xml:id="para_b6116be0-8f53-48fe-a1e0-55564662e507">PS3.7 focuses on the DICOM Message Service and here the OSI Basic Reference Model is used to model the interconnection of medical imaging equipment.
@@ -1610,7 +1613,7 @@
 <section label="8.2" status="2" xml:id="sect_8.2">
     <title>Association Protocol</title>
   
-  <para xml:id="para_7dddd977-4921-45ac-a73f-a9a77770ab1f">The establishment of an Association involves two DIMSE Service Users, one that is the Association-requester and one that is the Association-acceptor. A DIMSE Service User may initiate an Association establishment by using the A-ASSOCIATE service described in <olink targetdoc="PS3.8" targetptr="PS3.8" xrefstyle="select: labelnumber"/>.</para>
+  <para xml:id="para_7dddd977-4921-45ac-a73f-a9a77770ab1f">The establishment of an Association involves two DIMSE Service Users, one that is the Association-requestor and one that is the Association-acceptor. A DIMSE Service User may initiate an Association establishment by using the A-ASSOCIATE service described in <olink targetdoc="PS3.8" targetptr="PS3.8" xrefstyle="select: labelnumber"/>.</para>
   <para xml:id="para_f5e4307f-c8a2-4bf9-9ba6-4997ca3a64ea">Included in the parameters of the A-ASSOCIATE service is the Application Context that specifies, among other things, the rules required for the coordination of initialization information corresponding to different DICOM Application Entities. The Application Contexts permitted for DIMSE are specified in <xref linkend="chapter_A" xrefstyle="template:Annex %n"/>.</para>
   </section>
 <section label="8.3" status="2" xml:id="sect_8.3">
@@ -1815,13 +1818,13 @@
   <para xml:id="para_98793424-a21b-4a97-b815-a440c853491a">This parameter contains the error or success notification for the operation. It shall be included by the performing DIMSE Service User in the response/confirmation. The following types of status may occur in a response/confirmation (see also <xref linkend="chapter_C" xrefstyle="template: Annex %n"/>):</para>
   <orderedlist numeration="loweralpha">
     <listitem>
-      <para xml:id="para_93acf72d-d182-4d55-b80f-d725e50785dc">Refused: Out of Resources (Status value is Service Class specific) - This indicates that the peer DIMSE Service User was unable to store the composite SOP Instance because it was out of resources.</para>
+      <para xml:id="para_93acf72d-d182-4d55-b80f-d725e50785dc">Refused: Out of resources (Status value is Service Class specific) - This indicates that the peer DIMSE Service User was unable to store the composite SOP Instance because it was out of resources.</para>
 </listitem>
     <listitem>
-<para xml:id="para_1416a945-3d5a-4aac-ba7a-ce3ace5eb943">Failed: SOP Class Not Supported (0112H) - This indicates that the peer DIMSE Service User was unable to store the composite SOP Instance because the SOP Class is not supported,</para>
+        <para xml:id="para_1416a945-3d5a-4aac-ba7a-ce3ace5eb943">Refused: SOP Class not supported (0122H) - This indicates that the peer DIMSE Service User was unable to store the composite SOP Instance because the SOP Class is not supported,</para>
 </listitem>
     <listitem>
-      <para xml:id="para_6ddd8166-0685-4651-a0bf-41fe6b7afad1">Error: Cannot Understand (Status value is Service Class specific) - This indicates that the peer DIMSE Service User was unable to store the composite SOP Instance because it cannot understand certain Data Elements.</para>
+      <para xml:id="para_6ddd8166-0685-4651-a0bf-41fe6b7afad1">Error: Cannot understand (Status value is Service Class specific) - This indicates that the peer DIMSE Service User was unable to store the composite SOP Instance because it Cannot understand certain Data Elements.</para>
 </listitem>
     <listitem>
       <para xml:id="para_dc33a875-cae2-47bb-85be-6b78fc9bf764">Error: Data Set does not match SOP Class (Status value is Service Class specific) - This indicates that the peer DIMSE Service User was unable to store the composite SOP Instance because the Data Set does not match the SOP Class.</para>
@@ -1833,19 +1836,19 @@
 <para xml:id="para_eefa62e5-cff0-47ab-838d-5db3c36a6231">Success (0000H) - This indicates that the composite SOP Instance was successfully stored.</para>
 </listitem>
     <listitem>
-      <para xml:id="para_d1f7dcbf-2bcc-4f38-9f06-66d6cabe54d6">Duplicate Invocation (0210H) - Indicates that the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+      <para xml:id="para_d1f7dcbf-2bcc-4f38-9f06-66d6cabe54d6">Duplicate invocation (0210H) - Indicates that the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
     <listitem>
-      <para xml:id="para_bacadf2e-81fa-4aaa-abdc-640104faf686">Invalid Object Instance (0117H) - Indicates that the SOP Instance UID specified implied a violation of the UID construction rules.</para>
+      <para xml:id="para_bacadf2e-81fa-4aaa-abdc-640104faf686">Invalid SOP Instance (0117H) - Indicates that the SOP Instance UID specified implied a violation of the UID construction rules.</para>
 </listitem>
     <listitem>
-      <para xml:id="para_a1b99766-e2a1-492f-8dbc-c8711cc65e37">Mistyped Argument (0212H) - Indicates that one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
+      <para xml:id="para_a1b99766-e2a1-492f-8dbc-c8711cc65e37">Mistyped argument (0212H) - Indicates that one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
     <listitem>
-      <para xml:id="para_99679638-34b6-43fd-9759-9ea9c2a5d107">Unrecognized Operation (0211H) - Indicates that the operation is not one of those agreed between the DIMSE Service Users.</para>
+      <para xml:id="para_99679638-34b6-43fd-9759-9ea9c2a5d107">Unrecognized operation (0211H) - Indicates that the operation is not one of those agreed between the DIMSE Service Users.</para>
 </listitem>
     <listitem>
-      <para xml:id="para_e2068937-12cc-46f6-bfb5-347457b4915f">Refused: Not Authorized (0124H) - Indicates that the peer DIMSE Service User was not authorized to store the composite SOP Instance.</para>
+      <para xml:id="para_e2068937-12cc-46f6-bfb5-347457b4915f">Refused: Not authorized (0124H) - Indicates that the peer DIMSE Service User was not authorized to store the composite SOP Instance.</para>
 </listitem>
   </orderedlist>
 </section>
@@ -2044,16 +2047,19 @@
                   <para xml:id="para_8850be41-96bd-42b7-8c55-990bc880b5a4">Pending (Status value is Service Class specific) - This indicates that processing of the matches is initiated or continuing. It shall contain a matching Identifier.</para>
               </listitem>
               <listitem>
-                  <para xml:id="para_a05b8cfe-0a23-4309-a58c-a5fb37a639f0">Refused: Out of Resources (Status value is Service Class specific) - Indicates that processing of the C-FIND has been terminated because it was out of resources. This may be the initial response to the C-FIND, or may be sent after a number of pending C-FIND responses. This response shall not contain a matching Identifier.</para>
+                  <para xml:id="para_a05b8cfe-0a23-4309-a58c-a5fb37a639f0">Refused: Out of resources (Status value is Service Class specific) - Indicates that processing of the C-FIND has been terminated because it was out of resources. This may be the initial response to the C-FIND, or may be sent after a number of pending C-FIND responses. This response shall not contain a matching Identifier.</para>
               </listitem>
               <listitem>
-                  <para xml:id="para_1579ffc7-0ec3-4a73-abb2-ff1b6d2fe939">Refused: SOP Class Not Supported (0122H) - Indicates that processing of the C-FIND has been terminated because the SOP Class was not supported. This response shall not contain a matching Identifier.</para>
+                  <para xml:id="para_1579ffc7-0ec3-4a73-abb2-ff1b6d2fe939">Refused: SOP Class not supported (0122H) - Indicates that processing of the C-FIND has been terminated because the SOP Class was not supported. This response shall not contain a matching Identifier.</para>
               </listitem>
               <listitem>
                   <para xml:id="para_43499368-f3cb-44f1-b2bd-cd176d7b6266">Cancel (FE00H) - Indicates that the processing of the C-FIND has been terminated due to a C-FIND Cancel indication primitive. The response shall not contain an Identifier.</para>
               </listitem>
               <listitem>
                   <para xml:id="para_9a20b99a-9bc1-4bda-84c9-79dd62b6cba5">Failed (Status value is Service Class specific) - Indicates that the C-FIND operation failed at the performing DIMSE Service User.</para>
+              </listitem>
+              <listitem>
+                  <para xml:id="para_01241beb-78f1-46ea-89e6-5e10741796e7">Warning (Status value is Service Class specific) - Indicates that the performing DIMSE Service User has terminated the C-FIND operation, and the set of returned matching Identifiers may not be complete.</para>
               </listitem>
           </orderedlist>
       </section>
@@ -2097,7 +2103,7 @@
 <para xml:id="para_cf45e4ab-f1cf-4420-b2a1-364ba6851896">For each match, the performing DIMSE Service User issues a C-FIND response with the status set to Pending and a matching Identifier.</para>
 </listitem>
 <listitem>
-<para xml:id="para_9d955709-5377-4e58-9bb1-d55051b12f54">When the C-FIND operation completes (either in success or in failure), the performing DIMSE Service User issues a C-FIND response with the status set to either Refused, Failed, or Success to the DIMSE Service Provider.</para>
+    <para xml:id="para_9d955709-5377-4e58-9bb1-d55051b12f54">When the C-FIND operation completes (either in success or in failure), the performing DIMSE Service User issues a C-FIND response with the status set to either Refused, Failed, Warning, or Success to the DIMSE Service Provider.</para>
 </listitem>
 </orderedlist>
   <para xml:id="para_c3a574c8-8777-4363-9536-27d7361bc48b">The following C-FIND service procedures apply to the DIMSE Service Provider:</para>
@@ -2348,10 +2354,10 @@
   <para xml:id="para_69f09355-8e78-4f62-8d63-9039d529857b">Pending (Status value is Service Class specific) - This indicates that processing of the matches and sub-operations is initiated or continuing.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_68c10ed1-de9e-484c-be20-4504e2568bfd">Refused: Out of Resources (Status value is Service Class specific) - Indicates that processing of the C-GET has been terminated because it was out of resources. This may be the initial response to the C-GET or may be sent after a number of Pending statuses.</para>
+  <para xml:id="para_68c10ed1-de9e-484c-be20-4504e2568bfd">Refused: Out of resources (Status value is Service Class specific) - Indicates that processing of the C-GET has been terminated because it was out of resources. This may be the initial response to the C-GET or may be sent after a number of Pending statuses.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_57aa15b9-133c-494a-b46d-47a2b6a0c5fb">Refused: SOP Class Not Supported (0122H) - Indicates that processing of the C-GET has been terminated because the SOP Class was not supported.</para>
+  <para xml:id="para_57aa15b9-133c-494a-b46d-47a2b6a0c5fb">Refused: SOP Class not supported (0122H) - Indicates that processing of the C-GET has been terminated because the SOP Class was not supported.</para>
 </listitem>
 <listitem>
   <para xml:id="para_54b84554-c8b7-4c68-afd3-80dc23b79bed">Cancel (FE00H) - Indicates that processing of the C-GET has been terminated due to a C-GET Cancel indication primitive.</para>
@@ -2360,16 +2366,16 @@
   <para xml:id="para_d9670778-ee08-44c8-b8dd-5d285e6c271c">Failed (Status value is Service Class specific) - Indicates that the C-GET operation failed at the performing DIMSE Service User.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_4309e45c-2baf-4fbf-baf0-7dd808f8194e">Duplicate Invocation (0210H) - Indicates that the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+  <para xml:id="para_4309e45c-2baf-4fbf-baf0-7dd808f8194e">Duplicate invocation (0210H) - Indicates that the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_74a4c4f3-28c4-4018-980b-83fa3e247db9">Mistyped Argument (0212H) - Indicates that one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
+  <para xml:id="para_74a4c4f3-28c4-4018-980b-83fa3e247db9">Mistyped argument (0212H) - Indicates that one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_46a99c07-6782-456a-99ce-adbdba467778">Unrecognized Operation (0211H) - Indicates that the operation is not one of those agreed between the DIMSE Service Users.</para>
+  <para xml:id="para_46a99c07-6782-456a-99ce-adbdba467778">Unrecognized operation (0211H) - Indicates that the operation is not one of those agreed between the DIMSE Service Users.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_960782bd-f9f4-4d1f-a047-d479a890ca94">Refused: Not Authorized (0124H) - Indicates that the peer DIMSE Service User was not authorized to invoke the C-FIND operation.</para>
+  <para xml:id="para_960782bd-f9f4-4d1f-a047-d479a890ca94">Refused: Not authorized (0124H) - Indicates that the peer DIMSE Service User was not authorized to invoke the C-FIND operation.</para>
 </listitem>
     <listitem>
       <para xml:id="para_32b6e760-0652-40f1-8b97-5d8cf8dcfd56">Warning (Status value is Service Class specific) - This indicates that the peer DIMSE Service User was able to perform sub-operations but detected a probable error with one or more of them.</para>
@@ -2709,13 +2715,13 @@
   <para xml:id="para_7edfbf9d-cbf7-4a20-86be-b9c19f11e20d">Pending (Status value is Service Class specific) - This indicates that procession of the matches and sub-operations is initiated or continuing.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_cfe66527-6476-4e3c-bb5f-0dde5ec2bfcd">Refused: Out of Resources (Status value is Service Class specific) - Indicates that processing of the C-MOVE has been terminated because it was out of resources. This may be the initial response to the C-MOVE or may be sent after a number of Pending statuses.</para>
+  <para xml:id="para_cfe66527-6476-4e3c-bb5f-0dde5ec2bfcd">Refused: Out of resources (Status value is Service Class specific) - Indicates that processing of the C-MOVE has been terminated because it was out of resources. This may be the initial response to the C-MOVE or may be sent after a number of Pending statuses.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_a539ad29-f10f-407e-9ba8-18bbb5d808f4">Refused: SOP Class Not Supported (0122H) - Indicates that processing of the C-MOVE has been terminated because the SOP Class was not supported.</para>
+  <para xml:id="para_a539ad29-f10f-407e-9ba8-18bbb5d808f4">Refused: SOP Class not supported (0122H) - Indicates that processing of the C-MOVE has been terminated because the SOP Class was not supported.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_c7ccff60-ca2d-496c-b7c6-d442401adf97">Refused: Move Destination Unknown (Status value is Service Class specific) - Indicates that processing of the C-MOVE has been terminated because the Move destination was unknown.</para>
+  <para xml:id="para_c7ccff60-ca2d-496c-b7c6-d442401adf97">Refused: Move Destination unknown (Status value is Service Class specific) - Indicates that processing of the C-MOVE has been terminated because the Move destination was unknown.</para>
 </listitem>
 <listitem>
   <para xml:id="para_5d3d21ab-5466-43dc-80de-9b888f928594">Cancel (FE00H) - Indicates that processing of the C-MOVE has been terminated due to a C-MOVE Cancel indication primitive.</para>
@@ -2724,16 +2730,16 @@
   <para xml:id="para_7737dbe2-f7a1-40e0-89a1-164c4a417f06">Failed (Status value is Service Class specific) - Indicates that the C-MOVE operation failed at the performing DIMSE Service User.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_147d02b7-b271-4783-89ae-a5349ee2b7ac">Duplicate Invocation (0210H) - Indicates that the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+  <para xml:id="para_147d02b7-b271-4783-89ae-a5349ee2b7ac">Duplicate invocation (0210H) - Indicates that the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_b54110d0-1154-4026-b0fb-0eb0b940e05e">Mistyped Argument (0212H) - Indicates that one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
+  <para xml:id="para_b54110d0-1154-4026-b0fb-0eb0b940e05e">Mistyped argument (0212H) - Indicates that one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_893c6c5d-f4fb-4c32-b51b-7b89be2bfef8">Unrecognized Operation (0211H) - Indicates that the operation is not one of those agreed between the DIMSE Service Users.</para>
+  <para xml:id="para_893c6c5d-f4fb-4c32-b51b-7b89be2bfef8">Unrecognized operation (0211H) - Indicates that the operation is not one of those agreed between the DIMSE Service Users.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_7b3eb0f7-e411-464e-ad20-b57618467419">Refused: Not Authorized (0124H) - Indicates that the peer DIMSE Service User was not authorized to invoke the C-MOVE operation.</para>
+  <para xml:id="para_7b3eb0f7-e411-464e-ad20-b57618467419">Refused: Not authorized (0124H) - Indicates that the peer DIMSE Service User was not authorized to invoke the C-MOVE operation.</para>
 </listitem>
     <listitem>
       <para xml:id="para_f72fbcac-98b7-4181-9436-70f7713ecad2">Warning (Status value is Service Class specific) - This indicates that the peer DIMSE Service User was able to perform sub-operations but detected a probable error with one or more of them.</para>
@@ -2939,16 +2945,16 @@
   <para xml:id="para_b9bf63c7-79c5-4356-963b-981f8a5eb492">Success (0000H)</para>
 </listitem>
 <listitem>
-  <para xml:id="para_79c6de52-7146-4b91-b0de-acbaf8472971">Refused: SOP Class Not Supported (0122H) - Indicates that a different SOP Class than the Verification SOP Class was specified, which was not supported.</para>
+  <para xml:id="para_79c6de52-7146-4b91-b0de-acbaf8472971">Refused: SOP Class not supported (0122H) - Indicates that a different SOP Class than the Verification SOP Class was specified, which was not supported.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_f40859ce-07a4-439c-b30d-4989baacfebf">Duplicate Invocation (0210H) - Indicates that the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+  <para xml:id="para_f40859ce-07a4-439c-b30d-4989baacfebf">Duplicate invocation (0210H) - Indicates that the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
 <listitem>
   <para xml:id="para_2da0f57e-bf80-4a35-a1b7-f1d336e0733a">Mistyped argument (0212H) - Indicates that one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
 <listitem>
-  <para xml:id="para_8e8de79d-d546-47d8-a989-cdbc8488f374">Unrecognized Operation (0211H) - Indicates that a different SOP Class than the Verification SOP Class was specified, which does not recognize a C-ECHO operation.</para>
+  <para xml:id="para_8e8de79d-d546-47d8-a989-cdbc8488f374">Unrecognized operation (0211H) - Indicates that a different SOP Class than the Verification SOP Class was specified, which does not recognize a C-ECHO operation.</para>
 </listitem>
 </orderedlist>
   </section>
@@ -3885,7 +3891,7 @@
 <para xml:id="para_40781e42-2299-4921-9a3f-8efa9d4e664f">construct a Message conveying the (final) C-FIND-RSP</para>
 </listitem>
       <listitem>
-<para xml:id="para_a0274280-4b99-4714-b056-b02e011c8c59">end the Message using the P-DATA request service (see 8.1)</para>
+<para xml:id="para_a0274280-4b99-4714-b056-b02e011c8c59">send the Message using the P-DATA request service (see 8.1)</para>
 </listitem>
     </orderedlist>
   </listitem>
@@ -5544,31 +5550,31 @@
   <para xml:id="para_74783bdc-98ef-4a66-8e64-31a37df6b54c">This parameter contains the error or success notification for the operation. It shall be included by the performing DIMSE Service User in any response/confirmation. The following types of status may occur (see also <xref linkend="chapter_C" xrefstyle="template: Annex %n"/>):</para>
 <itemizedlist>
   <listitem>
-<para xml:id="para_2a089c8b-456c-4283-9f86-00190a7e3a40">Class-Instance Conflict (0119H) -  the specified SOP Instance is not a member of the specified SOP class.</para>
+<para xml:id="para_2a089c8b-456c-4283-9f86-00190a7e3a40">Class-Instance conflict (0119H) -  the specified SOP Instance is not a member of the specified SOP class.</para>
 </listitem>
   <listitem>
-<para xml:id="para_df0d2602-b28d-4a11-ba6a-5654f9fe54e0">Duplicate Invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+<para xml:id="para_df0d2602-b28d-4a11-ba6a-5654f9fe54e0">Duplicate invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
   <listitem>
-<para xml:id="para_f59887e8-5a44-4c67-b1a5-15bc4218af95">Invalid Argument Value (0115H) - the event information value specified was out of range or otherwise inappropriate.</para>
+<para xml:id="para_f59887e8-5a44-4c67-b1a5-15bc4218af95">Invalid argument value (0115H) - the event information value specified was out of range or otherwise inappropriate.</para>
 </listitem>
   <listitem>
-<para xml:id="para_115fd909-aa9c-4792-81b7-2aba8f917c68">Invalid Object Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
+<para xml:id="para_115fd909-aa9c-4792-81b7-2aba8f917c68">Invalid SOP Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
 </listitem>
   <listitem>
-<para xml:id="para_07b20026-aada-4ec3-ae52-c0c9d43bf33d">Mistyped Argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
+<para xml:id="para_07b20026-aada-4ec3-ae52-c0c9d43bf33d">Mistyped argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_87c94342-6343-4fcb-9603-e75c1e9cfe0b">No Such Argument (0114H) - the event information specified was not recognized.</para>
+<para xml:id="para_87c94342-6343-4fcb-9603-e75c1e9cfe0b">No such argument (0114H) - the event information specified was not recognized.</para>
 </listitem>
   <listitem>
-<para xml:id="para_a4121313-d338-49b8-a2b4-0fbfff56ab50">No Such Event Type (0113H) - the event type specified was not recognized.</para>
+<para xml:id="para_a4121313-d338-49b8-a2b4-0fbfff56ab50">No such Event Type (0113H) - the event type specified was not recognized.</para>
 </listitem>
   <listitem>
-<para xml:id="para_2832575e-a803-4da4-88c9-4905ae57e53e">No Such SOP Class (0118H) - the SOP Class was not recognized.</para>
+<para xml:id="para_2832575e-a803-4da4-88c9-4905ae57e53e">No such SOP Class (0118H) - the SOP Class was not recognized.</para>
 </listitem>
   <listitem>
-<para xml:id="para_f7cdf78c-f4a0-4297-acbe-35b4c9ce005b">No Such SOP Instance (0112H) - the SOP Instance was not recognized.</para>
+<para xml:id="para_f7cdf78c-f4a0-4297-acbe-35b4c9ce005b">No such SOP Instance (0112H) - the SOP Instance was not recognized.</para>
 </listitem>
   <listitem>
 <para xml:id="para_6d42bb01-7272-49be-9b47-a6ae3061b34a">Processing Failure (0110H) - a general failure in processing the operation was encountered.</para>
@@ -5580,7 +5586,7 @@
 <para xml:id="para_aa33f5b9-a799-4825-9b24-abc0cae92509">Success (0000H) - successful notification.</para>
 </listitem>
   <listitem>
-<para xml:id="para_7126e6f1-17da-4047-b0ed-5066286ca3b9">Unrecognized Operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
+<para xml:id="para_7126e6f1-17da-4047-b0ed-5066286ca3b9">Unrecognized operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
 </listitem>
 </itemizedlist>
   </section>
@@ -5612,7 +5618,7 @@
 <section label="10.1.2" status="3" xml:id="sect_10.1.2">
     <title>N-GET Service</title>
   
-  <para xml:id="para_3c96fc65-282d-48f9-b676-7fbe7eee5c31">The N-GET service is used by a DIMSE Service User to retrieve Attribute values from a peer DIMSE Service User. It is a confirmed service.</para>
+  <para xml:id="para_3c96fc65-282d-48f9-b676-7fbe7eee5c31">The N-GET service is used by a DIMSE Service User to retrieve Attribute Values from a peer DIMSE Service User. It is a confirmed service.</para>
   <section label="10.1.2.1" status="4" xml:id="sect_10.1.2.1">
     <title>N-GET Parameters</title>
   
@@ -5791,25 +5797,25 @@
   <para xml:id="para_0d753bbb-9e15-4e72-8ddb-d8a6ca195807">This parameter contains the error or success notification for the operation. It shall be included by the performing DIMSE Service User in any response/confirmation. The following types of status may occur (see also <xref linkend="chapter_C" xrefstyle="template: Annex %n"/>):</para>
 <itemizedlist>
   <listitem>
-<para xml:id="para_45dfd1c5-2ad6-4247-b826-40e5c68c4326">Attribute List Error (0107H) - one or more Attribute Values were not read because the specified Attribute was not recognized. The Attribute Values that could be read are returned.</para>
+<para xml:id="para_45dfd1c5-2ad6-4247-b826-40e5c68c4326">Attribute list error (0107H) - one or more Attribute Values were not read because the specified Attribute was not recognized. The Attribute Values that could be read are returned.</para>
 </listitem>
   <listitem>
-<para xml:id="para_dd119344-f551-42d2-a916-68eb919d7073">Class-Instance Conflict (0119H) -  the specified SOP Instance is not a member of the specified SOP Class.</para>
+<para xml:id="para_dd119344-f551-42d2-a916-68eb919d7073">Class-Instance conflict (0119H) -  the specified SOP Instance is not a member of the specified SOP Class.</para>
 </listitem>
   <listitem>
-<para xml:id="para_bbf7d00d-ac88-45e8-9210-941f21c45345">Duplicate Invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+<para xml:id="para_bbf7d00d-ac88-45e8-9210-941f21c45345">Duplicate invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
   <listitem>
-<para xml:id="para_5387994d-ab5c-4aa8-a606-104bc38cae37">Invalid Object Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
+<para xml:id="para_5387994d-ab5c-4aa8-a606-104bc38cae37">Invalid SOP Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
 </listitem>
   <listitem>
-<para xml:id="para_eecc7b07-aa17-4dc0-b55a-abf02b9c8783">Mistyped Argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
+<para xml:id="para_eecc7b07-aa17-4dc0-b55a-abf02b9c8783">Mistyped argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_68eabf53-8ca0-41fc-952e-cd059e272694">No Such SOP Class (0118H) - the SOP Class was not recognized.</para>
+<para xml:id="para_68eabf53-8ca0-41fc-952e-cd059e272694">No such SOP Class (0118H) - the SOP Class was not recognized.</para>
 </listitem>
   <listitem>
-<para xml:id="para_d7e4fcf1-fa28-4d52-b6ba-beb13481d385">No Such SOP Instance (0112H) - the SOP Instance was not recognized.</para>
+<para xml:id="para_d7e4fcf1-fa28-4d52-b6ba-beb13481d385">No such SOP Instance (0112H) - the SOP Instance was not recognized.</para>
 </listitem>
   <listitem>
 <para xml:id="para_5e4c546a-5394-4a81-9b35-f3e7b37dbdf7">Processing Failure (0110H) - a general failure in processing the operation was encountered.</para>
@@ -5821,10 +5827,10 @@
 <para xml:id="para_a26ba732-aae9-4ed4-ba22-cfb920a35973">Success (0000H) - successful operation.</para>
 </listitem>
   <listitem>
-<para xml:id="para_8b5fc79d-4e83-4f04-b0ea-ea5af72a7be2">Unrecognized Operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
+<para xml:id="para_8b5fc79d-4e83-4f04-b0ea-ea5af72a7be2">Unrecognized operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_1ab7d7ce-a777-4341-9c69-396146626e6d">Refused: Not Authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation</para>
+<para xml:id="para_1ab7d7ce-a777-4341-9c69-396146626e6d">Refused: Not authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation</para>
 </listitem>
   <listitem>
 <para xml:id="para_ffb2da4b-bb72-4599-955b-4e0f65ef39c2">Warning (Status value is Service Class specific): not all optional attributes were returned by DIMSE Service User</para>
@@ -6040,37 +6046,37 @@
   <para xml:id="para_9c1720f0-5caa-4a3e-a479-0add7462b9b9">This parameter contains the error or success notification for the operation. It shall be included by the performing DIMSE Service User in any response/confirmation. The following types of status may occur (see also <xref linkend="chapter_C" xrefstyle="template: Annex %n"/>):</para>
 <itemizedlist>
   <listitem>
-<para xml:id="para_14650a81-a258-4635-a10a-f62fc31d4efc">Class-Instance Conflict (0119H) -  the specified SOP Instance is not a member of the specified SOP Class.</para>
+<para xml:id="para_14650a81-a258-4635-a10a-f62fc31d4efc">Class-Instance conflict (0119H) -  the specified SOP Instance is not a member of the specified SOP Class.</para>
 </listitem>
   <listitem>
-<para xml:id="para_743e5948-4eb2-449b-9786-88b3a8444580">Duplicate Invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+<para xml:id="para_743e5948-4eb2-449b-9786-88b3a8444580">Duplicate invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
   <listitem>
 <para xml:id="para_c9950a0a-5896-4225-8237-cf173834163c">Invalid Attribute Value (0106H) - the Attribute Value specified was out of range or otherwise inappropriate.</para>
 </listitem>
   <listitem>
-<para xml:id="para_88804362-6630-4641-9948-752af79c0202">Attribute Value Out Of Range (0116H) - the Attribute Value specified was out of range or otherwise inappropriate. The Attribute Values that could be modified were modified.</para>
+<para xml:id="para_88804362-6630-4641-9948-752af79c0202">Attribute Value out of range (0116H) - the Attribute Value specified was out of range or otherwise inappropriate. The Attribute Values that could be modified were modified.</para>
 </listitem>
   <listitem>
-<para xml:id="para_353e60fc-c1e1-4f57-9aeb-6336a9f4b4fd">Mistyped Argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
+<para xml:id="para_353e60fc-c1e1-4f57-9aeb-6336a9f4b4fd">Mistyped argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_54108f35-2a51-45a7-b652-20410b7c19a6">Invalid Object Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
+<para xml:id="para_54108f35-2a51-45a7-b652-20410b7c19a6">Invalid SOP Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
 </listitem>
   <listitem>
 <para xml:id="para_8cf32770-204d-4f4c-a7bf-14e33324223b">Missing Attribute Value (0121H) - a required Attribute Value was not supplied.</para>
 </listitem>
   <listitem>
-<para xml:id="para_2f468e80-65f3-46c9-a0c6-476b313597f1">No Such Attribute (0105H) - the Tag for the specified Attribute was not recognized.</para>
+<para xml:id="para_2f468e80-65f3-46c9-a0c6-476b313597f1">No such Attribute (0105H) - the Tag for the specified Attribute was not recognized.</para>
 </listitem>
   <listitem>
-<para xml:id="para_62ebb814-3b53-4ce4-b6dc-8c839c21465f">Attribute List Error (0107H) - one or more Attribute Values were not modified because the specified Attributes were not recognized. The Attribute Values that could be modified were modified.</para>
+<para xml:id="para_62ebb814-3b53-4ce4-b6dc-8c839c21465f">Attribute list error (0107H) - one or more Attribute Values were not modified because the specified Attributes were not recognized. The Attribute Values that could be modified were modified.</para>
 </listitem>
   <listitem>
-<para xml:id="para_8fe69bf5-5f8f-4f75-8079-f8f621225735">No Such SOP Class (0118H) - the SOP Class was not recognized.</para>
+<para xml:id="para_8fe69bf5-5f8f-4f75-8079-f8f621225735">No such SOP Class (0118H) - the SOP Class was not recognized.</para>
 </listitem>
   <listitem>
-<para xml:id="para_9eb61f30-7a32-4ff9-9e51-f122181575c2">No Such SOP Instance (0112H) - the SOP Instance was not recognized.</para>
+<para xml:id="para_9eb61f30-7a32-4ff9-9e51-f122181575c2">No such SOP Instance (0112H) - the SOP Instance was not recognized.</para>
 </listitem>
   <listitem>
 <para xml:id="para_dadf18c4-e7c9-471b-8d49-a2b0d77c530d">Processing Failure (0110H) - a general failure in processing the operation was encountered.</para>
@@ -6082,10 +6088,10 @@
 <para xml:id="para_b6023420-18b6-48a9-8bef-d622216f3b86">Success (0000H) - successful operation.</para>
 </listitem>
   <listitem>
-<para xml:id="para_afb11504-5158-4095-8fd2-1a6356755656">Unrecognized Operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
+<para xml:id="para_afb11504-5158-4095-8fd2-1a6356755656">Unrecognized operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_a0a5543f-19e5-47b4-8afe-8d07f994ceef">Refused: Not Authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation.</para>
+<para xml:id="para_a0a5543f-19e5-47b4-8afe-8d07f994ceef">Refused: Not authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation.</para>
 </listitem>
   <listitem>
     <para xml:id="para_2b9cfe2f-677f-400b-a036-1db67c4a83b2">Failed (Status value is Service Class specific): the operation was not performed as certain conditions for operation were not met</para>
@@ -6330,31 +6336,31 @@
   <para xml:id="para_a03f6014-8875-46b2-a1cc-9fa84fa773ff">This parameter contains the error or success notification for the operation. It shall be included by the performing DIMSE Service User in any response/confirmation. The following type of status may occur (see also <xref linkend="chapter_C" xrefstyle="template: Annex %n"/>):</para>
 <itemizedlist>
   <listitem>
-<para xml:id="para_f7ed75e0-39e5-48b5-9157-bc326b9c0b92">Class-Instance Conflict (0119H) - the specified SOP Instance is not a member of the specified SOP Class.</para>
+<para xml:id="para_f7ed75e0-39e5-48b5-9157-bc326b9c0b92">Class-Instance conflict (0119H) - the specified SOP Instance is not a member of the specified SOP Class.</para>
 </listitem>
   <listitem>
-<para xml:id="para_4576723e-5649-4bee-9209-139beb0f2b8d">Duplicate Invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+<para xml:id="para_4576723e-5649-4bee-9209-139beb0f2b8d">Duplicate invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
   <listitem>
-<para xml:id="para_9ca89caa-47e2-4580-ba77-6a1e9f68cfa9">Invalid Argument Value (0115H) - the action information value specified was out of range or otherwise inappropriate.</para>
+<para xml:id="para_9ca89caa-47e2-4580-ba77-6a1e9f68cfa9">Invalid argument value (0115H) - the action information value specified was out of range or otherwise inappropriate.</para>
 </listitem>
   <listitem>
-<para xml:id="para_94ca31d0-79f6-44a6-89cf-bf8114d98a7a">Invalid Object Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
+<para xml:id="para_94ca31d0-79f6-44a6-89cf-bf8114d98a7a">Invalid SOP Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
 </listitem>
   <listitem>
-<para xml:id="para_bcee84f8-a022-4a15-a6e5-0fc497810276">Mistyped Argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
+<para xml:id="para_bcee84f8-a022-4a15-a6e5-0fc497810276">Mistyped argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_05cc88cc-e4df-47d0-8148-28866062a334">No Such Action (0123H) - the action type specified was not supported.</para>
+<para xml:id="para_05cc88cc-e4df-47d0-8148-28866062a334">No such Action (0123H) - the action type specified was not supported.</para>
 </listitem>
   <listitem>
-<para xml:id="para_7a2a544e-eb1f-454d-85e8-9ffbadf648e3">No Such Argument (0114H) - the action information specified was not supported.</para>
+<para xml:id="para_7a2a544e-eb1f-454d-85e8-9ffbadf648e3">No such argument (0114H) - the action information specified was not supported.</para>
 </listitem>
   <listitem>
-<para xml:id="para_50c4307b-b743-42b3-a726-506cc435de7a">No Such SOP Class (0118H) - the SOP Class was not recognized.</para>
+<para xml:id="para_50c4307b-b743-42b3-a726-506cc435de7a">No such SOP Class (0118H) - the SOP Class was not recognized.</para>
 </listitem>
   <listitem>
-<para xml:id="para_42fd5646-20e6-466c-a886-44d6f6df87b5">No Such SOP Instance (0112H) - the SOP Instance was not recognized.</para>
+<para xml:id="para_42fd5646-20e6-466c-a886-44d6f6df87b5">No such SOP Instance (0112H) - the SOP Instance was not recognized.</para>
 </listitem>
   <listitem>
 <para xml:id="para_a25015fa-ef5f-4236-9075-5596df935b83">Processing Failure (0110H) - a general failure in processing the operation was encountered.</para>
@@ -6366,10 +6372,10 @@
 <para xml:id="para_77175464-c2fe-4872-9f0a-e8d2601a6580">Success (0000H) - successful operation.</para>
 </listitem>
   <listitem>
-<para xml:id="para_5e84ff0d-6ab4-4ed4-afb9-ab1b49e73988">Unrecognized Operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
+<para xml:id="para_5e84ff0d-6ab4-4ed4-afb9-ab1b49e73988">Unrecognized operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_357cefe1-f5d7-48d1-af5e-2703d2930529">Refused: Not Authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation.</para>
+<para xml:id="para_357cefe1-f5d7-48d1-af5e-2703d2930529">Refused: Not authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation.</para>
 </listitem>
   <listitem>
     <para xml:id="para_2f079914-3e42-4676-964b-4adb9f4eb204">Failed (Status value is Service Class specific): the operation was not performed as certain conditions for operation were not met</para>
@@ -6541,7 +6547,7 @@
   <para xml:id="para_a091bbd0-43b4-4cca-a376-6dfdfc6ac5a4">This parameter contains the error or success notification for the operation. It shall be included by the performing DIMSE Service User in any response/confirmation. The following type of status may occur (see also <xref linkend="chapter_C" xrefstyle="template: Annex %n"/>):</para>
 <itemizedlist>
   <listitem>
-<para xml:id="para_d7a4d438-ac76-4da0-b101-31b0f64687e2">Duplicate Invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
+<para xml:id="para_d7a4d438-ac76-4da0-b101-31b0f64687e2">Duplicate invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation.</para>
 </listitem>
   <listitem>
 <para xml:id="para_5fef87c0-98a0-460a-aa3c-7627aea879d9">Duplicate SOP Instance (0111H) - the new managed SOP Instance Value supplied by the invoking DIMSE Service User was already registered for a managed SOP Instance of the specified SOP Class.</para>
@@ -6550,10 +6556,10 @@
 <para xml:id="para_95c8155f-de45-4be3-86ee-fb827c0e039b">Invalid Attribute Value (0106H) - the Attribute Value specified was out of range or otherwise inappropriate.</para>
 </listitem>
   <listitem>
-<para xml:id="para_f5022213-1479-440b-902f-3ea674a205f1">Attribute Value Out Of Range (0116H) - the Attribute Value specified was out of range or otherwise inappropriate. The SCP will apply a default value or will not include the attribute in the created instance.</para>
+<para xml:id="para_f5022213-1479-440b-902f-3ea674a205f1">Attribute Value out of range (0116H) - the Attribute Value specified was out of range or otherwise inappropriate. The SCP will apply a default value or will not include the attribute in the created instance.</para>
 </listitem>
   <listitem>
-<para xml:id="para_ccc14c5e-ab2c-4c5a-a488-ce7aca0eb0b8">Invalid Object Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
+<para xml:id="para_ccc14c5e-ab2c-4c5a-a488-ce7aca0eb0b8">Invalid SOP Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules.</para>
 </listitem>
   <listitem>
 <para xml:id="para_1a21ad5f-6900-44af-8981-b4abd5c588cb">Missing Attribute (0120H) - a required Attribute was not supplied.</para>
@@ -6562,16 +6568,16 @@
 <para xml:id="para_e1970518-5e99-4937-bd5d-68e593a7299f">Missing Attribute Value (0121H) - a required Attribute Value was not supplied and a default value was not available.</para>
 </listitem>
   <listitem>
-<para xml:id="para_9145ed6c-e06d-4c85-930a-736dbe0a74b5">Mistyped Argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
+<para xml:id="para_9145ed6c-e06d-4c85-930a-736dbe0a74b5">Mistyped argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_e0862c63-426e-4d37-b2a4-b16fdf4a268c">No Such Attribute (0105H) - the Tag for the specified Attribute was not recognized.</para>
+<para xml:id="para_e0862c63-426e-4d37-b2a4-b16fdf4a268c">No such Attribute (0105H) - the Tag for the specified Attribute was not recognized.</para>
 </listitem>
   <listitem>
-<para xml:id="para_d1963d97-d707-4e70-a618-f2a60870f238">Attribute List Error (0107H) -one or more specified Attributes were not recognized and not included in the created instance.</para>
+<para xml:id="para_d1963d97-d707-4e70-a618-f2a60870f238">Attribute list error (0107H) -one or more specified Attributes were not recognized and not included in the created instance.</para>
 </listitem>
   <listitem>
-<para xml:id="para_2214f90c-300c-4a89-b3a2-35bba4bf66bb">No Such SOP Class (0118H) - the SOP Class was not recognized.</para>
+<para xml:id="para_2214f90c-300c-4a89-b3a2-35bba4bf66bb">No such SOP Class (0118H) - the SOP Class was not recognized.</para>
 </listitem>
   <listitem>
 <para xml:id="para_b9e95c90-5d8f-41cd-a09a-e723d201977c">Processing Failure (0110H) - a general failure in processing the operation was encountered.</para>
@@ -6583,10 +6589,10 @@
 <para xml:id="para_dcdb980a-b108-4d68-9fae-c4eead16ac1c">Success (0000H) - successful operation.</para>
 </listitem>
   <listitem>
-<para xml:id="para_31c3a6b6-ed51-4845-bc52-c346b59526bc">Unrecognized Operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
+<para xml:id="para_31c3a6b6-ed51-4845-bc52-c346b59526bc">Unrecognized operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users.</para>
 </listitem>
   <listitem>
-<para xml:id="para_3d8ff9f6-f989-4107-bdaa-f617ac6c1f54">Refused: Not Authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation.</para>
+<para xml:id="para_3d8ff9f6-f989-4107-bdaa-f617ac6c1f54">Refused: Not authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation.</para>
 </listitem>
   <listitem>
     <para xml:id="para_5730b3b7-708b-4f6b-be71-dedb38e32078">Failed (Status value is Service Class specific): no instance was created by the DIMSE Service User</para>
@@ -6774,22 +6780,22 @@
   <para xml:id="para_b20afe09-91e6-42f4-a46a-896c3434982e">This parameter contains the error or success notification for the operation. It shall be included by the performing DIMSE Service User in any response/confirmation. The following types of status may occur (see also <xref linkend="chapter_C" xrefstyle="template: Annex %n"/>):</para>
 <itemizedlist>
   <listitem>
-<para xml:id="para_946ab28d-f4a6-4ffc-a0d8-5fca8f3c2931">Class-Instance Conflict (0119H) - the specified SOP Instance is not a member of the specified SOP Class</para>
+<para xml:id="para_946ab28d-f4a6-4ffc-a0d8-5fca8f3c2931">Class-Instance conflict (0119H) - the specified SOP Instance is not a member of the specified SOP Class</para>
 </listitem>
   <listitem>
-<para xml:id="para_7c74ca7b-23ab-409e-8bcd-c07acedaa703">Duplicate Invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation</para>
+<para xml:id="para_7c74ca7b-23ab-409e-8bcd-c07acedaa703">Duplicate invocation (0210H) - the Message ID (0000,0110) specified is allocated to another notification or operation</para>
 </listitem>
   <listitem>
-<para xml:id="para_de29b350-bbf7-4e15-91ea-8fc1673edc3e">Invalid Object Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules</para>
+<para xml:id="para_de29b350-bbf7-4e15-91ea-8fc1673edc3e">Invalid SOP Instance (0117H) - the SOP Instance UID specified implied a violation of the UID construction rules</para>
 </listitem>
   <listitem>
-<para xml:id="para_711c5fdb-903a-45c2-8362-91565198cf57">Mistyped Argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users</para>
+<para xml:id="para_711c5fdb-903a-45c2-8362-91565198cf57">Mistyped argument (0212H) - one of the parameters supplied has not been agreed for use on the Association between the DIMSE Service Users</para>
 </listitem>
   <listitem>
-<para xml:id="para_f98ec44e-809f-4c5e-9ef6-8520764fd5a8">No Such SOP Class (0118H) - the SOP Class was not recognized</para>
+<para xml:id="para_f98ec44e-809f-4c5e-9ef6-8520764fd5a8">No such SOP Class (0118H) - the SOP Class was not recognized</para>
 </listitem>
   <listitem>
-<para xml:id="para_1e6ea131-1b46-43b0-a02c-b9c630f05777">No Such SOP Instance (0112H) - the SOP Instance was not recognized</para>
+<para xml:id="para_1e6ea131-1b46-43b0-a02c-b9c630f05777">No such SOP Instance (0112H) - the SOP Instance was not recognized</para>
 </listitem>
   <listitem>
 <para xml:id="para_236dee26-8cce-4ee1-83eb-ccf04bce8b8c">Processing Failure (0110H) - a general failure in processing the operation was encountered</para>
@@ -6801,10 +6807,10 @@
 <para xml:id="para_fccef240-ce91-4893-9dd1-db69c42e55dd">Success (0000H) - successful operation</para>
 </listitem>
   <listitem>
-<para xml:id="para_f2a6a785-3ea7-464b-9bf2-16cc4043cb39">Unrecognized Operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users</para>
+<para xml:id="para_f2a6a785-3ea7-464b-9bf2-16cc4043cb39">Unrecognized operation (0211H) - the operation is not one of those agreed between the DIMSE Service Users</para>
 </listitem>
   <listitem>
-<para xml:id="para_6a277702-e912-4973-ad75-35ac2927655e">Refused: Not Authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation.</para>
+<para xml:id="para_6a277702-e912-4973-ad75-35ac2927655e">Refused: Not authorized (0124H) - the DIMSE Service User was not authorized to invoke the operation.</para>
 </listitem>
 </itemizedlist>
   </section>
@@ -7723,7 +7729,7 @@
         <para xml:id="para_269616f7-aeb7-4369-af1c-a8cb86be0ecd">1</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_18deb029-8805-4bd5-922b-9c871685694c">SOP Class UID of the SOP Instance for which Attribute values are to be modified.</para>
+        <para xml:id="para_18deb029-8805-4bd5-922b-9c871685694c">SOP Class UID of the SOP Instance for which Attribute Values are to be modified.</para>
       </td>
     </tr>
     <tr valign="top">
@@ -7791,7 +7797,7 @@
         <para xml:id="para_771e7ba1-31bd-44b5-9361-261e06a503c6">1</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_258e847e-b930-44bb-a304-4c2dd7d8a62a">Contains the UID of the SOP Instance for which Attribute values are to be modified.</para>
+        <para xml:id="para_258e847e-b930-44bb-a304-4c2dd7d8a62a">Contains the UID of the SOP Instance for which Attribute Values are to be modified.</para>
       </td>
     </tr>
     <tr valign="top">
@@ -9164,7 +9170,7 @@
     <title>Application Context Definition</title>
   
   <para xml:id="para_520d19a5-b440-4f5a-a397-73c0b93c8075">An Application Context explicitly defines the set of application service elements, related options and any other information necessary for the inter working of Application Entities on an Association; in particular, it specifies the DIMSE Protocol used by the Application Layer.</para>
-  <para xml:id="para_d5d3f029-caf1-428a-babf-92108a0a7d9e">Two Application Entities establish an Association by agreeing on an Application Context. The requester of an Association proposes an Application Context Name and the acceptor returns either the same or a different Application Context Name. The returned name specifies the Application Context to be used for this Association. The offer of an alternate Application Context by the acceptor provides a mechanism for limited negotiation. If the requester cannot operate in the acceptor's Application Context, it shall issue an A-Abort request primitive. Such a negotiation will facilitate the introduction of new versions of the DICOM Message Exchange Protocol in the future.</para>
+  <para xml:id="para_d5d3f029-caf1-428a-babf-92108a0a7d9e">Two Application Entities establish an Association by agreeing on an Application Context. The requestor of an Association proposes an Application Context Name and the acceptor returns either the same or a different Application Context Name. The returned name specifies the Application Context to be used for this Association. The offer of an alternate Application Context by the acceptor provides a mechanism for limited negotiation. If the requestor cannot operate in the acceptor's Application Context, it shall issue an A-Abort request primitive. Such a negotiation will facilitate the introduction of new versions of the DICOM Message Exchange Protocol in the future.</para>
   </section>
 <section label="A.2" status="2" xml:id="sect_A.2">
     <title>DICOM Application Context Name Encoding and Registration</title>
@@ -9189,7 +9195,7 @@
 <section label="A.3" status="2" xml:id="sect_A.3">
     <title>Association Initialization for DICOM Application Entity</title>
   
-  <para xml:id="para_69e24d1e-38c8-499b-a3fa-e5a01dfeef89">The establishment of an Association involves two DICOM AEs, one that is the Association-requester and one that is the Association-acceptor.</para>
+  <para xml:id="para_69e24d1e-38c8-499b-a3fa-e5a01dfeef89">The establishment of an Association involves two DICOM AEs, one that is the Association-requestor and one that is the Association-acceptor.</para>
   <para xml:id="para_1bcfe078-d216-4a45-bcf0-99c953972d94">A DICOM AE shall initiate an Association establishment by using the A-ASSOCIATE request service defined in <olink targetdoc="PS3.8" targetptr="PS3.8" xrefstyle="select: labelnumber"/>. It shall provide the Application Association Information as defined by <xref linkend="chapter_D" xrefstyle="template:Annex %n"/>.</para>
   </section>
 <section label="A.4" status="2" xml:id="sect_A.4">
@@ -9214,14 +9220,14 @@
 <section label="A.5" status="2" xml:id="sect_A.5">
     <title>Association Release for DICOM AE</title>
   
-  <para xml:id="para_91a4e5d8-6a9f-4bca-b4a9-7ce85ffcbaed">Only the DICOM AE Association-requester may initiate an orderly release of the Association. This shall be accomplished by using the A-RELEASE service defined in <olink targetdoc="PS3.8" targetptr="PS3.8" xrefstyle="select: labelnumber"/>.</para>
-  <para xml:id="para_44f5f234-ac38-43ac-8bee-59367aaba4fc">The DICOM AE Association-requester shall not release the Association until all operations invoked have been confirmed.</para>
+  <para xml:id="para_91a4e5d8-6a9f-4bca-b4a9-7ce85ffcbaed">Only the DICOM AE Association-requestor may initiate an orderly release of the Association. This shall be accomplished by using the A-RELEASE service defined in <olink targetdoc="PS3.8" targetptr="PS3.8" xrefstyle="select: labelnumber"/>.</para>
+  <para xml:id="para_44f5f234-ac38-43ac-8bee-59367aaba4fc">The DICOM AE Association-requestor shall not release the Association until all operations invoked have been confirmed.</para>
   </section>
 <section label="A.6" status="2" xml:id="sect_A.6">
     <title>Association Abort for DICOM AE</title>
   
   <para xml:id="para_90e34f74-1b78-4cbd-80d2-f1fa7b8d716e">Either DICOM AE may initiate an abrupt termination of an Association. This shall be accomplished by using the A-ABORT service defined in <olink targetdoc="PS3.8" targetptr="PS3.8" xrefstyle="select: labelnumber"/>.</para>
-  <para xml:id="para_eac788fb-74bf-48dc-9fd0-8395336cfd94">Upon receiving or issuing the A-ABORT service primitive, the DICOM AE Association-requester and DICOM AE Association-acceptor shall fail any operation that is outstanding.</para>
+  <para xml:id="para_eac788fb-74bf-48dc-9fd0-8395336cfd94">Upon receiving or issuing the A-ABORT service primitive, the DICOM AE Association-requestor and DICOM AE Association-acceptor shall fail any operation that is outstanding.</para>
   <note>
     <para xml:id="para_23d4e095-3059-41c5-96cc-57227dbf4dd8">The Association services and presentation services defined in the Upper Layer Service in <olink targetdoc="PS3.8" targetptr="PS3.8" xrefstyle="select: labelnumber"/> are a fully conformant subset of the services offered by the ACSE and the OSI Presentation Layer.</para>
   </note>
@@ -9237,7 +9243,7 @@
 <chapter label="C" status="1" xml:id="chapter_C">
     <title>Status Type Encoding (Normative)</title>
   
-  <para xml:id="para_be9eff79-eeca-42b0-bc00-5a7a46af4cd3">The following sections define the encoding for the Status Types supported by the DIMSE services. The applicability and semantics for each Status Type (i.e., Attribute List Error, etc.) are defined in the DIMSE Services. Each Status Type is categorized in a Status Class and represents certain Status Meaning within the Status Class.</para>
+  <para xml:id="para_be9eff79-eeca-42b0-bc00-5a7a46af4cd3">The following sections define the encoding for the Status Types supported by the DIMSE services. The applicability and semantics for each Status Type (i.e., Attribute list error, etc.) are defined in the DIMSE Services. Each Status Type is categorized in a Status Class and represents certain Status Meaning within the Status Class.</para>
   <note>
     <para xml:id="para_59b902cd-eb56-4872-bf4a-f68b719a4d70">The Status (0000,0900) Command Element is required for all Status Types.</para>
   </note>
@@ -9567,7 +9573,7 @@
 
   </section>
 <section label="C.4.2" status="3" xml:id="sect_C.4.2">
-    <title>Attribute List Error</title>
+    <title>Attribute list error</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -9674,7 +9680,7 @@
 
   </section>
 <section label="C.4.3" status="3" xml:id="sect_C.4.3">
-    <title>Attribute Value Out of Range</title>
+    <title>Attribute Value out of range</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -9752,7 +9758,7 @@
   
   <para xml:id="para_7cd9660c-8a13-40f5-9d7a-4b91d7d972a1">Statuses in this Status Class convey that the operation/notification failed and was not performed.</para>
   <section label="C.5.1" status="3" xml:id="sect_C.5.1">
-    <title>Error: Cannot Understand</title>
+    <title>Error: Cannot understand</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -9842,7 +9848,7 @@
 
   </section>
 <section label="C.5.2" status="3" xml:id="sect_C.5.2">
-    <title>Error: Data Set Does Not Match SOP Class</title>
+    <title>Error: Data Set does not match SOP Class</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10022,7 +10028,7 @@
 
   </section>
 <section label="C.5.4" status="3" xml:id="sect_C.5.4">
-    <title>Refused: Move Destination Unknown</title>
+    <title>Refused: Move Destination unknown</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10095,7 +10101,7 @@
 
   </section>
 <section label="C.5.5" status="3" xml:id="sect_C.5.5">
-    <title>Refused: Out of Resources</title>
+    <title>Refused: Out of resources</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10168,7 +10174,7 @@
 
   </section>
 <section label="C.5.6" status="3" xml:id="sect_C.5.6">
-    <title>Refused: SOP Class Not Supported</title>
+    <title>Refused: SOP Class not supported</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10241,7 +10247,7 @@
 
   </section>
 <section label="C.5.7" status="3" xml:id="sect_C.5.7">
-    <title>Class-Instance Conflict</title>
+    <title>Class-Instance conflict</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10404,7 +10410,7 @@
 
   </section>
 <section label="C.5.9" status="3" xml:id="sect_C.5.9">
-    <title>Duplicate Invocation</title>
+    <title>Duplicate invocation</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10460,7 +10466,7 @@
 
   </section>
 <section label="C.5.10" status="3" xml:id="sect_C.5.10">
-    <title>Invalid Argument Value</title>
+    <title>Invalid argument value</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10691,7 +10697,7 @@
 
   </section>
 <section label="C.5.12" status="3" xml:id="sect_C.5.12">
-    <title>Invalid Object Instance</title>
+    <title>Invalid SOP Instance</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10910,7 +10916,7 @@
 
   </section>
 <section label="C.5.15" status="3" xml:id="sect_C.5.15">
-    <title>Mistyped Argument</title>
+    <title>Mistyped argument</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -10966,7 +10972,7 @@
 
   </section>
 <section label="C.5.16" status="3" xml:id="sect_C.5.16">
-    <title>No Such Argument</title>
+    <title>No such argument</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -11073,7 +11079,7 @@
 
   </section>
 <section label="C.5.17" status="3" xml:id="sect_C.5.17">
-    <title>No Such Attribute</title>
+    <title>No such Attribute</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -11146,7 +11152,7 @@
 
   </section>
 <section label="C.5.18" status="3" xml:id="sect_C.5.18">
-    <title>No Such Event Type</title>
+    <title>No such Event Type</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -11236,7 +11242,7 @@
 
   </section>
 <section label="C.5.19" status="3" xml:id="sect_C.5.19">
-    <title>No Such SOP Instance</title>
+    <title>No such SOP Instance</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -11309,7 +11315,7 @@
 
   </section>
 <section label="C.5.20" status="3" xml:id="sect_C.5.20">
-    <title>No Such SOP Class</title>
+    <title>No such SOP Class</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -11562,7 +11568,7 @@
 
   </section>
 <section label="C.5.23" status="3" xml:id="sect_C.5.23">
-    <title>Unrecognized Operation</title>
+    <title>Unrecognized operation</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -11618,7 +11624,7 @@
 
   </section>
 <section label="C.5.24" status="3" xml:id="sect_C.5.24">
-    <title>No Such Action Type</title>
+    <title>No such Action Type</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -11708,7 +11714,7 @@
 
   </section>
 <section label="C.5.25" status="3" xml:id="sect_C.5.25">
-    <title>Refused: Not Authorized</title>
+    <title>Refused: Not authorized</title>
   
   <informaltable frame="box" rules="all">
     <thead>
@@ -11884,7 +11890,7 @@
 <xref linkend="figure_D.3-1" xrefstyle="select: label"/> provides an illustration of Presentation Context Negotiation with the key points as follows:</para>
   <orderedlist numeration="loweralpha">
 <listitem>
-<para xml:id="para_906d97aa-10e2-4bc1-a880-3900ae0719b2">the Association-requester may offer multiple Presentation Contexts per Association.</para>
+<para xml:id="para_906d97aa-10e2-4bc1-a880-3900ae0719b2">the Association-requestor may offer multiple Presentation Contexts per Association.</para>
 </listitem>
 <listitem>
 <para xml:id="para_c8e6a72d-5d48-4b1d-a1fc-05f7f31a2d61">each Presentation Context supports one Abstract Syntax (related to a SOP Class or Meta SOP Class) and one or more Transfer Syntaxes.</para>
@@ -12025,7 +12031,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_96293b78-0e23-43a1-a801-9bf345e46d24">3 - 4</para>
+        <para xml:id="para_96293b78-0e23-43a1-a801-9bf345e46d24">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_9786cfe5-964d-4e1a-ab05-9eff1efeaf0e">Item-length</para>
@@ -12036,13 +12042,13 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_e70e160c-dbaf-452d-8dd3-f3910d036200">5 - xxx</para>
+        <para xml:id="para_e70e160c-dbaf-452d-8dd3-f3910d036200">5-xxx</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_de73b646-b331-4923-b426-a27792d445f7">Implementation-class-uid</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_8755f80e-976f-4f72-b17b-7bc957bd18e8">This variable field shall contain the Implementation-class-uid of the Association-requester as defined in <xref linkend="sect_D.3.3.2" xrefstyle="select: label"/>. The Implementation-class-uid field is structured as a UID as defined in <olink targetdoc="PS3.5" targetptr="PS3.5" xrefstyle="select: labelnumber"/>.</para>
+        <para xml:id="para_8755f80e-976f-4f72-b17b-7bc957bd18e8">This variable field shall contain the Implementation-class-uid of the Association-requestor as defined in <xref linkend="sect_D.3.3.2" xrefstyle="select: label"/>. The Implementation-class-uid field is structured as a UID as defined in <olink targetdoc="PS3.5" targetptr="PS3.5" xrefstyle="select: labelnumber"/>.</para>
       </td>
     </tr>
     </tbody>
@@ -12099,7 +12105,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_2f76f2fc-1587-4cc0-ad5b-ffd1532515c7">3 - 4</para>
+        <para xml:id="para_2f76f2fc-1587-4cc0-ad5b-ffd1532515c7">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_559da400-bd4e-4195-9748-47321000b05a">Item-length</para>
@@ -12110,7 +12116,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_24c91acd-c87d-46b6-8a67-24a7664331d8">5 - xxx</para>
+        <para xml:id="para_24c91acd-c87d-46b6-8a67-24a7664331d8">5-xxx</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_fae041bc-8a0d-46f1-897b-b22f362ff9d9">Implementation-class-uid</para>
@@ -12173,7 +12179,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_8b57661b-68c0-4b0f-b5d5-2ad5009cfaac">3 - 4</para>
+        <para xml:id="para_8b57661b-68c0-4b0f-b5d5-2ad5009cfaac">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_dddde33a-6bc7-44c8-9c98-a6267fdd4781">Item-length</para>
@@ -12184,13 +12190,13 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_d52001da-f223-4e74-8c04-581539afd52b">5 - xxx</para>
+        <para xml:id="para_d52001da-f223-4e74-8c04-581539afd52b">5-xxx</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_0d131830-16d8-4329-9144-4139e0134673">Implementation-version-name</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_365c39f2-50c6-4f79-99ca-57e0df543fe6">This variable field shall contain the Implementation-version-name of the Association-requester as defined in <xref linkend="sect_D.3.3.2" xrefstyle="select: label"/>. It shall be encoded as a string of 1 to 16 ISO 646:1990 (basic G0 set) characters.</para>
+        <para xml:id="para_365c39f2-50c6-4f79-99ca-57e0df543fe6">This variable field shall contain the Implementation-version-name of the Association-requestor as defined in <xref linkend="sect_D.3.3.2" xrefstyle="select: label"/>. It shall be encoded as a string of 1 to 16 ISO 646:1990 (basic G0 set) characters.</para>
       </td>
     </tr>
     </tbody>
@@ -12247,7 +12253,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_45b8b71a-b785-41b7-82b7-b1192d826b7c">3 - 4</para>
+        <para xml:id="para_45b8b71a-b785-41b7-82b7-b1192d826b7c">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_83cb6b91-2838-451d-b24c-3a0b89cefba1">Item-length</para>
@@ -12258,7 +12264,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_866b3a53-16d9-4e68-a5d5-40dd82f9bbec">5 - xxx</para>
+        <para xml:id="para_866b3a53-16d9-4e68-a5d5-40dd82f9bbec">5-xxx</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_1c8c5a54-1c72-416c-99eb-bb96894d0ad9">Implementation-version-name</para>
@@ -12275,7 +12281,7 @@
     <title>Asynchronous Operations (And Sub-Operations) Window Negotiation</title>
   
   <para xml:id="para_f5c2eda1-19b4-4574-8c81-e1ad78efbf1a">The Asynchronous Operations Window is used to negotiate the maximum number of outstanding operation or sub-operation requests (i.e., command requests) for each direction. The synchronous operations mode is the default mode and shall be supported by all DICOM AEs. This negotiation is optional.</para>
-  <para xml:id="para_0d523164-c3de-45b4-b8f4-8f09cf7dca68">The Association-requester conveys in the A-ASSOCIATE request:</para>
+  <para xml:id="para_0d523164-c3de-45b4-b8f4-8f09cf7dca68">The Association-requestor conveys in the A-ASSOCIATE request:</para>
 <itemizedlist>
   <listitem>
 <para xml:id="para_3fa86715-9353-40df-80ee-9230d225f0f4">when negotiating the SCU role for operations, the maximum number of outstanding operations it may invoke asynchronously; when negotiating the SCP role for operations, the maximum number of outstanding sub-operations it may invoke asynchronously; when negotiating the SCP role for notifications, the maximum number of notifications it may invoke asynchronously</para>
@@ -12290,16 +12296,16 @@
   <para xml:id="para_a1bee3e4-adaf-45e9-912b-c94b3ba453f2">The Association-acceptor conveys in the A-ASSOCIATE response:</para>
 <itemizedlist>
   <listitem>
-<para xml:id="para_517295fc-18cb-4e69-a11f-dd3d2353f3bd">when negotiating the SCP role for operations, the maximum number of outstanding operations; when negotiating the SCU role for operations, the maximum number of sub-operations it allows the Association-requester to invoke asynchronously; when negotiating the SCU role for notifications, the maximum number of outstanding notifications it allows the Association-requester to invoke asynchronously when negotiating the SCU role. This number shall be equal or less than the number of outstanding notifications, operations and/or sub-operations the Association-requester offers to invoke (by the A-ASSOCIATE indication).</para>
+<para xml:id="para_517295fc-18cb-4e69-a11f-dd3d2353f3bd">when negotiating the SCP role for operations, the maximum number of outstanding operations; when negotiating the SCU role for operations, the maximum number of sub-operations it allows the Association-requestor to invoke asynchronously; when negotiating the SCU role for notifications, the maximum number of outstanding notifications it allows the Association-requestor to invoke asynchronously when negotiating the SCU role. This number shall be equal or less than the number of outstanding notifications, operations and/or sub-operations the Association-requestor offers to invoke (by the A-ASSOCIATE indication).</para>
 </listitem>
   <listitem>
-<para xml:id="para_fa94c939-ba09-4e2f-ac61-230fc3dd4355">when negotiating the SCU role for operations, the maximum number of outstanding operations; when negotiating the SCP role for operations, the maximum number of sub-operations it allows the Association-requester to perform asynchronously; when negotiating the SCP role for notifications, the maximum number of outstanding notifications it allows the Association-requester to perform asynchronously. This number shall be equal or less than the number of outstanding notifications, operations and/or sub-operations the Association-requester offers to perform (by the A-ASSOCIATE indication).</para>
+<para xml:id="para_fa94c939-ba09-4e2f-ac61-230fc3dd4355">when negotiating the SCU role for operations, the maximum number of outstanding operations; when negotiating the SCP role for operations, the maximum number of sub-operations it allows the Association-requestor to perform asynchronously; when negotiating the SCP role for notifications, the maximum number of outstanding notifications it allows the Association-requestor to perform asynchronously. This number shall be equal or less than the number of outstanding notifications, operations and/or sub-operations the Association-requestor offers to perform (by the A-ASSOCIATE indication).</para>
 </listitem>
 </itemizedlist>
   <para xml:id="para_c2b260ec-b0c5-447d-9957-ac82ccb34bf4">A value of zero indicates that the above parameters are unlimited. If the Asynchronous Operations Window is absent the default for the above parameters shall be equal to one. Figures D.3-5 and D.3-6 illustrate examples of Asynchronous Operations Window negotiation.</para>
   <para xml:id="para_6dc8d08d-2763-4c45-a743-32b2a8a5bab9">If this negotiation is not present in the A-ASSOCIATE indication it shall be omitted in the A-ASSOCIATE response.</para>
   <note>
-    <para xml:id="para_1eae59f1-14f6-4849-af72-2c070e3bfa59">The case where the Association-requester offers the value of zero (which indicates unlimited operations), the Association-acceptor may return zero (agreeing to unlimited operations) or negotiate the parameter down by conveying a value other than zero.</para>
+    <para xml:id="para_1eae59f1-14f6-4849-af72-2c070e3bfa59">The case where the Association-requestor offers the value of zero (which indicates unlimited operations), the Association-acceptor may return zero (agreeing to unlimited operations) or negotiate the parameter down by conveying a value other than zero.</para>
   </note>
   <para xml:id="para_1171c173-4014-4c0d-adbe-1435203cf4ee">
 <figure label="D.3-5" pgwide="1" xml:id="figure_D.3-5">
@@ -12374,7 +12380,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_af7c9a1f-ddf7-485d-919b-ae5c66db693a">3 - 4</para>
+        <para xml:id="para_af7c9a1f-ddf7-485d-919b-ae5c66db693a">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_5b972829-32f9-40de-ab00-3c61a3d2a5a9">Item-length</para>
@@ -12385,13 +12391,13 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_aa670df5-b5e7-4f24-a34d-8186af264fba">5 - 6</para>
+        <para xml:id="para_aa670df5-b5e7-4f24-a34d-8186af264fba">5-6</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_15171cc3-84cd-41bf-a141-ae1c2be87715">Maximum-number-operations-invoked</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_2172db9c-445b-4310-a50e-ca10e37bdc1e">This field shall contain the Maximum-number-operations-invoked as defined for the Association-requester in <xref linkend="sect_D.3.3.3" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary number.</para>
+        <para xml:id="para_2172db9c-445b-4310-a50e-ca10e37bdc1e">This field shall contain the Maximum-number-operations-invoked as defined for the Association-requestor in <xref linkend="sect_D.3.3.3" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary number.</para>
       </td>
     </tr>
     <tr valign="top">
@@ -12402,7 +12408,7 @@
         <para xml:id="para_e713bfd9-1b23-499b-a5da-58c46fd4c8e1">Maximum-number-operations-performed</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_df3df07e-4003-43ea-85ea-6e226f4f209e">This field shall contain the Maximum-number-operations-performed as defined for the Association-requester in <xref linkend="sect_D.3.3.3" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary number.</para>
+        <para xml:id="para_df3df07e-4003-43ea-85ea-6e226f4f209e">This field shall contain the Maximum-number-operations-performed as defined for the Association-requestor in <xref linkend="sect_D.3.3.3" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary number.</para>
       </td>
     </tr>
     </tbody>
@@ -12459,7 +12465,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_bd93be07-6341-468a-9e38-509a0999b9f7">3 - 4</para>
+        <para xml:id="para_bd93be07-6341-468a-9e38-509a0999b9f7">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_09ac443b-e0f5-4ea8-b6e3-7916b1dfd322">Item-length</para>
@@ -12499,30 +12505,30 @@
 <section label="D.3.3.4" status="4" xml:id="sect_D.3.3.4">
     <title>SCP/SCU Role Selection Negotiation</title>
   
-  <para xml:id="para_b557f018-3b8e-481b-98b2-1c3e7d8af750">The SCP/SCU role selection negotiation allows peer AEs to negotiate the roles in which they will serve for each SOP Class or Meta SOP Class supported on the Association. This negotiation is optional.</para>
-  <para xml:id="para_13a813d8-4463-4f40-9c6e-2b050415cc54">The Association-requester, for each SOP Class UID or Meta SOP Class UID, may use one SCP/SCU Role Selection item. The SOP Class or Meta SOP Class shall be identified by its corresponding Abstract Syntax Name followed by one of the three role values:</para>
+  <para xml:id="para_b557f018-3b8e-481b-98b2-1c3e7d8af750">The SCP/SCU Role Selection Negotiation allows peer AEs to negotiate the roles in which they will serve for each SOP Class or Meta SOP Class supported on the Association. This negotiation is optional.</para>
+  <para xml:id="para_13a813d8-4463-4f40-9c6e-2b050415cc54">The Association-requestor, for each SOP Class UID or Meta SOP Class UID, may use one SCP/SCU Role Selection item. The SOP Class or Meta SOP Class shall be identified by its corresponding Abstract Syntax Name followed by one of the three role values:</para>
 <itemizedlist>
   <listitem>
-<para xml:id="para_85ebcc95-6b8b-4bba-89b6-8f3cc8517db1">Association-requester is SCU only</para>
+<para xml:id="para_85ebcc95-6b8b-4bba-89b6-8f3cc8517db1">Association-requestor is SCU only</para>
 </listitem>
   <listitem>
-<para xml:id="para_7260706a-d509-40dd-9e97-e8f7293d217e">Association-requester is SCP only</para>
+<para xml:id="para_7260706a-d509-40dd-9e97-e8f7293d217e">Association-requestor is SCP only</para>
 </listitem>
   <listitem>
-<para xml:id="para_761d216f-7704-4265-a695-041155f46a78">Association-requester is both SCU and SCP</para>
+<para xml:id="para_761d216f-7704-4265-a695-041155f46a78">Association-requestor is both SCU and SCP</para>
 </listitem>
 </itemizedlist>
-  <para xml:id="para_b7de055c-3e50-427e-ad0b-f69a6ac9fd40">If the SCP/SCU Role Selection item is absent the default role of the Association-requester shall be SCU and the default role of the Association-acceptor shall be SCP.</para>
-  <para xml:id="para_40cf24e8-2bff-4bb7-b1d0-df3bbb754804">The Association-acceptor, for each SCP/SCU Role Selection item offered, either accepts the Association-requester proposal by returning the same value (1) or turns down the proposal by returning the value (0). The Association-acceptor shall not return the value (1) if the Association-requester has not proposed the role, i.e., it has sent a value (0). The Association-requester shall ignore the response if it has not proposed the role.</para>
-  <para xml:id="para_3745c745-d4a1-4cde-8fb7-e39265a1c212">If the SCP/SCU Role Selection item is not returned by the Association-acceptor then the role of the Association-requester shall be SCU and the role of the Association-acceptor shall be SCP. <xref linkend="figure_D.3-7" xrefstyle="select: label"/> illustrates the SCP/SCU Role Selection negotiation.</para>
+  <para xml:id="para_b7de055c-3e50-427e-ad0b-f69a6ac9fd40">If the SCP/SCU Role Selection item is absent the default role of the Association-requestor shall be SCU and the default role of the Association-acceptor shall be SCP.</para>
+  <para xml:id="para_40cf24e8-2bff-4bb7-b1d0-df3bbb754804">The Association-acceptor, for each SCP/SCU Role Selection item offered, either accepts the Association-requestor proposal by returning the same value (1) or turns down the proposal by returning the value (0). The Association-acceptor shall not return the value (1) if the Association-requestor has not proposed the role, i.e., it has sent a value (0). The Association-requestor shall ignore the response if it has not proposed the role.</para>
+  <para xml:id="para_3745c745-d4a1-4cde-8fb7-e39265a1c212">If the SCP/SCU Role Selection item is not returned by the Association-acceptor then the role of the Association-requestor shall be SCU and the role of the Association-acceptor shall be SCP. <xref linkend="figure_D.3-7" xrefstyle="select: label"/> illustrates the SCP/SCU Role Selection Negotiation.</para>
   <para xml:id="para_203f3f14-1a13-4e03-9923-a1e6e7ba065d">If the SCP/SCU Role Selection items do not exist in the A-ASSOCIATE indication they shall be omitted in the A-ASSOCIATE response.</para>
   <note>
     <orderedlist numeration="arabic">
       <listitem>
-        <para xml:id="para_c8253ecd-389d-4a34-bcd8-36dc84a07fad">The choices made for the default roles are based on clarification made to previous versions of the Standard. Association-requesters that wish to offer Abstract Syntax Names using the SCP role must support this item. Association-acceptors that wish to accept Abstract Syntax Names using the SCU role must support this item.</para>
+        <para xml:id="para_c8253ecd-389d-4a34-bcd8-36dc84a07fad">The choices made for the default roles are based on clarification made to previous versions of the Standard. Association-requestors that wish to offer Abstract Syntax Names using the SCP role must support this item. Association-acceptors that wish to accept Abstract Syntax Names using the SCU role must support this item.</para>
       </listitem>
       <listitem>
-        <para xml:id="para_8ed7bad9-2b19-4b3a-855a-c2ec0b6ae329">If an Association-requestor offers an SCP/SCU Role Selection item for an Abstract Syntax Name but the Association-acceptor does not return a SCP/SCU Role Selection item for the same Abstract Syntax Name then the proposed roles have not been accepted and the default roles apply (i.e., Association-requester is SCU and Association-acceptor is SCP).</para>
+        <para xml:id="para_8ed7bad9-2b19-4b3a-855a-c2ec0b6ae329">If an Association-requestor offers an SCP/SCU Role Selection item for an Abstract Syntax Name but the Association-acceptor does not return an SCP/SCU Role Selection item for the same Abstract Syntax Name then the proposed roles have not been accepted and the default roles apply (i.e., Association-requestor is SCU and Association-acceptor is SCP).</para>
       </listitem>
     </orderedlist>
   </note>
@@ -12553,7 +12559,7 @@
   <section label="D.3.3.4.1" status="5" xml:id="sect_D.3.3.4.1">
     <title>SCP/SCU Role Selection Sub-Item Structure (A-ASSOCIATE-RQ)</title>
   
-  <para xml:id="para_fdf0743d-03b5-4604-a4a2-805d7e5743a3">The SCP/SCU Role Selection Sub-Item shall be made of a sequence of mandatory fields. This Sub-Item is optional and if supported, one or more SCP/SCU Role Selection Sub-Items may be present in the User Data Item of the A-ASSOCIATE-RQ. The Association-requester may only offer one SOP Class SCP/SCU Role Selection Sub-Item for each SOP Class UID or Meta SOP Class that is present in the A-ASSOCIATE request. <xref linkend="table_D.3-9" xrefstyle="select: label"/> shows the sequence of the mandatory fields.</para>
+  <para xml:id="para_fdf0743d-03b5-4604-a4a2-805d7e5743a3">The SCP/SCU Role Selection Sub-Item shall be made of a sequence of mandatory fields. This Sub-Item is optional and if supported, one or more SCP/SCU Role Selection Sub-Items may be present in the User Data Item of the A-ASSOCIATE-RQ. The Association-requestor may only offer one SOP Class SCP/SCU Role Selection Sub-Item for each SOP Class UID or Meta SOP Class that is present in the A-ASSOCIATE request. <xref linkend="table_D.3-9" xrefstyle="select: label"/> shows the sequence of the mandatory fields.</para>
     <table frame="box" label="D.3-9" rules="all" xml:id="table_D.3-9">
     <caption>SCP/SCU Role Selection Sub-Item Fields (A-ASSOCIATE-RQ)</caption>
     <thead>
@@ -12601,7 +12607,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_ae59a743-aabc-4630-8222-8d1f7af99fb9">3 - 4</para>
+        <para xml:id="para_ae59a743-aabc-4630-8222-8d1f7af99fb9">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_0ecf0e44-ade3-40bf-9414-b022484238d9">Item-length</para>
@@ -12629,7 +12635,7 @@
         <para xml:id="para_c608f09a-00dd-46d0-905d-a228c5a0dce2">SOP-class-uid</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_97dba67d-c728-4745-9b91-aedb52d29550">This variable field shall contain the SOP Class UID or Meta SOP Class UID that may be used to identify the corresponding Abstract Syntax for which this Sub-Item pertains. It shall be encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="PS3.5" xrefstyle="select: labelnumber"/>.</para>
+        <para xml:id="para_97dba67d-c728-4745-9b91-aedb52d29550">This variable field shall contain the SOP Class UID or Meta SOP Class UID that may be used to identify the corresponding Abstract Syntax for which this Sub-Item pertains. It shall be encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="chapter_9" xrefstyle="template:Section %n “%t” in PS3.5"/>.</para>
       </td>
     </tr>
     <tr valign="top">
@@ -12640,7 +12646,7 @@
         <para xml:id="para_29659ae2-8a4b-4b0b-8e7e-8429a8ae262d">SCU-role</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_26414a13-e956-45cd-8eca-40383c1d67c1">This byte field shall contain the SCU-role as defined for the Association-requester in <xref linkend="sect_D.3.3.4" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary and shall use one of the following values:</para>
+        <para xml:id="para_26414a13-e956-45cd-8eca-40383c1d67c1">This byte field shall contain the SCU-role as defined for the Association-requestor in <xref linkend="sect_D.3.3.4" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary and shall use one of the following values:</para>
         <para xml:id="para_ce83748c-077f-4bd8-9d26-fe35014dc5b3">0 - non support of the SCU role</para>
         <para xml:id="para_a3068a65-9e0a-4661-b0ff-e160cc451777">1 - support of the SCU role</para>
       </td>
@@ -12653,7 +12659,7 @@
         <para xml:id="para_f25d4130-a412-4855-9ea8-f08903a4b3e2">SCP-role</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_e76d909d-6b8f-46b9-b2c8-337a8439454b">This byte field shall contain the SCP-role as defined for the Association-requester in <xref linkend="sect_D.3.3.4" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary and shall use one of the following values:</para>
+        <para xml:id="para_e76d909d-6b8f-46b9-b2c8-337a8439454b">This byte field shall contain the SCP-role as defined for the Association-requestor in <xref linkend="sect_D.3.3.4" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary and shall use one of the following values:</para>
         <para xml:id="para_0784015d-0e01-4ead-b779-18d1f30cc956">0 - non support of the SCP role</para>
         <para xml:id="para_2e34636c-e932-4354-ae04-2ebe0260aa81">1 - support of the SCP role.</para>
       </td>
@@ -12742,7 +12748,7 @@
         <para xml:id="para_f0efbdf1-fa4f-49f7-b81c-c578b7947a13">SOP-class-uid</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_1ffd380b-9a03-4c96-bd6c-bcc2c3a29d8a">This variable field shall contain the SOP Class UID or Meta SOP Class UID that may be used to identify the corresponding Abstract Syntax for which this Sub-Item pertains. It shall be encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="PS3.5" xrefstyle="select: labelnumber"/>.</para>
+        <para xml:id="para_1ffd380b-9a03-4c96-bd6c-bcc2c3a29d8a">This variable field shall contain the SOP Class UID or Meta SOP Class UID that may be used to identify the corresponding Abstract Syntax for which this Sub-Item pertains. It shall be encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="chapter_9" xrefstyle="template:Section %n “%t” in PS3.5"/>.</para>
       </td>
     </tr>
     <tr valign="top">
@@ -12754,8 +12760,8 @@
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_65822dbd-89d8-4be3-9386-44547813e961">This byte field shall contain the SCU-role as defined in <xref linkend="sect_D.3.3.4" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary and shall use one of the following values:</para>
-        <para xml:id="para_adb8d2bd-7743-4b78-a1cb-dff23e013521">0 - The Association-acceptor rejects the Association-requester's proposal of the SCU role selection</para>
-        <para xml:id="para_eacbd064-f29c-405c-b3a5-e552a61be15c">1 - The Association-acceptor accepts the Association-requester's proposal of the SCU role selection</para>
+        <para xml:id="para_adb8d2bd-7743-4b78-a1cb-dff23e013521">0 - The Association-acceptor rejects the Association-requestor's proposal of the SCU role selection</para>
+        <para xml:id="para_eacbd064-f29c-405c-b3a5-e552a61be15c">1 - The Association-acceptor accepts the Association-requestor's proposal of the SCU role selection</para>
       </td>
     </tr>
     <tr valign="top">
@@ -12767,8 +12773,8 @@
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_67451cde-f1c2-4a3f-a20e-1a7dda245ebf">This byte field shall contain the SCP-role as defined for the Association-acceptor in <xref linkend="sect_D.3.3.4" xrefstyle="select: label"/>. It shall be encoded as an unsigned binary and shall use one of the following values:</para>
-        <para xml:id="para_7c4b6838-4e41-4e85-a3b1-47246dba060e">0 - The Association-acceptor rejects the Association-requester's proposal of the SCP role selection</para>
-        <para xml:id="para_9b48ad11-09f8-4db2-847b-52cbc03918db">1 - The Association-acceptor accepts the Association-requester's proposal of the SCP role selection</para>
+        <para xml:id="para_7c4b6838-4e41-4e85-a3b1-47246dba060e">0 - The Association-acceptor rejects the Association-requestor's proposal of the SCP role selection</para>
+        <para xml:id="para_9b48ad11-09f8-4db2-847b-52cbc03918db">1 - The Association-acceptor accepts the Association-requestor's proposal of the SCP role selection</para>
       </td>
     </tr>
    </tbody>
@@ -12799,12 +12805,12 @@
   <note>
     <para xml:id="para_3a13094c-f617-4958-a275-f1c849b804f9">The use of the SOP Class Extended Negotiation is not limited to Service Classes defined by this Standard. It may also be used for privately defined Service Classes.</para>
   </note>
-  <para xml:id="para_3d0d0aec-0c16-45dc-97ee-f1a49f3f3c1a">The Association-requester may only offer one SOP Class Extended Negotiation item for each SOP Class UID or Meta SOP Class that is present in the A-ASSOCIATE request.</para>
-  <para xml:id="para_f401f31e-34f0-46fb-83d1-4975d488ff15">If the SOP Class Extended Negotiation items do not exist in the A-ASSOCIATE indication they shall be omitted in the A-ASSOCIATE response.</para>
+  <para xml:id="para_3d0d0aec-0c16-45dc-97ee-f1a49f3f3c1a">The Association-requestor may only offer one SOP Class Extended Negotiation Sub-Item for each SOP Class UID or Meta SOP Class that is present in the A-ASSOCIATE request.</para>
+  <para xml:id="para_f401f31e-34f0-46fb-83d1-4975d488ff15">If the SOP Class Extended Negotiation Sub-Items do not exist in the A-ASSOCIATE indication they shall be omitted in the A-ASSOCIATE response.</para>
   <section label="D.3.3.5.1" status="5" xml:id="sect_D.3.3.5.1">
     <title>SOP Class Extended Negotiation Sub-Item Structure (A-ASSOCIATE-RQ)</title>
   
-  <para xml:id="para_b4b2a3ff-b867-46d3-a89f-cac960f09a7b">The SOP Class Extended Negotiation Sub-item shall be made of a sequence of mandatory fields followed by the Service-class-application-information field (specific for each Service Class specification). This Sub-Item is required per the specific Service Class specifications. Multiple SOP Class Extended Negotiation Sub-Items may be present in the User Data Item of the A-ASSOCIATE-RQ, however, only one Sub-Item per SOP Class UID shall be present. <xref linkend="table_D.3-11" xrefstyle="select: label"/> shows the sequence of mandatory fields.</para>
+  <para xml:id="para_b4b2a3ff-b867-46d3-a89f-cac960f09a7b">The SOP Class Extended Negotiation Sub-Item shall be made of a sequence of mandatory fields followed by the Service-class-application-information field (specific for each Service Class specification). This Sub-Item is required per the specific Service Class specifications. Multiple SOP Class Extended Negotiation Sub-Items may be present in the User Data Item of the A-ASSOCIATE-RQ, however, only one Sub-Item per SOP Class UID shall be present. <xref linkend="table_D.3-11" xrefstyle="select: label"/> shows the sequence of mandatory fields.</para>
     <table frame="box" label="D.3-11" rules="all" xml:id="table_D.3-11">
     <caption>SOP Class Extended Negotiation Sub-Item Fields (A-ASSOCIATE-RQ and A-ASSOCIATE-AC)</caption>
     <thead>
@@ -12880,11 +12886,11 @@
         <para xml:id="para_46041e4e-5439-4115-9f3f-bff0ccb31581">SOP-class-uid</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_80d0f1f3-bd27-4969-9d18-124d3e24366d">The SOP Class or Meta SOP Class identifier encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="PS3.5" xrefstyle="select: labelnumber"/>.</para>
+        <para xml:id="para_80d0f1f3-bd27-4969-9d18-124d3e24366d">The SOP Class or Meta SOP Class identifier encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="chapter_9" xrefstyle="template:Section %n “%t” in PS3.5"/>.</para>
       </td>
     </tr>
     <tr valign="top">
-      <td align="left" colspan="1" rowspan="1">
+        <td align="center" colspan="1" rowspan="1">
         <para xml:id="para_3354e654-f1d6-4867-9180-f519b5162ac6">xxx-xxx</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
@@ -12902,23 +12908,23 @@
 <section label="D.3.3.5.2" status="5" xml:id="sect_D.3.3.5.2">
     <title>SOP Class Extended Negotiation Sub-Item Structure (A-ASSOCIATE-AC)</title>
   
-  <para xml:id="para_652ca81e-898c-4ca6-aacd-6126a5778084">The SOP Class Extended Negotiation Sub-item shall be made of a sequence of mandatory fields followed by the Service-class-application-information field (specific for each Service Class specification). This Sub-Item is required per the specific Service Class specifications. Multiple SOP Class Extended Negotiation Sub-Items may be present in the User Data Item of the A-ASSOCIATE-AC, however, only one Sub-Item per SOP Class UID shall be present. <xref linkend="table_D.3-11" xrefstyle="select: label"/> shows the sequence of mandatory fields.</para>
+  <para xml:id="para_652ca81e-898c-4ca6-aacd-6126a5778084">The SOP Class Extended Negotiation Sub-Item shall be made of a sequence of mandatory fields followed by the Service-class-application-information field (specific for each Service Class specification). This Sub-Item is required per the specific Service Class specifications. Multiple SOP Class Extended Negotiation Sub-Items may be present in the User Data Item of the A-ASSOCIATE-AC, however, only one Sub-Item per SOP Class UID shall be present. <xref linkend="table_D.3-11" xrefstyle="select: label"/> shows the sequence of mandatory fields.</para>
   </section>
 </section>
 <section label="D.3.3.6" status="4" xml:id="sect_D.3.3.6">
     <title>Service-Object Pair (SOP) Class Common Extended Negotiation</title>
   
-  <para xml:id="para_31aef017-4efe-427c-aed9-8e73d8e2adce">The SOP Class Common Extended Negotiation allows, at Association establishment, peer DICOM AEs to exchange application information, the form of which is generic, and not specific to individual Service Classes, as compared to the information defined in D.3.3.5. This is an optional feature that Association-requesters and Association-acceptors may or may not choose to support.</para>
+  <para xml:id="para_31aef017-4efe-427c-aed9-8e73d8e2adce">The SOP Class Common Extended Negotiation allows, at Association establishment, peer DICOM AEs to exchange application information, the form of which is generic, and not specific to individual Service Classes, as compared to the information defined in D.3.3.5. This is an optional feature that Association-requestors and Association-acceptors may or may not choose to support.</para>
   <para xml:id="para_1112a3d6-e978-4d89-ba35-29379a13ae8a">The information included for each SOP Class for which a sub-item is present consists of a Service Class UID and (optionally) a Related General SOP Class UID.</para>
   <para xml:id="para_e93d0c95-8354-4562-aadd-6d8915d628d0">The Service Class UID conveys the Service Class of the SOP Class.</para>
   <note>
-    <para xml:id="para_83421938-ecf6-4697-9c1f-cff5479f199b">Explicit conveyance of the Service Class may allow the selection of the proper format for the Service-class-application-information of the SOP Class Extended Negotiation Sub-item.</para>
+    <para xml:id="para_83421938-ecf6-4697-9c1f-cff5479f199b">Explicit conveyance of the Service Class may allow the selection of the proper format for the Service-class-application-information of the SOP Class Extended Negotiation Sub-Item.</para>
   </note>
   <para xml:id="para_df79db08-d4d7-4b5f-94f6-df970268ae99">The Related General SOP Class UID conveys zero or more Related General SOP Class for the SOP Class.</para>
   <note>
     <orderedlist>
       <listitem>
-        <para xml:id="para_bb3042a5-8bba-4839-913e-9a25292b34ea">Consider the example of negotiation of support for a Procedure Log Storage SOP Class. That SOP Class is of the Storage Service Class. The encoding of the IOD would be compatible with the more general Enhanced SR Storage SOP Class. Therefore, the following common extended negotiation sub-item could optionally be included:</para>
+        <para xml:id="para_bb3042a5-8bba-4839-913e-9a25292b34ea">Consider the example of negotiation of support for a Procedure Log Storage SOP Class. That SOP Class is of the Storage Service Class. The encoding of the IOD would be compatible with the more general Enhanced SR Storage SOP Class. Therefore, the following common Extended Negotiation sub-item could optionally be included:</para>
         <itemizedlist mark="none">
           <listitem>
 <para xml:id="para_73d2309e-dbd7-4ba4-bece-6c515aaaaeae">SOP Class UID: 1.2.840.10008.5.1.4.1.1.88.40 Procedure Log</para>
@@ -12953,12 +12959,12 @@
       </listitem>
     </orderedlist>
   </note>
-  <para xml:id="para_f4662e06-8779-4663-abb4-1cf8103deba1">The Association-requester may only offer one SOP Class Common Extended Negotiation item for each SOP Class UID that is present in the A-ASSOCIATE request.</para>
-  <para xml:id="para_9ec8279a-4d21-424e-bd44-42e3a63dce41">No response is necessary, hence the SOP Class Common Extended Negotiation items shall be omitted in the A-ASSOCIATE response.</para>
+  <para xml:id="para_f4662e06-8779-4663-abb4-1cf8103deba1">The Association-requestor may only offer one SOP Class Common Extended Negotiation Sub-Item for each SOP Class UID that is present in the A-ASSOCIATE request.</para>
+  <para xml:id="para_9ec8279a-4d21-424e-bd44-42e3a63dce41">No response is necessary, hence the SOP Class Common Extended Negotiation Sub-Items shall be omitted in the A-ASSOCIATE response.</para>
   <section label="D.3.3.6.1" status="5" xml:id="sect_D.3.3.6.1">
     <title>SOP Class Common Extended Negotiation Sub-Item Structure (A-ASSOCIATE-RQ)</title>
   
-  <para xml:id="para_613eb9e5-f931-4741-aa6e-25ff06f43252">The SOP Class Common Extended Negotiation Sub-item shall be made of a sequence of mandatory fields, the last two of which may be zero-length. Multiple SOP Class Common Extended Negotiation Sub-Items may be present in the User Data Item of the A-ASSOCIATE-RQ, however, only one Sub-Item per SOP Class UID shall be present. <xref linkend="table_D.3-12" xrefstyle="select: label"/> shows the sequence of mandatory fields.</para>
+  <para xml:id="para_613eb9e5-f931-4741-aa6e-25ff06f43252">The SOP Class Common Extended Negotiation Sub-Item shall be made of a sequence of mandatory fields, the last two of which may be zero-length. Multiple SOP Class Common Extended Negotiation Sub-Items may be present in the User Data Item of the A-ASSOCIATE-RQ, however, only one Sub-Item per SOP Class UID shall be present. <xref linkend="table_D.3-12" xrefstyle="select: label"/> shows the sequence of mandatory fields.</para>
     <table frame="box" label="D.3-12" rules="all" xml:id="table_D.3-12">
     <caption>SOP Class Common Extended Negotiation Sub-Item Fields (A-ASSOCIATE-RQ)</caption>
     <thead>
@@ -12998,10 +13004,10 @@
         <para xml:id="para_7a724c10-51da-4340-a298-8dde894b9ec2">2</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_c2fa92a0-8d0e-4a0d-af39-17918524d660">Sub-item-version</para>
+        <para xml:id="para_c2fa92a0-8d0e-4a0d-af39-17918524d660">Sub-Item-version</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_7001f685-5e49-490d-9964-2beca1b28ed5">This field indicates the version of the Sub-item. Fields added to the Sub-item definition in succeeding editions of the Standard will not affect the semantics of previously defined fields. The version of the Sub-item defined in this edition of the Standard is 0.</para>
+        <para xml:id="para_7001f685-5e49-490d-9964-2beca1b28ed5">This field indicates the version of the Sub-Item. Fields added to the Sub-Item definition in succeeding editions of the Standard will not affect the semantics of previously defined fields. The version of the Sub-Item defined in this edition of the Standard is 0.</para>
       </td>
     </tr>
     <tr valign="top">
@@ -13034,7 +13040,7 @@
         <para xml:id="para_17ee4fde-a1ed-4134-a52e-244ec9821eb6">SOP-class-uid</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_074f4df0-0251-4831-bf56-59973a5fcfcf">The SOP Class identifier encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="PS3.5" xrefstyle="select: labelnumber"/>.</para>
+        <para xml:id="para_074f4df0-0251-4831-bf56-59973a5fcfcf">The SOP Class identifier encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="chapter_9" xrefstyle="template:Section %n “%t” in PS3.5"/>.</para>
       </td>
     </tr>
     <tr valign="top">
@@ -13056,7 +13062,7 @@
         <para xml:id="para_dc308de3-1a1e-4a88-a760-4677759a081c">Service-class-uid</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_397240b0-9b52-4948-9b97-438100981009">The Service Class identifier encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="PS3.5" xrefstyle="select: labelnumber"/>.</para>
+        <para xml:id="para_397240b0-9b52-4948-9b97-438100981009">The Service Class identifier encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="chapter_9" xrefstyle="template:Section %n “%t” in PS3.5"/>.</para>
       </td>
     </tr>
     <tr valign="top">
@@ -13090,13 +13096,11 @@
         <para xml:id="para_6f17e2d3-a39e-432f-ba08-f1fce2a1e874">Reserved</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_a6ab5804-3c99-40f4-b546-1025d1bf669b">Reserved for additional fields of the sub-item. Shall be zero-length for Version 0 of Sub-item definition.</para>
+        <para xml:id="para_a6ab5804-3c99-40f4-b546-1025d1bf669b">Reserved for additional fields of the sub-item. Shall be zero-length for Version 0 of Sub-Item definition.</para>
       </td>
     </tr>
    </tbody>
   </table>
-
-
     <table frame="box" label="D.3-13" rules="all" xml:id="table_D.3-13">
     <caption>Related-General-SOP-Class-Identification Sub-Fields</caption>
     <thead>
@@ -13138,20 +13142,18 @@
         <para xml:id="para_33356b54-196e-4214-8c19-3d249e1ce097">Related-general-sop-class-uid</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_2e95f653-0c7a-4048-bc93-c23c86d179c2">The Related General SOP Class identifier encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="PS3.5" xrefstyle="select: labelnumber"/>.</para>
+          <para xml:id="para_2e95f653-0c7a-4048-bc93-c23c86d179c2">The Related General SOP Class identifier encoded as a UID as defined in <olink targetdoc="PS3.5" targetptr="chapter_9" xrefstyle="template:Section %n “%t” in PS3.5"/>.</para>
       </td>
     </tr>
    </tbody>
   </table>
-
-
   </section>
 </section>
 <section label="D.3.3.7" status="4" xml:id="sect_D.3.3.7">
     <title>User Identity Negotiation</title>
   
   <para xml:id="para_c76d31f1-77e6-442b-a30d-5d1dab8537a8">The User Identity Negotiation is used to notify the association acceptor of the user identity of the association requestor. It may also request that the association acceptor respond with the server identity. This negotiation is optional. If this sub-item is not present in the A-ASSOCIATE request the A-ASSOCIATE response shall not contain a user identity response sub-item.</para>
-  <para xml:id="para_f091ab35-d0f1-4f10-8a5b-c4c1338240d7">The Association-requester conveys in the A-ASSOCIATE request:</para>
+  <para xml:id="para_f091ab35-d0f1-4f10-8a5b-c4c1338240d7">The Association-requestor conveys in the A-ASSOCIATE request:</para>
 <itemizedlist>
   <listitem>
     <para xml:id="para_df2b7b69-7b34-4e4a-a627-a88c6cd6f2dd">the form of user identity being provided, either a username, username and passcode, a Kerberos service ticket, a SAML assertion, or a JSON Web Token (JWT).</para>
@@ -13253,7 +13255,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_d61fe0fa-bfa7-4d45-8fd0-257ce1c5c649">3 - 4</para>
+        <para xml:id="para_d61fe0fa-bfa7-4d45-8fd0-257ce1c5c649">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_f6e65b9d-9e24-4f20-b01d-f4f0038cc7b4">Item-length</para>
@@ -13270,7 +13272,7 @@
         <para xml:id="para_7046e441-c86c-4e31-917d-aa42236003ba">User-Identity-Type</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
-        <para xml:id="para_276328ba-b1b2-4841-b8d1-612735e34600">Field value shall be in the range 1 to 4 with the following meanings:</para>
+        <para xml:id="para_276328ba-b1b2-4841-b8d1-612735e34600">Field value shall be in the range 1 to 5 with the following meanings:</para>
         <para xml:id="para_4e42d526-3c88-415e-ab36-ace6943a17ee">1 - Username as a string in UTF-8</para>
         <para xml:id="para_3f5dda40-8c82-4a32-8b37-43ecd740a261">2 - Username as a string in UTF-8 and passcode</para>
         <para xml:id="para_7279eb99-7d15-4c8c-9493-9d33ce1e16f7">3 - Kerberos Service ticket</para>
@@ -13316,7 +13318,7 @@
       </td>
     </tr>
     <tr valign="top">
-      <td align="left" colspan="1" rowspan="1">
+        <td align="center" colspan="1" rowspan="1">
         <para xml:id="para_c10f8178-8054-4be8-9409-ab736c53f734">n+1-n+2</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
@@ -13327,7 +13329,7 @@
       </td>
     </tr>
     <tr valign="top">
-      <td align="left" colspan="1" rowspan="1">
+        <td align="center" colspan="1" rowspan="1">
         <para xml:id="para_97dec233-6693-4624-83f2-c7f727786604">n+3-m</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
@@ -13393,7 +13395,7 @@
     </tr>
     <tr valign="top">
       <td align="center" colspan="1" rowspan="1">
-        <para xml:id="para_c845ab52-4ad9-4523-ba75-47c01be2fa56">3 - 4</para>
+        <para xml:id="para_c845ab52-4ad9-4523-ba75-47c01be2fa56">3-4</para>
       </td>
       <td align="left" colspan="1" rowspan="1">
         <para xml:id="para_21081b99-c89e-4a56-a9e4-79a39e3d231f">Item-length</para>

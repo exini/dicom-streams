@@ -40,7 +40,7 @@ class ElementFlowsTest
       .via(elementFlow)
 
     source
-      .runWith(TestSink.probe[Element])
+      .runWith(TestSink())
       .expectElement(Tag.PatientName)
       .expectElement(Tag.StudyDate)
       .expectDicomComplete()
@@ -60,7 +60,7 @@ class ElementFlowsTest
       .via(elementFlow)
 
     source
-      .runWith(TestSink.probe[Element])
+      .runWith(TestSink())
       .expectFragments(Tag.PixelData)
       .expectFragment(4)
       .expectFragment(4)
@@ -78,7 +78,7 @@ class ElementFlowsTest
       .via(elementFlow)
 
     source
-      .runWith(TestSink.probe[Element])
+      .runWith(TestSink())
       .expectElement(Tag.StudyDate, ByteString.empty)
       .expectElement(Tag.PatientName, ByteString("John^Doe"))
       .expectFragments(Tag.PixelData)
@@ -98,7 +98,7 @@ class ElementFlowsTest
       .via(elementFlow)
 
     source
-      .runWith(TestSink.probe[Element])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence, 24)
       .expectItem(16)
       .expectElement(Tag.PatientName)
@@ -120,7 +120,7 @@ class ElementFlowsTest
       .via(tagPathFlow)
 
     source
-      .runWith(TestSink.probe[(TagPath, Element)])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case (EmptyTagPath, PreambleElement) => true
@@ -201,7 +201,7 @@ class ElementFlowsTest
       .via(tagPathFlow)
 
     source
-      .runWith(TestSink.probe[(TagPath, Element)])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case (_: TagPath, _: SequenceElement) => true
@@ -240,7 +240,7 @@ class ElementFlowsTest
       .via(tagPathFlow)
 
     source
-      .runWith(TestSink.probe[(TagPath, Element)])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case (_: TagPath, e: ValueElement) if e.length == 0 => true

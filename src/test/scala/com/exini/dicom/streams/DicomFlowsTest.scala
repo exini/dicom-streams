@@ -6,7 +6,7 @@ import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements.ValueElement
-import com.exini.dicom.data.DicomParts.{ DicomPart, MetaPart }
+import com.exini.dicom.data.DicomParts.MetaPart
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
 import com.exini.dicom.streams.DicomFlows._
@@ -43,7 +43,7 @@ class DicomFlowsTest
       .via(printFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -63,7 +63,7 @@ class DicomFlowsTest
       .via(stopTagFlow(Tag.PatientName))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectDicomComplete()
@@ -78,7 +78,7 @@ class DicomFlowsTest
       .via(stopTagFlow(Tag.StudyDate + 1))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectDicomComplete()
@@ -95,7 +95,7 @@ class DicomFlowsTest
       .via(stopTagFlow(Tag.PatientName + 1))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence)
@@ -121,7 +121,7 @@ class DicomFlowsTest
       .via(groupLengthDiscardFilter)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -140,7 +140,7 @@ class DicomFlowsTest
       .via(groupLengthDiscardFilter)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -158,7 +158,7 @@ class DicomFlowsTest
       .via(fmiDiscardFilter)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectHeader(Tag.StudyDate)
@@ -174,7 +174,7 @@ class DicomFlowsTest
       .via(fmiDiscardFilter)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectHeader(Tag.ImageType)
@@ -191,7 +191,7 @@ class DicomFlowsTest
       .via(tagFilter(tagPath => tagPath.tag != Tag.PatientName))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectHeader(Tag.StudyDate)
@@ -213,7 +213,7 @@ class DicomFlowsTest
       .via(tagFilter(tagPath => groupNumber(tagPath.tag) >= 8, _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectHeader(Tag.StudyDate)
@@ -229,7 +229,7 @@ class DicomFlowsTest
       .via(tagFilter(tagPath => tagPath.tag == Tag.PatientName, _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectDicomComplete()
@@ -247,7 +247,7 @@ class DicomFlowsTest
       .via(tagFilter(tagPath => !isFileMetaInformation(tagPath.tag), _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectDicomComplete()
@@ -261,7 +261,7 @@ class DicomFlowsTest
       .via(tagFilter(tagPath => !isFileMetaInformation(tagPath.tag), _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectHeader(Tag.ImageType)
@@ -275,7 +275,7 @@ class DicomFlowsTest
       .via(tagFilter(tagPath => !isPrivate(tagPath.tag)))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -293,7 +293,7 @@ class DicomFlowsTest
       .via(allowFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectDicomComplete()
@@ -310,7 +310,7 @@ class DicomFlowsTest
       .via(allowFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomComplete()
   }
 
@@ -324,7 +324,7 @@ class DicomFlowsTest
       .via(allowFilter(Set.empty, _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomComplete()
   }
 
@@ -339,7 +339,7 @@ class DicomFlowsTest
       .via(allowFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.StudyDate)), _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectHeader(Tag.StudyDate)
@@ -360,7 +360,7 @@ class DicomFlowsTest
       .via(allowFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate)), _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectHeader(Tag.StudyDate)
@@ -385,7 +385,7 @@ class DicomFlowsTest
       .via(denyFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence)), _ => false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectHeader(Tag.PatientName)
@@ -410,7 +410,7 @@ class DicomFlowsTest
       )
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectHeader(Tag.StudyDate)
@@ -432,7 +432,7 @@ class DicomFlowsTest
       .via(denyFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate)), _ => true))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence)
@@ -459,7 +459,7 @@ class DicomFlowsTest
       .via(headerFilter(header => header.vr == VR.PN))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectHeader(Tag.PatientName)
@@ -485,7 +485,7 @@ class DicomFlowsTest
       .via(validateContextFlow(contexts))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -510,7 +510,7 @@ class DicomFlowsTest
       .via(validateContextFlow(contexts))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -537,7 +537,7 @@ class DicomFlowsTest
       .via(validateContextFlow(contexts))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomError()
   }
 
@@ -553,7 +553,7 @@ class DicomFlowsTest
       .via(validateContextFlow(contexts))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomError()
   }
 
@@ -569,7 +569,7 @@ class DicomFlowsTest
       .via(validateContextFlow(contexts))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomError()
   }
 
@@ -587,7 +587,7 @@ class DicomFlowsTest
       .via(validateContextFlow(contexts))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomError()
   }
 
@@ -614,7 +614,7 @@ class DicomFlowsTest
       .via(parseFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -647,7 +647,7 @@ class DicomFlowsTest
       .via(deflateDatasetFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -664,7 +664,7 @@ class DicomFlowsTest
       .via(deflateDatasetFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -685,7 +685,7 @@ class DicomFlowsTest
       .via(deflateDatasetFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomComplete()
   }
 
@@ -699,7 +699,7 @@ class DicomFlowsTest
       .via(bulkDataFilter)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -721,7 +721,7 @@ class DicomFlowsTest
       .via(bulkDataFilter)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectHeader(Tag.PatientName)
@@ -744,7 +744,7 @@ class DicomFlowsTest
       .via(bulkDataFilter)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.WaveformSequence)
       .expectItem()
       .expectHeader(Tag.PatientName)
@@ -768,7 +768,7 @@ class DicomFlowsTest
       .via(bulkDataFilter)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectDicomComplete()
@@ -788,7 +788,7 @@ class DicomFlowsTest
       .via(fmiGroupLengthFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk(intToBytesLE(correctLength))
@@ -809,7 +809,7 @@ class DicomFlowsTest
       .via(fmiGroupLengthFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk(intToBytesLE(correctLength))
@@ -828,7 +828,7 @@ class DicomFlowsTest
       .via(fmiGroupLengthFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk(intToBytesLE(correctLength))
       .expectHeader(Tag.TransferSyntaxUID)
@@ -847,7 +847,7 @@ class DicomFlowsTest
       .via(fmiGroupLengthFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomComplete()
   }
 
@@ -860,7 +860,7 @@ class DicomFlowsTest
       .via(fmiGroupLengthFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
@@ -876,7 +876,7 @@ class DicomFlowsTest
       .via(fmiGroupLengthFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk(ByteString(0, 0, 0, 0))
       .expectHeader(Tag.PatientName)
@@ -897,7 +897,7 @@ class DicomFlowsTest
       .via(fmiGroupLengthFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case SomePart => true
@@ -925,7 +925,7 @@ class DicomFlowsTest
       .via(toIndeterminateLengthSequences)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence, indeterminateLength)
       .expectItem(indeterminateLength)
       .expectHeader(Tag.StudyDate)
@@ -959,7 +959,7 @@ class DicomFlowsTest
       .via(toIndeterminateLengthSequences)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence, indeterminateLength)
       .expectItem(indeterminateLength)
       .expectHeader(Tag.StudyDate)
@@ -981,7 +981,7 @@ class DicomFlowsTest
       .via(toIndeterminateLengthSequences)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectFragments()
       .expectItem(4)
       .expectValueChunk()
@@ -1007,7 +1007,7 @@ class DicomFlowsTest
       .via(toIndeterminateLengthSequences)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence, indeterminateLength)
@@ -1040,7 +1040,7 @@ class DicomFlowsTest
       .via(toIndeterminateLengthSequences)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence, indeterminateLength)
       .expectItem(indeterminateLength)
       .expectHeader(Tag.StudyDate)
@@ -1076,7 +1076,7 @@ class DicomFlowsTest
       .via(toUtf8Flow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectHeader(Tag.PatientName)
@@ -1096,7 +1096,7 @@ class DicomFlowsTest
       .via(toUtf8Flow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk(ByteString("ISO_IR 192"))
       .expectDicomComplete()
@@ -1111,7 +1111,7 @@ class DicomFlowsTest
       .via(toUtf8Flow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk(ByteString("ISO_IR 192"))
       .expectHeader(Tag.PatientName)
@@ -1137,7 +1137,7 @@ class DicomFlowsTest
       .via(toUtf8Flow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence)
@@ -1165,7 +1165,7 @@ class DicomFlowsTest
       .via(toUtf8Flow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectHeader(Tag.PatientName)
@@ -1190,7 +1190,7 @@ class DicomFlowsTest
       .reduce(_ ++ _)
 
     source
-      .runWith(TestSink.probe[ByteString])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF { case newBytes => newBytes shouldBe bytes }
       .expectComplete()
@@ -1205,7 +1205,7 @@ class DicomFlowsTest
       .via(toUtf8Flow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectHeader(Tag.PatientName)
@@ -1225,7 +1225,7 @@ class DicomFlowsTest
       .via(toUtf8Flow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk(ByteString("ISO_IR 192"))
       .expectHeader(Tag.PatientName)
@@ -1256,7 +1256,7 @@ class DicomFlowsTest
       .via(toExplicitVrLittleEndianFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -1294,7 +1294,7 @@ class DicomFlowsTest
       .reduce(_ ++ _)
 
     source
-      .runWith(TestSink.probe[ByteString])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF { case newBytes: ByteString => newBytes shouldBe personNameJohnDoe() }
       .expectComplete()
@@ -1320,7 +1320,7 @@ class DicomFlowsTest
       .reduce(_ ++ _)
 
     source
-      .runWith(TestSink.probe[ByteString])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF { case newBytes: ByteString => newBytes shouldBe bytes }
       .expectComplete()
@@ -1335,7 +1335,7 @@ class DicomFlowsTest
       .via(toExplicitVrLittleEndianFlow)
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectDicomComplete()
   }

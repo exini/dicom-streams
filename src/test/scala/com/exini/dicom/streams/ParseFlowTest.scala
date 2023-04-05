@@ -6,7 +6,7 @@ import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements.ValueElement
-import com.exini.dicom.data.{ Tag, UID, VR, _ }
+import com.exini.dicom.data._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -21,7 +21,6 @@ class ParseFlowTest
     with BeforeAndAfterAll {
 
   import TestUtils._
-  import com.exini.dicom.data.DicomParts._
   import com.exini.dicom.data.TestData._
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
@@ -39,7 +38,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -58,7 +57,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -76,7 +75,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -93,7 +92,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectDicomComplete()
@@ -106,7 +105,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectHeader(Tag.PatientName)
       .expectDicomComplete()
@@ -120,7 +119,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -139,7 +138,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.MediaStorageSOPInstanceUID)
@@ -159,7 +158,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectDicomComplete()
   }
@@ -176,7 +175,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -194,7 +193,7 @@ class ParseFlowTest
       .via(ParseFlow(inflate = false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -213,7 +212,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -235,7 +234,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -257,7 +256,7 @@ class ParseFlowTest
       .via(ParseFlow(inflate = false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -275,7 +274,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectFragments()
       .expectFragment(4)
       .expectValueChunk()
@@ -294,7 +293,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectFragments()
       .expectFragment(4)
       .expectValueChunk()
@@ -313,7 +312,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectFragments()
       .expectFragment(4)
       .expectValueChunk()
@@ -334,7 +333,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectHeader(Tag.PatientName)
@@ -356,7 +355,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectSequence(Tag.DerivationCodeSequence)
@@ -381,7 +380,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -400,7 +399,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomError()
   }
 
@@ -414,7 +413,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -435,7 +434,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -454,7 +453,7 @@ class ParseFlowTest
       .via(ParseFlow(chunkSize = 5))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -479,7 +478,7 @@ class ParseFlowTest
       .via(ParseFlow(chunkSize = 25, inflate = false))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
       .expectHeader(Tag.TransferSyntaxUID)
@@ -499,7 +498,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectPreamble()
       .expectHeader(Tag.FileMetaInformationGroupLength)
       .expectValueChunk()
@@ -519,7 +518,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PixelData, VR.OW, length)
       .expectValueChunk(ByteString.empty)
       .expectDicomComplete()
@@ -535,7 +534,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.StudyDate)
       .expectValueChunk()
       .expectSequence(Tag.DerivationCodeSequence)
@@ -557,7 +556,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectFragments()
       .expectFragment(0)
       .expectFragment(4)
@@ -575,7 +574,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectHeader(Tag.CTExposureSequence, VR.UN, 24)
@@ -592,7 +591,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectHeader(Tag.CTExposureSequence, VR.UN, 24)
@@ -613,7 +612,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
@@ -639,7 +638,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
@@ -663,7 +662,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
@@ -692,7 +691,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
@@ -716,7 +715,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
@@ -741,7 +740,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
@@ -769,7 +768,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectSequence(Tag.CTDIPhantomTypeCodeSequence)
@@ -799,7 +798,7 @@ class ParseFlowTest
       .via(ParseFlow())
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength, VR.UL, 4)
       .expectValueChunk(4)
       .expectHeader(Tag.MediaStorageSOPInstanceUID, VR.UI, 55)

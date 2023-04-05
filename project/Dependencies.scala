@@ -5,12 +5,12 @@ object Dependencies {
 
   private lazy val typesafeReleases = "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/"
 
-  private lazy val akkaVersion = "2.6.18"
+  private lazy val akkaVersion = "2.8.0"
 
   private lazy val lang: Seq[ModuleID] =
     Seq(
-      "org.scala-lang.modules" %% "scala-xml"           % "2.0.1",
-      "com.beachape"           %% "enumeratum"          % "1.7.0",
+      "org.scala-lang.modules" %% "scala-xml"           % "2.1.0",
+      "com.beachape"           %% "enumeratum"          % "1.7.2",
     )
 
   private lazy val akka: Seq[ModuleID] =
@@ -21,12 +21,12 @@ object Dependencies {
 
   private lazy val logging: Seq[ModuleID] =
     Seq(
-      "org.slf4j"               % "slf4j-simple"        % "1.7.35",
+      "org.slf4j"               % "slf4j-simple"        % "2.0.7",
     )
 
   private lazy val test: Seq[ModuleID] =
     Seq(
-      "org.scalatest"          %% "scalatest"           % "3.2.2"     % "test",
+      "org.scalatest"          %% "scalatest"           % "3.2.15"     % "test",
       "com.typesafe.akka"      %% "akka-stream-testkit" % akkaVersion % "test",
     )
 

@@ -21,7 +21,7 @@ lazy val rootSettings = Seq(
       url("https://exini.com")
     )
   ),
-  scalaVersion := "2.13.8",
+  scalaVersion := "2.13.10",
   scalacOptions ++= Seq("-Vimplicits", "-Vtype-diffs"),
   resolvers ++= Dependencies.resolvers
 )

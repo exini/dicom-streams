@@ -5,9 +5,9 @@ import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
-import com.exini.dicom.data.DicomParts.{ DicomPart, ElementsPart }
+import com.exini.dicom.data.DicomParts.ElementsPart
 import com.exini.dicom.data.TestData._
-import com.exini.dicom.data.{ Tag, TagTree, item, _ }
+import com.exini.dicom.data._
 import com.exini.dicom.streams.CollectFlow._
 import com.exini.dicom.streams.ParseFlow.parseFlow
 import com.exini.dicom.streams.TestUtils._
@@ -40,7 +40,7 @@ class CollectFlowTest
       .via(collectFlow(tags, "tag"))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart =>
@@ -65,7 +65,7 @@ class CollectFlowTest
       .via(collectFlow(Set.empty, "tag"))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart => e.elements.isEmpty shouldBe true
@@ -82,7 +82,7 @@ class CollectFlowTest
       .via(collectFlow(Set(Tag.Modality, Tag.SeriesInstanceUID).map(TagTree.fromTag), "tag"))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart => e.elements.isEmpty shouldBe true
@@ -103,7 +103,7 @@ class CollectFlowTest
       .via(collectFlow(Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag), "tag", maxBufferSize = 1000))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart =>
@@ -133,7 +133,7 @@ class CollectFlowTest
       .via(collectFlow(_.tag == Tag.PatientName, _.tag > Tag.PixelData, "tag", maxBufferSize = 1000))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .expectDicomError()
   }
 
@@ -161,7 +161,7 @@ class CollectFlowTest
       )
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart =>
@@ -183,7 +183,7 @@ class CollectFlowTest
       .via(collectFlow(Set(TagTree.fromTag(Tag.PixelData)), "tag"))
 
     source
-      .runWith(TestSink.probe[DicomPart])
+      .runWith(TestSink())
       .request(1)
       .expectNextChainingPF {
         case e: ElementsPart =>
