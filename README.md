@@ -158,7 +158,7 @@ latest commit to master. Given this, the following procedure should be used:
 1. Push tags to origin by `git push --tags`
 1. Push release commit to origin by `git push`, this will trigger the release using the tagged version
 1. From the Github project page, create a new release using the existing release tag describing your changes
-1. Merge master into develop via a new branch
+1. Merge master into develop via a new branch.
 
 ### License
 
