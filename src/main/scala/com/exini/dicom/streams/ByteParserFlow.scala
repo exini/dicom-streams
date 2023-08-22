@@ -27,7 +27,7 @@ abstract class ByteParserFlow[T] extends GraphStage[FlowShape[ByteString, T]] {
     override def complete(): Unit =
       completeStage()
 
-    override def needNoreData(current: ParseStep[T], reader: ByteReader, acceptNoMoreDataAvailable: Boolean): Unit =
+    override def needMoreData(current: ParseStep[T], reader: ByteReader, acceptNoMoreDataAvailable: Boolean): Unit =
       if (isClosed(bytesIn))
         if (acceptNoMoreDataAvailable) completeStage()
         else current.onTruncation(reader)

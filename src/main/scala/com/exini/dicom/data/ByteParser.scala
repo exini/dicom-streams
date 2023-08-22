@@ -92,14 +92,14 @@ class ByteParser[T](target: ByteParserTarget[T]) {
       } catch {
         case NeedMoreData =>
           acceptNoMoreDataAvailable = false
-          target.needNoreData(current, reader, acceptNoMoreDataAvailable = false)
+          target.needMoreData(current, reader, acceptNoMoreDataAvailable = false)
           DontRecurse
         case NonFatal(ex) =>
           fail(new DicomParseException(s"Parsing failed in step $current: ${ex.getMessage}", ex))
           DontRecurse
       }
     } else {
-      target.needNoreData(current, reader, acceptNoMoreDataAvailable)
+      target.needMoreData(current, reader, acceptNoMoreDataAvailable)
       DontRecurse
     }
 
@@ -200,7 +200,7 @@ object ByteParser {
 
   trait ByteParserTarget[T] {
     def next(result: T): Unit
-    def needNoreData(current: ParseStep[T], reader: ByteReader, acceptNoMoreDataAvailable: Boolean): Unit
+    def needMoreData(current: ParseStep[T], reader: ByteReader, acceptNoMoreDataAvailable: Boolean): Unit
     def fail(ex: Throwable): Unit
     def complete(): Unit
   }

@@ -67,7 +67,7 @@ object ByteParserTest {
     override def next(word: String): Unit =
       result += word
 
-    override def needNoreData(
+    override def needMoreData(
         current: ParseStep[String],
         reader: ByteReader,
         acceptNoMoreDataAvailable: Boolean
