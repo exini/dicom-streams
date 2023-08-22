@@ -39,8 +39,8 @@ object ByteParserTest {
     val chunksIterator: Iterator[ByteString] = chunks.iterator
     var isCompleted                          = false
 
-    val parser: ByteParser[String] = new ByteParser[String](this)
-    val result: ArrayBuffer[String]   = ArrayBuffer.empty[String]
+    val parser: ByteParser[String]  = new ByteParser[String](this)
+    val result: ArrayBuffer[String] = ArrayBuffer.empty[String]
 
     case object AtBeginning extends ParseStep[String] {
       override def parse(reader: ByteReader): ParseResult[String] = {
@@ -64,29 +64,21 @@ object ByteParserTest {
 
     parser.startWith(AtBeginning)
 
-    override def next(word: String): Unit =
-      result += word
+    override def next(word: String): Unit = result += word
 
     override def needMoreData(
         current: ParseStep[String],
         reader: ByteReader,
         acceptNoMoreDataAvailable: Boolean
     ): Unit =
-      if (chunksIterator.hasNext)
-        parser.parse(chunksIterator.next)
-      else if (!acceptNoMoreDataAvailable)
-        current.onTruncation(reader)
-      else
-        complete()
+      if (chunksIterator.hasNext) parser.parse(chunksIterator.next)
+      else if (!acceptNoMoreDataAvailable) current.onTruncation(reader)
+      else complete()
 
     override def fail(ex: Throwable): Unit = throw ex
 
-    override def complete(): Unit = {
-      isCompleted = true
-    }
+    override def complete(): Unit = isCompleted = true
 
-    def parse(): Unit =
-      while (!isCompleted)
-        parser.doParse()
+    def parse(): Unit = while (!isCompleted) parser.doParse()
   }
 }
