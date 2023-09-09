@@ -12,13 +12,14 @@ import java.util.zip.Inflater
 class Parser(val stop: Option[(AttributeInfo, Int) => Boolean] = None) {
 
   private val builder         = new ElementsBuilder()
-  private var isCompleted     = false
   private var canMakeProgress = true
   private var isLastChunk     = false
 
   private val byteParserTarget: ByteParserTarget[Element] = new ByteParserTarget[Element] {
-    override def next(element: Element): Unit =
+    override def next(element: Element): Unit = {
       builder += element
+      ()
+    }
 
     override def needMoreData(
         current: ParseStep[Element],
@@ -31,15 +32,12 @@ class Parser(val stop: Option[(AttributeInfo, Int) => Boolean] = None) {
         canMakeProgress = false
 
     override def fail(ex: Throwable): Unit = {
-      isCompleted = true
       canMakeProgress = false
       throw ex
     }
 
-    override def complete(): Unit = {
+    override def complete(): Unit =
       canMakeProgress = false
-      isCompleted = true
-    }
   }
 
   private val byteParser: ByteParser[Element] = new ByteParser[Element](byteParserTarget) {
@@ -72,23 +70,19 @@ class Parser(val stop: Option[(AttributeInfo, Int) => Boolean] = None) {
   /**
     * Parse the input binary data, producing DICOM elements that are added to the internal builder. An elements results
     * structure can be fetched from the builder at any time.
+    * @param chunk the (ppssibly partial) DICOM binary data
+    * @param last lets the parser know whether this chunk of data is the last or if there is more to come
     */
   def parse(chunk: ByteString, last: Boolean = true): Unit = {
     isLastChunk = last
     byteParser ++= chunk
-    while (canMakeProgress && !isCompleted) byteParser.parse()
+    while (canMakeProgress) byteParser.parse()
   }
 
   /**
     * Get the current elements as represented by the builder
     */
   def result(): Elements = builder.build()
-
-  /**
-    * Returns true the parser has completed parsing (stop condition was met)
-    */
-  def isComplete: Boolean =
-    isCompleted
 }
 
 object Parser {
@@ -230,11 +224,10 @@ object Parser {
       else if (state.explicitVR && !explicitVR) {
         log.warn("Implicit VR attributes detected in explicit VR dataset")
         AttributeState(maySwitchTs = false, bigEndian = state.bigEndian, explicitVR = false, state.inflater)
-      }
-      else if (!state.explicitVR && explicitVR)
+      } else if (!state.explicitVR && explicitVR)
         AttributeState(maySwitchTs = false, bigEndian = state.bigEndian, explicitVR = true, state.inflater)
       else
-      AttributeState(maySwitchTs = false, bigEndian = state.bigEndian, explicitVR = state.explicitVR, state.inflater)
+        AttributeState(maySwitchTs = false, bigEndian = state.bigEndian, explicitVR = state.explicitVR, state.inflater)
     }
 
     override def parse(reader: ByteReader): ParseResult[Element] = {
@@ -338,8 +331,7 @@ object Parser {
           Some(FragmentElement(header.valueLength, new Value(valueBytes), state.bigEndian)),
           new InFragments(FragmentsState(state.bigEndian, state.explicitVR, state.inflater), stop)
         )
-      }
-      else if (header.tag == 0xfffee0dd) {
+      } else if (header.tag == 0xfffee0dd) {
         // end fragments
         if (header.valueLength != 0)
           log.warn("Unexpected fragments delimitation length " + header.valueLength)

@@ -54,7 +54,7 @@ object ByteParserTest {
 
     case object InWords extends ParseStep[String] {
       override def parse(reader: ByteReader): ParseResult[String] = {
-        if (reader.remainingData.headOption.contains(','))
+        if (reader.remainingData.headOption.contains(','.toByte))
           reader.take(1)
         val nextWord = reader.remainingData.utf8String.takeWhile(_ != ',')
         reader.take(nextWord.length)
@@ -72,7 +72,7 @@ object ByteParserTest {
         acceptNoMoreDataAvailable: Boolean
     ): Unit =
       if (chunksIterator.hasNext) {
-        parser ++= chunksIterator.next
+        parser ++= chunksIterator.next()
         parser.parse()
       } else if (!acceptNoMoreDataAvailable)
         current.onTruncation(reader)

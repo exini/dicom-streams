@@ -206,10 +206,8 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
     val parser = new Parser(Some(stop))
 
-    parser.isComplete shouldBe false
     parser.parse(bytes)
     val elements = parser.result()
-    parser.isComplete shouldBe true
     elements.contains(Tag.PatientName) shouldBe false
   }
 
