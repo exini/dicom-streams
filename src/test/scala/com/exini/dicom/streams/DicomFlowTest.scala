@@ -27,7 +27,7 @@ class DicomFlowTest
     with ScalaFutures {
 
   import DicomFlows._
-  import TestUtils._
+  import StreamTestUtils._
   import com.exini.dicom.data.DicomParts._
   import com.exini.dicom.data.TestData._
 

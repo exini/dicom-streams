@@ -43,6 +43,11 @@ object DicomElements {
     def toElements: List[Element]
   }
 
+  case class UnknownElement(override val bigEndian: Boolean) extends Element {
+    override def toBytes: ByteString = ByteString.empty
+    override def toParts: List[DicomPart] = List.empty
+  }
+
   case object PreambleElement extends Element {
     override val bigEndian: Boolean       = false
     override def toBytes: ByteString      = ByteString.fromArray(new Array[Byte](128)) ++ ByteString("DICM")

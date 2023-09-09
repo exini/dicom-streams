@@ -21,7 +21,7 @@ class ModifyFlowTest
 
   import ModifyFlow._
   import ParseFlow.parseFlow
-  import TestUtils._
+  import StreamTestUtils._
   import com.exini.dicom.data.TestData._
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher

@@ -34,7 +34,7 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
 
   protected class DicomParsingLogic extends ParsingLogic with StageLogging {
 
-    case class DatasetHeaderState(maySwitchTs: Boolean, bigEndian: Boolean, explicitVR: Boolean) extends ParseState
+    case class DatasetHeaderState(override val maySwitchTs: Boolean, bigEndian: Boolean, explicitVR: Boolean) extends ParseState
 
     case class FmiHeaderState(
         tsuid: Option[String],
@@ -43,15 +43,11 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
         hasFmi: Boolean,
         pos: Long,
         fmiEndPos: Option[Long]
-    ) extends ParseState {
-      override val maySwitchTs: Boolean = false
-    }
+    ) extends ParseState
 
     case class ValueState(bigEndian: Boolean, bytesLeft: Long, nextStep: ParseStep[DicomPart])
 
-    case class FragmentsState(bigEndian: Boolean, explicitVR: Boolean) extends ParseState {
-      override val maySwitchTs: Boolean = false
-    }
+    case class FragmentsState(bigEndian: Boolean, explicitVR: Boolean) extends ParseState
 
     case class DeflatedState(bigEndian: Boolean, nowrap: Boolean)
 
@@ -103,9 +99,8 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
 
         val bigEndian  = tsuid == UID.ExplicitVRBigEndianRetired
         val explicitVR = tsuid != UID.ImplicitVRLittleEndian
-        val isDeflated = tsuid == UID.DeflatedExplicitVRLittleEndian || tsuid == UID.JPIPReferencedDeflate
 
-        if (isDeflated)
+        if (isDeflated(tsuid))
           if (hasZLIBHeader(firstTwoBytes))
             InDeflatedData(DeflatedState(state.bigEndian, nowrap = false))
           else
@@ -113,8 +108,6 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
         else
           InDatasetHeader(DatasetHeaderState(maySwitchTs = true, bigEndian, explicitVR))
       }
-
-      private def hasZLIBHeader(firstTwoBytes: ByteString): Boolean = bytesToUShortBE(firstTwoBytes) == 0x789c
 
       def parse(reader: ByteReader): ParseResult[DicomPart] = {
         val header = readHeader(reader, state)
@@ -337,9 +330,6 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
 
 object ParseFlow {
 
-  private def inflateNowrap(maxBytesPerChunk: Int): Flow[ByteString, ByteString, NotUsed] =
-    Flow[ByteString].via(Compression.inflate(maxBytesPerChunk, nowrap = true))
-
   /**
     * Flow which ingests a stream of bytes and outputs a stream of DICOM data parts as specified by the <code>DicomPart</code>
     * trait. Example DICOM parts are the preamble, headers (tag, VR, length), value chunks (the data in an element divided into chunks),
@@ -372,8 +362,8 @@ object ParseFlow {
         val partition = builder.add(Partition[(DicomPart, Int)](3, _._2))
         val toPart    = Flow.fromFunction[(DicomPart, Int), DicomPart](_._1)
         val toBytes   = Flow.fromFunction[(DicomPart, Int), ByteString](_._1.bytes)
-        val inflater1 = inflateNowrap(maxBytesPerChunk = chunkSize)
-        val inflater2 = Compression.inflate(maxBytesPerChunk = chunkSize)
+        val inflater1 = Compression.inflate(maxBytesPerChunk = chunkSize, nowrap = true)
+        val inflater2 = Compression.inflate(maxBytesPerChunk = chunkSize, nowrap = false)
         val merge     = builder.add(MergePreferred.create[DicomPart](2))
 
         parser1 ~> decider ~> partition

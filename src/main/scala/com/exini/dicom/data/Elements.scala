@@ -18,9 +18,9 @@ package com.exini.dicom.data
 
 import java.math.BigInteger
 import java.net.URI
-import java.time.{ LocalDate, LocalTime, ZoneOffset, ZonedDateTime }
-
+import java.time.{LocalDate, LocalTime, ZoneOffset, ZonedDateTime}
 import akka.util.ByteString
+import com.exini.dicom.data.Compression.compress
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.Elements._
@@ -788,8 +788,16 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def toElements(withPreamble: Boolean = true): List[Element] =
     if (withPreamble) PreambleElement :: toList.flatMap(_.toElements) else toList.flatMap(_.toElements)
   def toParts(withPreamble: Boolean = true): List[DicomPart] = toElements(withPreamble).flatMap(_.toParts)
-  def toBytes(withPreamble: Boolean = true): ByteString =
-    data.map(_.toBytes).foldLeft(if (withPreamble) PreambleElement.toBytes else ByteString.empty)(_ ++ _)
+  def toBytes(withPreamble: Boolean = true): ByteString = {
+    val preambleBytes = if (withPreamble) PreambleElement.toBytes else ByteString.empty
+    val (fmiElements, dataElements) = data.partition(e => isFileMetaInformation(e.tag))
+    val fmiBytes = fmiElements.map(_.toBytes).foldLeft(ByteString.empty)(_ ++ _)
+    val dataBytes = dataElements.map(_.toBytes).foldLeft(ByteString.empty)(_ ++ _)
+    if (getString(Tag.TransferSyntaxUID).contains(UID.DeflatedExplicitVRLittleEndian))
+      preambleBytes ++ fmiBytes ++ compress(dataBytes)
+    else
+      preambleBytes ++ fmiBytes ++ dataBytes
+  }
 
   private def toStrings(indent: String): Vector[String] = {
     def space1(description: String): String = " " * Math.max(0, 40 - description.length)

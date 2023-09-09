@@ -32,11 +32,11 @@ import scala.util.control.{ NoStackTrace, NonFatal }
   */
 class ByteParser[T](target: ByteParserTarget[T]) {
 
-  private var current: ParseStep[T]     = FinishedParser
-  private var untilCompact: Int         = CompactionThreshold
-  private var reader                    = new ByteReader(ByteString.empty)
-  private var acceptNoMoreDataAvailable = true
-  private var buffer                    = ByteString.empty
+  protected var current: ParseStep[T]     = FinishedParser
+  protected var untilCompact: Int         = CompactionThreshold
+  protected var reader                    = new ByteReader(ByteString.empty)
+  protected var acceptNoMoreDataAvailable = true
+  protected var buffer: ByteString        = ByteString.empty
 
   def startWith(step: ParseStep[T]): Unit =
     current = step
@@ -92,10 +92,10 @@ class ByteParser[T](target: ByteParserTarget[T]) {
       } catch {
         case NeedMoreData =>
           acceptNoMoreDataAvailable = false
-          target.needMoreData(current, reader, acceptNoMoreDataAvailable = false)
+          target.needMoreData(current, reader, acceptNoMoreDataAvailable)
           DontRecurse
         case NonFatal(ex) =>
-          fail(new DicomParseException(s"Parsing failed in step $current: ${ex.getMessage}", ex))
+          fail(new ParseException(s"Parsing failed in step $current: ${ex.getMessage}", ex))
           DontRecurse
       }
     } else {
@@ -103,19 +103,19 @@ class ByteParser[T](target: ByteParserTarget[T]) {
       DontRecurse
     }
 
-  @tailrec final def doParse(remainingRecursions: Int = recursionLimit): Unit =
+  @tailrec final private def doParse(remainingRecursions: Int): Unit =
     if (remainingRecursions == 0)
-      fail(new DicomParseException(s"Parsing logic didn't produce result after $recursionLimit steps."))
+      fail(new ParseException(s"Parsing logic didn't produce result after $recursionLimit steps."))
     else {
       val recurse = doParseInner()
       if (recurse) doParse(remainingRecursions - 1)
     }
 
   /**
-    * Append the input data and trigger a parse cycle which, if successful, will emit a single element
+    * Append the input data
     * @param chunk input data
     */
-  def parse(chunk: ByteString = ByteString.empty): Unit = {
+  def ++=(chunk: ByteString): Unit =
     if (chunk.nonEmpty) {
       buffer ++= chunk
       untilCompact -= 1
@@ -128,8 +128,10 @@ class ByteParser[T](target: ByteParserTarget[T]) {
       }
     }
 
-    this.doParse(recursionLimit)
-  }
+  /**
+    * Trigger a parse cycle which, if successful, will emit a single element
+    */
+  def parse(): Unit = this.doParse(recursionLimit)
 }
 
 object ByteParser {
@@ -149,12 +151,12 @@ object ByteParser {
   trait ParseStep[+T] {
     def parse(reader: ByteReader): ParseResult[T]
 
-    def onTruncation(reader: ByteReader): Unit = throw new IllegalStateException("truncated data")
+    def onTruncation(reader: ByteReader): Unit = throw new ParseException("truncated data")
   }
 
   object FinishedParser extends ParseStep[Nothing] {
     override def parse(reader: ByteReader) =
-      throw new DicomParseException("no initial parser installed: you must use startWith(...)")
+      throw new ParseException("no initial parser installed: you must use startWith(...)")
   }
 
   val NeedMoreData = new Exception with NoStackTrace

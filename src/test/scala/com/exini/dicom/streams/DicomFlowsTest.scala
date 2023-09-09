@@ -12,7 +12,7 @@ import com.exini.dicom.data._
 import com.exini.dicom.streams.DicomFlows._
 import com.exini.dicom.streams.ModifyFlow._
 import com.exini.dicom.streams.ParseFlow._
-import com.exini.dicom.streams.TestUtils._
+import com.exini.dicom.streams.StreamTestUtils._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers

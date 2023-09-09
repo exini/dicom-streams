@@ -20,7 +20,7 @@ class ByteParserTest extends AnyFlatSpec with Matchers {
   }
 
   it should "throw an error for invalid byte sequence" in new Fixture(Seq(ByteString("Car,Boat"))) {
-    assertThrows[DicomParseException] {
+    assertThrows[ParseException] {
       parse()
     }
   }
@@ -71,14 +71,18 @@ object ByteParserTest {
         reader: ByteReader,
         acceptNoMoreDataAvailable: Boolean
     ): Unit =
-      if (chunksIterator.hasNext) parser.parse(chunksIterator.next)
-      else if (!acceptNoMoreDataAvailable) current.onTruncation(reader)
-      else complete()
+      if (chunksIterator.hasNext) {
+        parser ++= chunksIterator.next
+        parser.parse()
+      } else if (!acceptNoMoreDataAvailable)
+        current.onTruncation(reader)
+      else
+        complete()
 
     override def fail(ex: Throwable): Unit = throw ex
 
     override def complete(): Unit = isCompleted = true
 
-    def parse(): Unit = while (!isCompleted) parser.doParse()
+    def parse(): Unit = while (!isCompleted) parser.parse()
   }
 }

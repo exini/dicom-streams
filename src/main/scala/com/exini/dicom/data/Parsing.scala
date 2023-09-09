@@ -15,7 +15,7 @@ object Parsing {
   case class AttributeInfo(tag: Int, vr: VR, headerLength: Int, valueLength: Long)
 
   trait ParseState {
-    val maySwitchTs: Boolean
+    val maySwitchTs: Boolean = false
     val bigEndian: Boolean
     val explicitVR: Boolean
   }
@@ -45,7 +45,7 @@ object Parsing {
       Some(HeaderInfo(bigEndian = assumeBigEndian, explicitVR = true, hasFmi = isFileMetaInformation(tag)))
     else if (intToUnsignedLong(bytesToInt(data.drop(4), assumeBigEndian)) >= 0)
       if (assumeBigEndian)
-        throw new DicomParseException("Implicit VR Big Endian encoded DICOM Stream")
+        throw new ParseException("Implicit VR Big Endian encoded DICOM Stream")
       else
         Some(HeaderInfo(bigEndian = false, explicitVR = false, hasFmi = isFileMetaInformation(tag)))
     else
@@ -76,4 +76,9 @@ object Parsing {
   def warnIfOdd(tag: Int, vr: VR, valueLength: Long, log: LoggingAdapter): Unit =
     if (valueLength % 2 > 0 && valueLength != indeterminateLength && vr != null && vr != VR.SQ)
       log.warning(s"Element ${tagToString(tag)} has odd length")
+
+  def isDeflated(transferSyntaxUid: String): Boolean =
+    transferSyntaxUid == UID.DeflatedExplicitVRLittleEndian || transferSyntaxUid == UID.JPIPReferencedDeflate
+
+  def hasZLIBHeader(firstTwoBytes: ByteString): Boolean = bytesToUShortBE(firstTwoBytes) == 0x789c
 }

@@ -37,16 +37,17 @@ abstract class ByteParserFlow[T] extends GraphStage[FlowShape[ByteString, T]] {
     protected val parser: ByteParser[T] = new ByteParser[T](this)
 
     override def onPull(): Unit =
-      parser.doParse(1000)
+      parser.parse()
 
     def onPush(): Unit = {
       val chunk = grab(bytesIn)
-      parser.parse(chunk)
+      parser ++= chunk
+      parser.parse()
     }
 
     override def onUpstreamFinish(): Unit =
       if (isAvailable(objOut))
-        parser.doParse(1000)
+        parser.parse()
 
     protected def startWith(step: ParseStep[T]): Unit = parser.startWith(step)
 
