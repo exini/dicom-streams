@@ -320,7 +320,7 @@ object Parser {
               )
             )
           case _ =>
-            ParseResult(Some(UnknownElement(updatedState.bigEndian)), this) // TODO can we use None instead of unknown?
+            ParseResult(None, this)
         }
     }
   }
@@ -358,7 +358,7 @@ object Parser {
       } else {
         reader.take(header.valueLength.toInt)
         log.warn("Unexpected element (" + tagToString(header.tag) + ") in fragments with length " + header.valueLength)
-        ParseResult(Some(UnknownElement(state.bigEndian)), this)
+        ParseResult(None, this)
       }
     }
   }
