@@ -72,12 +72,12 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
           tryReadHeader(reader.remainingData.take(8))
             .map { info =>
               val nextState =
-                if (info.hasFmi) {
+                if (info.isFmi) {
                   if (!info.explicitVR)
                     log.warning(s"File meta information uses implicit VR encoding")
                   if (info.bigEndian)
                     log.warning(s"File meta information uses big-endian encoding")
-                  InFmiHeader(FmiHeaderState(None, info.bigEndian, info.explicitVR, info.hasFmi, 0, None))
+                  InFmiHeader(FmiHeaderState(None, info.bigEndian, info.explicitVR, info.isFmi, 0, None))
                 } else
                   InDatasetHeader(DatasetHeaderState(maySwitchTs = false, info.bigEndian, info.explicitVR))
               ParseResult(maybePreamble, nextState)

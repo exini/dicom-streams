@@ -10,7 +10,7 @@ object Parsing {
 
   final val dicomPreambleLength = 132
 
-  case class HeaderInfo(bigEndian: Boolean, explicitVR: Boolean, hasFmi: Boolean)
+  case class HeaderInfo(tag: Int, bigEndian: Boolean, explicitVR: Boolean, isFmi: Boolean)
 
   case class AttributeInfo(tag: Int, vr: VR, headerLength: Int, valueLength: Long)
 
@@ -42,12 +42,12 @@ object Parsing {
     if (vr == VR.UN)
       None
     else if (bytesToVR(data.drop(4)) == vr.value)
-      Some(HeaderInfo(bigEndian = assumeBigEndian, explicitVR = true, hasFmi = isFileMetaInformation(tag)))
+      Some(HeaderInfo(tag, bigEndian = assumeBigEndian, explicitVR = true, isFmi = isFileMetaInformation(tag)))
     else if (intToUnsignedLong(bytesToInt(data.drop(4), assumeBigEndian)) >= 0)
       if (assumeBigEndian)
         throw new ParseException("Implicit VR Big Endian encoded DICOM Stream")
       else
-        Some(HeaderInfo(bigEndian = false, explicitVR = false, hasFmi = isFileMetaInformation(tag)))
+        Some(HeaderInfo(tag, bigEndian = false, explicitVR = false, isFmi = isFileMetaInformation(tag)))
     else
       None
   }

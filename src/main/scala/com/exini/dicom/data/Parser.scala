@@ -27,7 +27,12 @@ class Parser(val stop: Option[(AttributeInfo, Int) => Boolean] = None) {
         acceptNoMoreDataAvailable: Boolean
     ): Unit =
       if (isLastChunk)
-        if (acceptNoMoreDataAvailable) complete() else current.onTruncation(reader)
+        if (acceptNoMoreDataAvailable) complete()
+        else {
+          current.onTruncation(reader)
+          if (!reader.hasRemaining)
+            complete()
+        }
       else
         canMakeProgress = false
 
@@ -119,27 +124,33 @@ object Parser {
   class AtBeginning(stop: AttributeInfo => Boolean) extends DicomParseStep(None, stop) {
     override def parse(reader: ByteReader): ParseResult[Element] = {
       if (isPreamble(reader.remainingData))
-        reader.take(dicomPreambleLength)
-      if (reader.remainingSize == 0)
-        ParseResult(None, FinishedParser)
-      else {
-        reader.ensure(8)
-        if (reader.remainingData.forall(_ == 0))
-          reader.ensure(dicomPreambleLength)
-        tryReadHeader(reader.remainingData)
-          .map { info =>
-            val nextState =
-              if (info.hasFmi)
-                new InFmiAttribute(
-                  FmiAttributeState(None, info.bigEndian, info.explicitVR, info.hasFmi, 0, None),
-                  stop
-                )
-              else new InAttribute(AttributeState(maySwitchTs = false, info.bigEndian, info.explicitVR, None), stop)
-            ParseResult(None, nextState);
-          }
-          .getOrElse(throw new ParseException("Not a DICOM file"))
-      }
+        reader.take(dicomPreambleLength) // if file begins with preamble - skip over it
+      reader.ensure(8) // ensure we have enough data to parse an attribute
+      tryReadHeader(reader.remainingData)
+        .filter(info => info.tag > 0) // if chunk is part of a preamble, data will parse as attribute, but with tag = 0
+        .map { info =>
+          val nextState =
+            if (info.isFmi)
+              new InFmiAttribute(
+                FmiAttributeState(None, info.bigEndian, info.explicitVR, info.isFmi, 0, None),
+                stop
+              )
+            else new InAttribute(AttributeState(maySwitchTs = false, info.bigEndian, info.explicitVR, None), stop)
+          ParseResult(None, nextState)
+        }
+        .getOrElse {
+          reader.ensure(dicomPreambleLength + 8) // force a call for more data
+          ParseResult(None, this)                // should never end up here
+        }
     }
+
+    override def onTruncation(reader: ByteReader): Unit =
+      if (isPreamble(reader.remainingData)) {
+        reader.take(dicomPreambleLength) // there's a preamble, skip over it
+        if (reader.remainingSize > 0)
+          super.onTruncation(reader) // data still remains, file is DICOM but truncated
+      } else if (reader.remainingSize > 0)
+        throw new ParseException("Not a DICOM file") // if data is present but nothing can be parsed -> not DICOM
   }
 
   class InFmiAttribute(state: FmiAttributeState, stop: AttributeInfo => Boolean)

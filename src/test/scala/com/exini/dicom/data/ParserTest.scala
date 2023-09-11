@@ -8,53 +8,90 @@ import org.scalatest.OptionValues._
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
+import scala.util.Random
+
 class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   import com.exini.dicom.data.TestData._
 
-  private def parse(bytes: ByteString): Elements = {
+  private def parse(bytes: ByteString, chunkSize: Option[Int] = None): Elements = {
     val parser = new Parser()
-    parser.parse(bytes)
+    chunkSize match {
+      case Some(size) =>
+        val chunks = bytes.grouped(size).toList
+        for (chunk <- chunks.init)
+          parser.parse(chunk, last = false)
+        parser.parse(chunks.last)
+      case _ =>
+        parser.parse(bytes)
+    }
     parser.result()
   }
 
   "The parser" should "produce a preamble, FMI tags and dataset tags for a complete DICOM file" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
+    val bytes    = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
     val elements = parse(bytes)
     elements.toBytes() shouldBe bytes
   }
 
   it should "read DICOM data in chunks" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
-    val chunks = bytes.grouped(7).toList
-    val parser = new Parser()
-    for (chunk <- chunks.init)
-      parser.parse(chunk, last = false)
-    parser.parse(chunks.last)
-    val elements = parser.result()
+    val bytes  = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
+    val elements = parse(bytes, Some(7))
     elements.toBytes() shouldBe bytes
   }
 
   it should "read files without preamble but with FMI" in {
-    val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
+    val bytes    = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
   }
 
   it should "read a file with only FMI" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID()
+    val bytes    = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID()
     val elements = parse(bytes)
     elements.toBytes() shouldBe bytes
   }
 
   it should "read a file with neither FMI nor preamble" in {
-    val bytes = personNameJohnDoe()
+    val bytes    = personNameJohnDoe()
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
   }
 
+  it should "treat a preamble alone as a valid DICOM file" in {
+    val bytes    = preamble
+    val elements = parse(bytes)
+    elements.size shouldBe 0
+    elements.toBytes() shouldBe bytes
+  }
+
+  it should "treat a preamble alone with non-zero data as a valid DICOM file" in {
+    val bytes    = ByteString(Random.nextBytes(128)) ++ ByteString("DICM")
+    val elements = parse(bytes)
+    elements.size shouldBe 0
+  }
+
+  it should "handle a preamble with non-zero data" in {
+    val bytes    = ByteString(Random.nextBytes(128)) ++ ByteString("DICM") ++ personNameJohnDoe()
+    val elements = parse(bytes, Some(1))
+    elements.size shouldBe 1
+    elements.head.tag shouldBe Tag.PatientName
+  }
+
+  it should "fail reading a file with an incomplete preamble" in {
+    val bytes1 = preamble.dropRight(2)
+    assertThrows[ParseException] {
+      parse(bytes1)
+    }
+
+    val bytes2 = preamble.dropRight(2) ++ personNameJohnDoe()
+    assertThrows[ParseException] {
+      parse(bytes2)
+    }
+  }
+
   it should "handle zero-length values" in {
-    val bytes = ByteString(8, 0, 32, 0, 68, 65, 0, 0, 16, 0, 16, 0, 80, 78, 0, 0)
+    val bytes    = ByteString(8, 0, 32, 0, 68, 65, 0, 0, 16, 0, 16, 0, 80, 78, 0, 0)
     val elements = parse(bytes)
     elements.getBytes(Tag.StudyDate) shouldBe Some(ByteString.empty)
     elements.getBytes(Tag.PatientName) shouldBe Some(ByteString.empty)
@@ -62,16 +99,9 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   }
 
   it should "output a warning when non-meta information is included in the header" in {
-    val bytes = fmiGroupLength(transferSyntaxUID(), studyDate()) ++ transferSyntaxUID() ++ studyDate()
+    val bytes    = fmiGroupLength(transferSyntaxUID(), studyDate()) ++ transferSyntaxUID() ++ studyDate()
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
-  }
-
-  it should "treat a preamble alone as a valid DICOM file" in {
-    val bytes = preamble
-    val elements = parse(bytes)
-    elements.size shouldBe 0
-    elements.toBytes() shouldBe bytes
   }
 
   it should "fail reading a truncated DICOM file" in {
@@ -91,12 +121,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   it should "inflate deflated dataset served in chunks" in {
     val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++
       transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian) ++ compress(personNameJohnDoe() ++ studyDate())
-    val chunks = bytes.grouped(7).toList
-    val parser = new Parser()
-    for (chunk <- chunks.init)
-      parser.parse(chunk, last = false)
-    parser.parse(chunks.last)
-    val elements = parser.result()
+    val elements = parse(bytes, Some(7))
     elements.toBytes(withPreamble = false) shouldBe bytes
   }
 
@@ -165,7 +190,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   }
 
   it should "accept meta information encoded with implicit VR" in {
-    val bytes = preamble ++ transferSyntaxUID(UID.ExplicitVRLittleEndian, explicitVR = false) ++ personNameJohnDoe()
+    val bytes    = preamble ++ transferSyntaxUID(UID.ExplicitVRLittleEndian, explicitVR = false) ++ personNameJohnDoe()
     val elements = parse(bytes)
     elements.toBytes() shouldBe bytes
   }
@@ -186,15 +211,15 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   it should "parse sequences with VR UN as a block of bytes" in {
     val unSequence = tagToBytes(Tag.CTExposureSequence) ++ ByteString("UN") ++ ByteString(0, 0) ++ intToBytes(24)
-    val bytes = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate()
-    val elements = parse(bytes)
+    val bytes      = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate()
+    val elements   = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
   }
 
   it should "parse sequences with VR UN, and where the nested data set(s) have implicit VR, as a block of bytes" in {
     val unSequence = tagToBytes(Tag.CTExposureSequence) ++ ByteString("UN") ++ ByteString(0, 0) ++ intToBytes(24)
-    val bytes = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate(explicitVR = false)
-    val elements = parse(bytes)
+    val bytes      = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate(explicitVR = false)
+    val elements   = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
   }
 
