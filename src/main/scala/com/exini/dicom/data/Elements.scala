@@ -24,6 +24,7 @@ import com.exini.dicom.data.Compression.compress
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.Elements._
+import com.exini.dicom.data.Parsing.isDeflated
 import com.exini.dicom.data.TagPath._
 
 /**
@@ -793,7 +794,7 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     val (fmiElements, dataElements) = data.partition(e => isFileMetaInformation(e.tag))
     val fmiBytes = fmiElements.map(_.toBytes).foldLeft(ByteString.empty)(_ ++ _)
     val dataBytes = dataElements.map(_.toBytes).foldLeft(ByteString.empty)(_ ++ _)
-    if (getString(Tag.TransferSyntaxUID).contains(UID.DeflatedExplicitVRLittleEndian))
+    if (getString(Tag.TransferSyntaxUID).exists(isDeflated))
       preambleBytes ++ fmiBytes ++ compress(dataBytes)
     else
       preambleBytes ++ fmiBytes ++ dataBytes

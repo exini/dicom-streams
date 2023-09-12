@@ -77,11 +77,13 @@ class Parser(val stop: Option[(AttributeInfo, Int) => Boolean] = None) {
     * structure can be fetched from the builder at any time.
     * @param chunk the (ppssibly partial) DICOM binary data
     * @param last lets the parser know whether this chunk of data is the last or if there is more to come
+    * @return a reference to this parser for chaining commands
     */
-  def parse(chunk: ByteString, last: Boolean = true): Unit = {
+  def parse(chunk: ByteString, last: Boolean = true): Parser = {
     isLastChunk = last
     byteParser ++= chunk
     while (canMakeProgress) byteParser.parse()
+    this
   }
 
   /**
@@ -125,7 +127,7 @@ object Parser {
     override def parse(reader: ByteReader): ParseResult[Element] = {
       if (isPreamble(reader.remainingData))
         reader.take(dicomPreambleLength) // if file begins with preamble - skip over it
-      reader.ensure(8) // ensure we have enough data to parse an attribute
+      reader.ensure(8)                   // ensure we have enough data to parse an attribute
       tryReadHeader(reader.remainingData)
         .filter(info => info.tag > 0) // if chunk is part of a preamble, data will parse as attribute, but with tag = 0
         .map { info =>

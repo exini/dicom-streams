@@ -1,7 +1,7 @@
 package com.exini.dicom.streams
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{FileIO, Source}
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
@@ -9,12 +9,17 @@ import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
 import com.exini.dicom.streams.ElementFlows.elementFlow
 import com.exini.dicom.streams.ElementSink.elementSink
+import com.exini.dicom.streams.ParseFlow.parseFlow
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
+import java.io.File
+import java.nio.file.Files
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ Await, ExecutionContextExecutor }
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 class ElementSinkTest
     extends TestKit(ActorSystem("ElementSinkSpec"))
@@ -255,5 +260,19 @@ class ElementSinkTest
 
     iter2.next() shouldBe ByteString(1, 2, 1, 2, 1, 2, 1, 2)
     iter2.hasNext shouldBe false
+  }
+
+  it should "create a identical set of elements as the non-streaming parser" in {
+    val file = new File(getClass.getResource("../data/test001.dcm").toURI)
+    val elements1 = FileIO
+      .fromPath(file.toPath)
+      .via(parseFlow)
+      .via(elementFlow)
+      .runWith(elementSink)
+      .futureValue(Timeout(5.seconds))
+
+    val elements2 = new Parser().parse(ByteString(Files.readAllBytes(file.toPath))).result()
+
+    elements1 shouldBe elements2
   }
 }
