@@ -10,7 +10,7 @@ import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
 import com.exini.dicom.streams.ElementFlows._
-import com.exini.dicom.streams.TestUtils._
+import com.exini.dicom.streams.StreamTestUtils._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers

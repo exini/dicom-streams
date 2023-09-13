@@ -8,7 +8,7 @@ import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.TagPath.EmptyTagPath
-import com.exini.dicom.data.{ Tag, TagPath, _ }
+import com.exini.dicom.data._
 import com.exini.dicom.streams.ParseFlow.parseFlow
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
@@ -27,7 +27,7 @@ class DicomFlowTest
     with ScalaFutures {
 
   import DicomFlows._
-  import TestUtils._
+  import StreamTestUtils._
   import com.exini.dicom.data.DicomParts._
   import com.exini.dicom.data.TestData._
 

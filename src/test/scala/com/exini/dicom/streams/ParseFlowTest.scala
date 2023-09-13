@@ -5,6 +5,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import akka.util.ByteString
+import com.exini.dicom.data.Compression.compress
 import com.exini.dicom.data.DicomElements.ValueElement
 import com.exini.dicom.data._
 import org.scalatest.BeforeAndAfterAll
@@ -20,7 +21,7 @@ class ParseFlowTest
     with Matchers
     with BeforeAndAfterAll {
 
-  import TestUtils._
+  import StreamTestUtils._
   import com.exini.dicom.data.TestData._
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
@@ -205,7 +206,7 @@ class ParseFlowTest
   it should "inflate deflated datasets" in {
     val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(
       UID.DeflatedExplicitVRLittleEndian
-    ) ++ deflate(personNameJohnDoe() ++ studyDate())
+    ) ++ compress(personNameJohnDoe() ++ studyDate())
 
     val source = Source
       .single(bytes)
@@ -227,7 +228,7 @@ class ParseFlowTest
   it should "inflate gzip deflated datasets (with warning message)" in {
     val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(
       UID.DeflatedExplicitVRLittleEndian
-    ) ++ deflate(personNameJohnDoe() ++ studyDate(), gzip = true)
+    ) ++ compress(personNameJohnDoe() ++ studyDate(), gzip = true)
 
     val source = Source
       .single(bytes)
@@ -249,7 +250,7 @@ class ParseFlowTest
   it should "pass through deflated data when asked not to inflate" in {
     val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(
       UID.DeflatedExplicitVRLittleEndian
-    ) ++ deflate(personNameJohnDoe() ++ studyDate())
+    ) ++ compress(personNameJohnDoe() ++ studyDate())
 
     val source = Source
       .single(bytes)
@@ -471,7 +472,7 @@ class ParseFlowTest
   it should "chunk deflated data according to max chunk size" in {
     val bytes = fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)) ++ transferSyntaxUID(
       UID.DeflatedExplicitVRLittleEndian
-    ) ++ deflate(personNameJohnDoe() ++ studyDate())
+    ) ++ compress(personNameJohnDoe() ++ studyDate())
 
     val source = Source
       .single(bytes)

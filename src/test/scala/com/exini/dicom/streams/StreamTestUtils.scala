@@ -6,22 +6,7 @@ import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data._
 
-import java.util.zip.Deflater
-
-object TestUtils {
-
-  def deflate(bytes: ByteString, gzip: Boolean = false): ByteString = {
-    val deflater = if (gzip) new Deflater() else new Deflater(-1, true)
-    deflater.setInput(bytes.toArray)
-    val buffer = new Array[Byte](bytes.length)
-    var out    = ByteString.empty
-    var n      = 1
-    while (n > 0) {
-      n = deflater.deflate(buffer, 0, buffer.length, Deflater.FULL_FLUSH)
-      out = out ++ ByteString.fromArray(buffer.take(n))
-    }
-    out
-  }
+object StreamTestUtils {
 
   case class TestPart(id: String) extends MetaPart {
     override def toString = s"${getClass.getSimpleName}: $id"

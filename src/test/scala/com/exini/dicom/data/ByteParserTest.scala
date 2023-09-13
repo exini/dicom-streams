@@ -20,7 +20,7 @@ class ByteParserTest extends AnyFlatSpec with Matchers {
   }
 
   it should "throw an error for invalid byte sequence" in new Fixture(Seq(ByteString("Car,Boat"))) {
-    assertThrows[DicomParseException] {
+    assertThrows[ParseException] {
       parse()
     }
   }
@@ -39,8 +39,8 @@ object ByteParserTest {
     val chunksIterator: Iterator[ByteString] = chunks.iterator
     var isCompleted                          = false
 
-    val parser: ByteParser[String] = new ByteParser[String](this)
-    val result: ArrayBuffer[String]   = ArrayBuffer.empty[String]
+    val parser: ByteParser[String]  = new ByteParser[String](this)
+    val result: ArrayBuffer[String] = ArrayBuffer.empty[String]
 
     case object AtBeginning extends ParseStep[String] {
       override def parse(reader: ByteReader): ParseResult[String] = {
@@ -54,7 +54,7 @@ object ByteParserTest {
 
     case object InWords extends ParseStep[String] {
       override def parse(reader: ByteReader): ParseResult[String] = {
-        if (reader.remainingData.headOption.contains(','))
+        if (reader.remainingData.headOption.contains(','.toByte))
           reader.take(1)
         val nextWord = reader.remainingData.utf8String.takeWhile(_ != ',')
         reader.take(nextWord.length)
@@ -64,29 +64,25 @@ object ByteParserTest {
 
     parser.startWith(AtBeginning)
 
-    override def next(word: String): Unit =
-      result += word
+    override def next(word: String): Unit = result += word
 
     override def needMoreData(
         current: ParseStep[String],
         reader: ByteReader,
         acceptNoMoreDataAvailable: Boolean
     ): Unit =
-      if (chunksIterator.hasNext)
-        parser.parse(chunksIterator.next)
-      else if (!acceptNoMoreDataAvailable)
+      if (chunksIterator.hasNext) {
+        parser ++= chunksIterator.next()
+        parser.parse()
+      } else if (!acceptNoMoreDataAvailable)
         current.onTruncation(reader)
       else
         complete()
 
     override def fail(ex: Throwable): Unit = throw ex
 
-    override def complete(): Unit = {
-      isCompleted = true
-    }
+    override def complete(): Unit = isCompleted = true
 
-    def parse(): Unit =
-      while (!isCompleted)
-        parser.doParse()
+    def parse(): Unit = while (!isCompleted) parser.parse()
   }
 }

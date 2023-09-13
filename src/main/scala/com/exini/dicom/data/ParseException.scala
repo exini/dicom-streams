@@ -16,6 +16,6 @@
 
 package com.exini.dicom.data
 
-class DicomParseException(message: String, t: Throwable) extends RuntimeException(message, t) {
+class ParseException(message: String, t: Throwable) extends RuntimeException(message, t) {
   def this(message: String) = this(message, null)
 }
