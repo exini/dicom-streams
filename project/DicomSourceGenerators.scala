@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import scala.xml.{Elem, NodeSeq, XML}
+import scala.xml.{ Elem, NodeSeq, XML }
 
 object DicomSourceGenerators {
 
@@ -28,10 +28,15 @@ object DicomSourceGenerators {
   case class UID(uidValue: String, uidName: String, uidType: String, retired: Boolean)
 
   val nonAlphaNumeric = "[^a-zA-Z0-9_]"
-  val nonHex = "[^a-fA-F0-9x]"
-  val nonUID = "[^0-9.]"
+  val nonHex          = "[^a-fA-F0-9x]"
+  val nonUID          = "[^0-9.]"
 
-  val (commandElements, metaElements, directoryElements, dataElements): (Seq[DocElement], Seq[DocElement], Seq[DocElement], Seq[DocElement]) = {
+  val (commandElements, metaElements, directoryElements, dataElements): (
+      Seq[DocElement],
+      Seq[DocElement],
+      Seq[DocElement],
+      Seq[DocElement]
+  ) = {
     val meta = chapters
       .find(_ \@ "label" == "7")
       .map(_ \\ "tbody" \ "tr")
@@ -54,7 +59,8 @@ object DicomSourceGenerators {
           cells(2).text.trim.replaceAll(nonAlphaNumeric, ""),
           cells(3).text.trim,
           cells(4).text.trim,
-          cells(5).text.trim.toLowerCase.startsWith("ret"))
+          cells(5).text.trim.toLowerCase.startsWith("ret")
+        )
       }
 
     (
@@ -65,22 +71,19 @@ object DicomSourceGenerators {
     )
   }
 
-  val uids: Seq[UID] = {
+  val uids: Seq[UID] =
     chapters
       .find(_ \@ "label" == "A")
       .map(_ \\ "tbody" \ "tr")
-      .map(rows => rows.map { row =>
-        val cells = row \ "td"
-        val uid = cells.head.text.trim.replaceAll(nonUID, "")
-        val name = cells(1).text.trim
-        UID(
-          uid,
-          name,
-          cells(2).text.trim,
-          name.endsWith("(Retired)"))
-      })
+      .map(rows =>
+        rows.map { row =>
+          val cells = row \ "td"
+          val uid   = cells.head.text.trim.replaceAll(nonUID, "")
+          val name  = cells(1).text.trim
+          UID(uid, name, cells(2).text.trim, name.endsWith("(Retired)"))
+        }
+      )
       .getOrElse(Seq.empty)
-  }
 
   def generateTag(): String =
     s"""package com.exini.dicom.data
@@ -88,25 +91,53 @@ object DicomSourceGenerators {
        |object Tag {
        |
        |  // command elements
-       |${commandElements.filter(_.keyword.nonEmpty).map(a => s"""  final val ${a.keyword} = 0x${a.tagString.replaceAll("x", "0").replaceAll(nonHex, "")}${if (a.retired) " // retired" else ""}""").mkString("\r\n")}
+       |${commandElements
+      .filter(_.keyword.nonEmpty)
+      .map(a =>
+        s"""  final val ${a.keyword} = 0x${a.tagString.replaceAll("x", "0").replaceAll(nonHex, "")}${if (a.retired)
+             " // retired"
+           else ""}"""
+      )
+      .mkString("\r\n")}
        |
        |  // file meta elements
-       |${metaElements.filter(_.keyword.nonEmpty).map(a => s"""  final val ${a.keyword} = 0x${a.tagString.replaceAll("x", "0").replaceAll(nonHex, "")}${if (a.retired) " // retired" else ""}""").mkString("\r\n")}
+       |${metaElements
+      .filter(_.keyword.nonEmpty)
+      .map(a =>
+        s"""  final val ${a.keyword} = 0x${a.tagString.replaceAll("x", "0").replaceAll(nonHex, "")}${if (a.retired)
+             " // retired"
+           else ""}"""
+      )
+      .mkString("\r\n")}
        |
        |  // directory elements
-       |${directoryElements.filter(_.keyword.nonEmpty).map(a => s"""  final val ${a.keyword} = 0x${a.tagString.replaceAll("x", "0").replaceAll(nonHex, "")}${if (a.retired) " // retired" else ""}""").mkString("\r\n")}
+       |${directoryElements
+      .filter(_.keyword.nonEmpty)
+      .map(a =>
+        s"""  final val ${a.keyword} = 0x${a.tagString.replaceAll("x", "0").replaceAll(nonHex, "")}${if (a.retired)
+             " // retired"
+           else ""}"""
+      )
+      .mkString("\r\n")}
        |
        |  // data elements
-       |${dataElements.filter(_.keyword.nonEmpty).map(a => s"""  final val ${a.keyword} = 0x${a.tagString.replaceAll("x", "0").replaceAll(nonHex, "")}${if (a.retired) " // retired" else ""}""").mkString("\r\n")}
+       |${dataElements
+      .filter(_.keyword.nonEmpty)
+      .map(a =>
+        s"""  final val ${a.keyword} = 0x${a.tagString.replaceAll("x", "0").replaceAll(nonHex, "")}${if (a.retired)
+             " // retired"
+           else ""}"""
+      )
+      .mkString("\r\n")}
        |
        |}""".stripMargin
 
   def generateUID(): String = {
     val pairs = uids
       .map { uid =>
-        val name = uid.uidName
+        val name           = uid.uidName
         val hasDescription = name.indexOf(':') > 0
-        val truncName = if (hasDescription) name.substring(0, name.indexOf(':')) else name
+        val truncName      = if (hasDescription) name.substring(0, name.indexOf(':')) else name
         val cleanedName = truncName
           .replaceAll(nonAlphaNumeric, "")
           .replaceAll("^12", "Twelve")
@@ -126,7 +157,7 @@ object DicomSourceGenerators {
   }
 
   case class TagMapping(tag: String, keyword: String, vr: String, vm: String)
-  
+
   private def generateTagMappings(): (Int, String, Seq[TagMapping], Seq[TagMapping]) = {
     val split = 2153
 
@@ -136,7 +167,7 @@ object DicomSourceGenerators {
       if (vm1Vrs contains vr)
         "Multiplicity.single"
       else {
-        val pattern = "([0-9]+)-?([0-9]+n|[0-9]+|n)?".r
+        val pattern           = "([0-9]+)-?([0-9]+n|[0-9]+|n)?".r
         val pattern(min, max) = vm
         if (max == null)
           if (min == "1") "Multiplicity.single" else s"Multiplicity.fixed($min)"
@@ -146,7 +177,7 @@ object DicomSourceGenerators {
           s"Multiplicity.bounded($min, $max)"
       }
     }
-      
+
     val tagMappings = (commandElements ++ metaElements ++ directoryElements ++ dataElements)
       .filter(_.keyword.nonEmpty)
       .filterNot(_.tagString.startsWith("(0028,04x"))
@@ -155,16 +186,16 @@ object DicomSourceGenerators {
         val vr = a.vr match {
           case s if s.contains("OW") => "OW"
           case s if s.contains("SS") => "SS"
-          case s => s
+          case s                     => s
         }
-        val vm = toMultiplicity(vr, a.vm)
+        val vm      = toMultiplicity(vr, a.vm)
         val keyword = a.keyword
         TagMapping(tag, keyword, vr, vm)
       }
       .filter(_.vr.length == 2)
       .sortBy(_.tag)
-    
-    val splitValue = tagMappings(split + 1).tag
+
+    val splitValue                        = tagMappings(split + 1).tag
     val (tagMappingsLow, tagMappingsHigh) = tagMappings.splitAt(split)
 
     (split, splitValue, tagMappingsLow, tagMappingsHigh)
@@ -172,7 +203,7 @@ object DicomSourceGenerators {
 
   def generateTagToKeyword(): String = {
     val (_, _, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
-    
+
     s"""package com.exini.dicom.data
        |
        |import scala.collection.mutable
@@ -213,7 +244,7 @@ object DicomSourceGenerators {
 
   def generateTagToVR(): String = {
     val (_, _, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
-    
+
     s"""package com.exini.dicom.data
        |
        |import VR._
@@ -258,10 +289,10 @@ object DicomSourceGenerators {
        |
        |}""".stripMargin
   }
-  
+
   def generateTagToVM(): String = {
     val (_, _, tagMappingsLow, tagMappingsHigh) = generateTagMappings()
-    
+
     s"""package com.exini.dicom.data
        |
        |import scala.collection.mutable
