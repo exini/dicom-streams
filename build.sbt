@@ -55,17 +55,20 @@ lazy val coverageSettings = Seq(
   coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*\\.UIDToName.*"
 )
 
-lazy val dataLib = project.in(file("data"))
+lazy val dataLib = project
+  .in(file("data"))
   .enablePlugins(BuildInfoPlugin)
   .settings(buildInfoSettings)
   .settings(managedSourcesSettings)
   .settings(libraryDependencies ++= Dependencies.data)
 
-lazy val streamsLib = project.in(file("streams"))
+lazy val streamsLib = project
+  .in(file("streams"))
   .settings(libraryDependencies ++= Dependencies.streams)
   .dependsOn(dataLib)
 
-lazy val root = project.in(file("."))
+lazy val root = project
+  .in(file("."))
   .aggregate(dataLib, streamsLib)
   .settings(rootSettings)
   .settings(coverageSettings)
