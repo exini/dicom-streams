@@ -219,7 +219,7 @@ trait InSequence[Out] extends DicomFlow[Out] with GuaranteedDelimitationEvents[O
   }
 }
 
-object ValueChunkMarker extends ValueChunk(bigEndian = false, Array.emptyByteArray, last = true) with Singleton
+object ValueChunkMarker extends ValueChunk(bigEndian = false, Array.emptyByteArray, last = true) with RefEquals
 
 /**
   * This mixin makes sure the `onValueChunk` event is called also for empty elements. This special case requires
@@ -247,9 +247,9 @@ trait GuaranteedValueEvent[Out] extends DicomFlow[Out] with InFragments[Out] {
 
 object SequenceDelimitationPartMarker
     extends SequenceDelimitationPart(bigEndian = false, Array.emptyByteArray)
-    with Singleton
+    with RefEquals
 
-object ItemDelimitationPartMarker extends ItemDelimitationPart(bigEndian = false, Array.emptyByteArray) with Singleton
+object ItemDelimitationPartMarker extends ItemDelimitationPart(bigEndian = false, Array.emptyByteArray) with RefEquals
 
 /**
   * By mixing in this trait, sequences and items with determinate length will be concluded by delimitation events, just

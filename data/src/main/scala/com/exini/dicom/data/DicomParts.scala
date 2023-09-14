@@ -26,12 +26,6 @@ object DicomParts {
   trait DicomPart {
     def bigEndian: Boolean
     def bytes: Array[Byte]
-    override def equals(obj: Any): Boolean =
-      obj match {
-        case p: DicomPart => bigEndian == p.bigEndian && bytes.sameElements(p.bytes)
-        case _            => false
-      }
-    override def hashCode(): Int = 31 * (31 * 7 + bigEndian.hashCode()) + util.Arrays.hashCode(bytes)
   }
 
   /**
@@ -56,7 +50,24 @@ object DicomParts {
     def vr: VR
   }
 
-  case class PreamblePart(bytes: Array[Byte]) extends DicomPart {
+  trait BinaryEquals { this: DicomPart =>
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case p: DicomPart => bigEndian == p.bigEndian && bytes.sameElements(p.bytes)
+        case _            => false
+      }
+    override def hashCode(): Int = 31 * (31 * 7 + bigEndian.hashCode()) + util.Arrays.hashCode(bytes)
+  }
+
+  trait RefEquals {
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case a: AnyRef => a.eq(this)
+        case _         => false
+      }
+  }
+
+  case class PreamblePart(bytes: Array[Byte]) extends DicomPart with BinaryEquals {
     def bigEndian         = false
     override def toString = s"${getClass.getSimpleName} (${bytes.length} bytes)"
   }
@@ -72,7 +83,8 @@ object DicomParts {
   ) extends DicomPart
       with TagPart
       with VrPart
-      with LengthPart {
+      with LengthPart
+      with BinaryEquals {
 
     def withUpdatedLength(newLength: Long): HeaderPart =
       if (newLength == length)
@@ -118,56 +130,50 @@ object DicomParts {
     }
   }
 
-  case class ValueChunk(bigEndian: Boolean, bytes: Array[Byte], last: Boolean) extends DicomPart {
+  case class ValueChunk(bigEndian: Boolean, bytes: Array[Byte], last: Boolean) extends DicomPart with BinaryEquals {
     override def toString =
       s"${getClass.getSimpleName} ${if (last) "(last) " else ""}length = ${bytes.length} ${if (bigEndian) "(big endian) "
       else ""}${if (bytes.length <= 64) "ASCII = " + bytes.utf8String else ""}"
   }
 
-  case class DeflatedChunk(bigEndian: Boolean, bytes: Array[Byte], nowrap: Boolean) extends DicomPart
+  case class DeflatedChunk(bigEndian: Boolean, bytes: Array[Byte], nowrap: Boolean) extends DicomPart with BinaryEquals
 
-  case class ItemPart(length: Long, bigEndian: Boolean, bytes: Array[Byte]) extends LengthPart {
+  case class ItemPart(length: Long, bigEndian: Boolean, bytes: Array[Byte]) extends LengthPart with BinaryEquals {
     override def toString =
       s"${getClass.getSimpleName} length = $length ${if (bigEndian) "(big endian) " else ""}${bytes.arrayString}"
   }
 
-  case class ItemDelimitationPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart
+  case class ItemDelimitationPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart with BinaryEquals
 
   case class SequencePart(tag: Int, length: Long, bigEndian: Boolean, explicitVR: Boolean, bytes: Array[Byte])
       extends DicomPart
       with TagPart
       with VrPart
-      with LengthPart {
+      with LengthPart
+      with BinaryEquals {
     override val vr: VR = VR.SQ
     override def toString =
       s"${getClass.getSimpleName} ${tagToString(tag)} length = $length ${if (bigEndian) "(big endian) " else ""}${if (!explicitVR) "(implicit) "
       else ""}${bytes.arrayString}"
   }
 
-  case class SequenceDelimitationPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart
+  case class SequenceDelimitationPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart with BinaryEquals
 
   case class FragmentsPart(tag: Int, length: Long, vr: VR, bigEndian: Boolean, explicitVR: Boolean, bytes: Array[Byte])
       extends DicomPart
       with TagPart
       with VrPart
-      with LengthPart {
+      with LengthPart
+      with BinaryEquals {
     override def toString =
       s"${getClass.getSimpleName} ${tagToString(tag)} $vr ${if (bigEndian) "(big endian) " else ""}${bytes.arrayString}"
   }
 
-  case class UnknownPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart
+  case class UnknownPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart with BinaryEquals
 
   trait MetaPart extends DicomPart {
     def bigEndian: Boolean = false
     def bytes: Array[Byte] = Array.emptyByteArray
-  }
-
-  trait Singleton {
-    override def equals(obj: Any): Boolean =
-      obj match {
-        case o: AnyRef if o.eq(this) => true
-        case _                       => false
-      }
   }
 
   /**
@@ -181,11 +187,11 @@ object DicomParts {
   /**
     * Meta-part that can be used to mark the start of a DICOM file, e.g. using `.prepend(Source.single(DicomStartMarker)`
     */
-  case object DicomStartMarker extends MetaPart with Singleton
+  case object DicomStartMarker extends MetaPart
 
   /**
     * Meta-part that can be used to mark the end of a DICOM file, e.g. using `.concat(Source.single(DicomEndMarker)`
     */
-  case object DicomEndMarker extends MetaPart with Singleton
+  case object DicomEndMarker extends MetaPart
 
 }

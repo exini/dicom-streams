@@ -8,7 +8,7 @@ object Dependencies {
 
   private lazy val lang: Seq[ModuleID] =
     Seq(
-      "org.scala-lang.modules" %% "scala-xml"  % "2.1.0"
+      "org.scala-lang.modules" %% "scala-xml" % "2.1.0"
     )
 
   private lazy val logging: Seq[ModuleID] =
