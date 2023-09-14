@@ -16,13 +16,9 @@
 
 package com.exini.dicom.data
 
-import enumeratum.values.{ IntEnum, IntEnumEntry }
+sealed abstract class VR(val value: Int, val headerLength: Int, val paddingByte: Byte)
 
-sealed abstract class VR(val value: Int, val headerLength: Int, val paddingByte: Byte) extends IntEnumEntry
-
-object VR extends IntEnum[VR] {
-
-  val values = findValues
+object VR {
 
   case object AE extends VR(0x4145, 8, ' ')
   case object AS extends VR(0x4153, 8, ' ')
@@ -58,4 +54,43 @@ object VR extends IntEnum[VR] {
   case object US extends VR(0x5553, 8, 0)
   case object UT extends VR(0x5554, 12, ' ')
   case object UV extends VR(0x5556, 12, 0)
+
+  val values: IndexedSeq[VR] = IndexedSeq(
+    AE,
+    AS,
+    AT,
+    CS,
+    DA,
+    DS,
+    DT,
+    FD,
+    FL,
+    IS,
+    LO,
+    LT,
+    OB,
+    OD,
+    OF,
+    OL,
+    OV,
+    OW,
+    PN,
+    SH,
+    SL,
+    SQ,
+    SS,
+    ST,
+    SV,
+    TM,
+    UC,
+    UI,
+    UL,
+    UN,
+    UR,
+    US,
+    UT,
+    UV
+  )
+
+  def withValue(value: Int): Option[VR] = values.find(_.value == value)
 }

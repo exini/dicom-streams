@@ -2,8 +2,6 @@ package com.exini.dicom.data
 
 import com.exini.dicom.data.ByteParser.ByteReader
 
-import scala.util.Try
-
 object Parsing {
 
   final val dicomPreambleLength = 132
@@ -25,7 +23,7 @@ object Parsing {
     if (isSpecial(tag))
       (tag, null)
     else if (explicitVr) {
-      val vr = Try(VR.withValue(bytesToVR(data.drop(4)))).getOrElse(null)
+      val vr = VR.withValue(bytesToVR(data.drop(4))).orNull
       (tag, vr)
     } else
       (tag, Lookup.vrOf(tag))

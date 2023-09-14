@@ -27,8 +27,6 @@ import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.Parsing._
 import com.exini.dicom.data._
 
-import scala.util.Try
-
 class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
 
   import ByteParser._
@@ -190,7 +188,7 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
         reader.ensure(8)
         val data       = reader.remainingData.take(8)
         val tag        = bytesToTag(data, state.bigEndian)
-        val explicitVR = Try(VR.withValue(bytesToVR(data.drop(4)))).getOrElse(null)
+        val explicitVR = VR.withValue(bytesToVR(data.drop(4))).orNull
         if (isSpecial(tag))
           state.copy(maySwitchTs = false)
         else if (state.explicitVR && explicitVR == null) {

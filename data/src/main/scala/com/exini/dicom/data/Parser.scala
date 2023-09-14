@@ -224,13 +224,7 @@ object Parser {
       reader.ensure(8)
       val data = reader.remainingData.take(8)
       val tag  = bytesToTag(data, state.bigEndian)
-      val explicitVR =
-        try {
-          VR.withValue(bytesToVR(data.drop(4)))
-          true
-        } catch {
-          case _: Throwable => false
-        }
+      val explicitVR = VR.withValue(bytesToVR(data.drop(4))).isDefined
       if (isSpecial(tag))
         AttributeState(maySwitchTs = false, bigEndian = state.bigEndian, explicitVR = state.explicitVR, state.inflater)
       else if (state.explicitVR && !explicitVR) {
