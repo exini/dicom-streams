@@ -40,15 +40,15 @@ class dataTest extends AnyFlatSpec with Matchers {
   }
 
   it should "create a name based UID" in {
-    val uid1 = createNameBasedUID(CharacterSets.encode("name"))
-    val uid2 = createNameBasedUID(CharacterSets.encode("name"))
+    val uid1 = createNameBasedUID("name".utf8Bytes)
+    val uid2 = createNameBasedUID("name".utf8Bytes)
     uid1.startsWith("2.25") shouldBe true
     uid1 shouldBe uid2
   }
 
   it should "create a name based UID with specified root" in {
-    val uid1 = createNameBasedUID(CharacterSets.encode("name"), "6.66.666")
-    val uid2 = createNameBasedUID(CharacterSets.encode("name"), "6.66.666")
+    val uid1 = createNameBasedUID("name".utf8Bytes, "6.66.666")
+    val uid2 = createNameBasedUID("name".utf8Bytes, "6.66.666")
     uid1.startsWith("6.66.666") shouldBe true
     uid1 shouldBe uid2
   }

@@ -72,7 +72,7 @@ object TestData {
   ): Array[Byte] =
     shortToBytes(groupNumber, bigEndian) ++
       Array[Byte](0, 0) ++
-      (if (explicitVR) CharacterSets.encode("UL") ++ shortToBytes(4, bigEndian) else intToBytes(4, bigEndian)) ++
+      (if (explicitVR) "UL".utf8Bytes ++ shortToBytes(4, bigEndian) else intToBytes(4, bigEndian)) ++
       intToBytes(length, bigEndian)
 
   def characterSetsJis(bigEndian: Boolean = false, explicitVR: Boolean = true): Array[Byte] =

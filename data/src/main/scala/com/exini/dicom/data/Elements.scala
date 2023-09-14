@@ -889,21 +889,21 @@ object Elements {
       ValueElement
         .fromBytes(
           Tag.MediaStorageSOPClassUID,
-          padToEvenLength(CharacterSets.encode(sopClassUID), Tag.MediaStorageSOPClassUID)
+          padToEvenLength(sopClassUID.utf8Bytes, Tag.MediaStorageSOPClassUID)
         ),
       ValueElement.fromBytes(
         Tag.MediaStorageSOPInstanceUID,
-        padToEvenLength(CharacterSets.encode(sopInstanceUID), Tag.MediaStorageSOPInstanceUID)
+        padToEvenLength(sopInstanceUID.utf8Bytes, Tag.MediaStorageSOPInstanceUID)
       ),
       ValueElement
-        .fromBytes(Tag.TransferSyntaxUID, padToEvenLength(CharacterSets.encode(transferSyntax), Tag.TransferSyntaxUID)),
+        .fromBytes(Tag.TransferSyntaxUID, padToEvenLength(transferSyntax.utf8Bytes, Tag.TransferSyntaxUID)),
       ValueElement.fromBytes(
         Tag.ImplementationClassUID,
-        padToEvenLength(CharacterSets.encode(Implementation.classUid), Tag.ImplementationClassUID)
+        padToEvenLength(Implementation.classUid.utf8Bytes, Tag.ImplementationClassUID)
       ),
       ValueElement.fromBytes(
         Tag.ImplementationVersionName,
-        padToEvenLength(CharacterSets.encode(Implementation.versionName), Tag.ImplementationVersionName)
+        padToEvenLength(Implementation.versionName.utf8Bytes, Tag.ImplementationVersionName)
       )
     )
     val groupLength =

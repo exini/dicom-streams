@@ -386,7 +386,7 @@ object Value {
       case UL                          => truncate(4, longToBytes(java.lang.Long.parseUnsignedLong(value), bigEndian), bigEndian)
       case UV                          => toBytes(new BigInteger(value), 8, bigEndian)
       case OB | OW | OL | OV | OF | OD => throw new IllegalArgumentException("Cannot create binary array from string")
-      case _                           => CharacterSets.encode(value)
+      case _                           => value.utf8Bytes
     }
   def fromString(vr: VR, value: String, bigEndian: Boolean = false): Value =
     apply(vr, stringBytes(vr, value, bigEndian))
@@ -405,7 +405,7 @@ object Value {
       case UV => longToBytes(java.lang.Short.toUnsignedInt(value).toLong, bigEndian)
       case OB | OW | OL | OV | OF | OD | AT =>
         throw new IllegalArgumentException(s"Cannot create value of VR $vr from short")
-      case _ => CharacterSets.encode(value.toString)
+      case _ => value.toString.utf8Bytes
     }
   def fromShort(vr: VR, value: Short, bigEndian: Boolean = false): Value = apply(vr, shortBytes(vr, value, bigEndian))
   def fromShorts(vr: VR, values: Seq[Short], bigEndian: Boolean = false): Value =
@@ -423,7 +423,7 @@ object Value {
       case UL                          => truncate(4, longToBytes(Integer.toUnsignedLong(value), bigEndian), bigEndian)
       case UV                          => longToBytes(Integer.toUnsignedLong(value), bigEndian)
       case OB | OW | OL | OV | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from int")
-      case _                           => CharacterSets.encode(value.toString)
+      case _                           => value.toString.utf8Bytes
     }
   def fromInt(vr: VR, value: Int, bigEndian: Boolean = false): Value = apply(vr, intBytes(vr, value, bigEndian))
   def fromInts(vr: VR, values: Seq[Int], bigEndian: Boolean = false): Value =
@@ -441,7 +441,7 @@ object Value {
       case UL                     => truncate(4, longToBytes(value, bigEndian), bigEndian)
       case UV                     => toBytes(BigInteger.valueOf(value), 8, bigEndian)
       case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from long")
-      case _                      => CharacterSets.encode(value.toString)
+      case _                      => value.toString.utf8Bytes
     }
   def fromLong(vr: VR, value: Long, bigEndian: Boolean = false): Value = apply(vr, longBytes(vr, value, bigEndian))
   def fromLongs(vr: VR, values: Seq[Long], bigEndian: Boolean = false): Value =
@@ -459,7 +459,7 @@ object Value {
       case UL                     => toBytes(value, 4, bigEndian)
       case UV                     => toBytes(value, 8, bigEndian)
       case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from long")
-      case _                      => CharacterSets.encode(value.toString)
+      case _                      => value.toString.utf8Bytes
     }
   def fromVeryLong(vr: VR, value: BigInteger, bigEndian: Boolean = false): Value =
     apply(vr, veryLongBytes(vr, value, bigEndian))
@@ -478,7 +478,7 @@ object Value {
       case UL                     => truncate(4, longToBytes(value.toLong, bigEndian), bigEndian)
       case UV                     => toBytes(BigDecimal.valueOf(value.toDouble).toBigInteger, 8, bigEndian)
       case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from float")
-      case _                      => CharacterSets.encode(value.toString)
+      case _                      => value.toString.utf8Bytes
     }
   def fromFloat(vr: VR, value: Float, bigEndian: Boolean = false): Value = apply(vr, floatBytes(vr, value, bigEndian))
   def fromFloats(vr: VR, values: Seq[Float], bigEndian: Boolean = false): Value =
@@ -496,7 +496,7 @@ object Value {
       case UL                     => truncate(4, longToBytes(value.toLong, bigEndian), bigEndian)
       case UV                     => toBytes(BigDecimal.valueOf(value).toBigInteger, 8, bigEndian)
       case OB | OW | OL | OF | OD => throw new IllegalArgumentException(s"Cannot create value of VR $vr from double")
-      case _                      => CharacterSets.encode(value.toString)
+      case _                      => value.toString.utf8Bytes
     }
   def fromDouble(vr: VR, value: Double, bigEndian: Boolean = false): Value =
     apply(vr, doubleBytes(vr, value, bigEndian))
@@ -507,7 +507,7 @@ object Value {
     vr match {
       case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD =>
         throw new IllegalArgumentException(s"Cannot create value of VR $vr from date")
-      case _ => CharacterSets.encode(formatDate(value))
+      case _ => formatDate(value).utf8Bytes
     }
   def fromDate(vr: VR, value: LocalDate): Value        = apply(vr, dateBytes(vr, value))
   def fromDates(vr: VR, values: Seq[LocalDate]): Value = apply(vr, combine(vr, values.map(dateBytes(vr, _))))
@@ -516,7 +516,7 @@ object Value {
     vr match {
       case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD =>
         throw new IllegalArgumentException(s"Cannot create value of VR $vr from time")
-      case _ => CharacterSets.encode(formatTime(value))
+      case _ => formatTime(value).utf8Bytes
     }
   def fromTime(vr: VR, value: LocalTime): Value        = apply(vr, timeBytes(vr, value))
   def fromTimes(vr: VR, values: Seq[LocalTime]): Value = apply(vr, combine(vr, values.map(timeBytes(vr, _))))
@@ -525,7 +525,7 @@ object Value {
     vr match {
       case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD =>
         throw new IllegalArgumentException(s"Cannot create value of VR $vr from date-time")
-      case _ => CharacterSets.encode(formatDateTime(value))
+      case _ => formatDateTime(value).utf8Bytes
     }
   def fromDateTime(vr: VR, value: ZonedDateTime): Value = apply(vr, dateTimeBytes(vr, value))
   def fromDateTimes(vr: VR, values: Seq[ZonedDateTime]): Value =
@@ -533,7 +533,7 @@ object Value {
 
   private def personNameBytes(vr: VR, value: PersonName): Array[Byte] =
     vr match {
-      case PN => CharacterSets.encode(value.toString)
+      case PN => value.toString.utf8Bytes
       case _  => throw new IllegalArgumentException(s"Cannot create value of VR $vr from person name")
     }
   def fromPersonName(vr: VR, value: PersonName): Value = apply(vr, personNameBytes(vr, value))
@@ -542,7 +542,7 @@ object Value {
 
   private def uriBytes(vr: VR, value: URI): Array[Byte] =
     vr match {
-      case UR => CharacterSets.encode(value.toString)
+      case UR => value.toString.utf8Bytes
       case _  => throw new IllegalArgumentException(s"Cannot create value of VR $vr from URI")
     }
   def fromURI(vr: VR, value: URI): Value = apply(vr, uriBytes(vr, value))

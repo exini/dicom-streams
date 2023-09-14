@@ -352,7 +352,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "overwrite element if already present" in {
-    val newPatientName = patientName.setValue(Value(CharacterSets.encode("Jane^Doe")))
+    val newPatientName = patientName.setValue(Value("Jane^Doe".utf8Bytes))
     val updated        = elements.set(newPatientName)
 
     updated.size shouldBe elements.size
@@ -377,13 +377,13 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "set bytes" in {
-    val updated = elements.setBytes(Tag.SeriesDate, CharacterSets.encode("20100101"))
+    val updated = elements.setBytes(Tag.SeriesDate, "20100101".utf8Bytes)
     updated.getDate(Tag.SeriesDate).get shouldBe LocalDate.parse("2010-01-01")
   }
 
   it should "set nested bytes" in {
     val tagPath = TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.SeriesDate)
-    val updated = elements.setNestedBytes(tagPath, CharacterSets.encode("20100101"))
+    val updated = elements.setNestedBytes(tagPath, "20100101".utf8Bytes)
     updated.getDate(tagPath).get shouldBe LocalDate.parse("2010-01-01")
   }
 
@@ -634,7 +634,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "update character sets" in {
-    val updatedCs1 = elements.setCharacterSets(CharacterSets(CharacterSets.encode("\\ISO 2022 IR 127"))).characterSets
+    val updatedCs1 = elements.setCharacterSets(CharacterSets("\\ISO 2022 IR 127".utf8Bytes)).characterSets
     updatedCs1.charsetNames shouldBe Seq("", "ISO 2022 IR 127")
     val updatedCs2 = elements.set(ValueElement.fromString(Tag.SpecificCharacterSet, "\\ISO 2022 IR 13")).characterSets
     updatedCs2.charsetNames shouldBe Seq("", "ISO 2022 IR 13")
@@ -718,8 +718,8 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     val fmi     = Elements.empty().set(fmiList)
     fmi.getInt(Tag.FileMetaInformationGroupLength).get shouldBe
       (12 + 5 * 8 + 2 + 4 + 4 + 2 +
-        padToEvenLength(CharacterSets.encode(Implementation.classUid), Tag.ImplementationClassUID).length +
-        padToEvenLength(CharacterSets.encode(Implementation.versionName), Tag.ImplementationVersionName).length)
+        padToEvenLength(Implementation.classUid.utf8Bytes, Tag.ImplementationClassUID).length +
+        padToEvenLength(Implementation.versionName.utf8Bytes, Tag.ImplementationVersionName).length)
     fmi.getBytes(Tag.FileMetaInformationVersion).get shouldBe Array[Byte](0, 1)
     fmi.getString(Tag.MediaStorageSOPClassUID).get shouldBe "cuid"
     fmi.getString(Tag.MediaStorageSOPInstanceUID).get shouldBe "iuid"
@@ -735,7 +735,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       Tag.StudyDate,
       VR.DA,
       8
-    ).bytes ++ CharacterSets.encode("20010101")
+    ).bytes ++ "20010101".utf8Bytes
     SequenceElement(Tag.DerivationCodeSequence, 10).toBytes shouldBe sequence(Tag.DerivationCodeSequence, 10)
     FragmentsElement(Tag.PixelData, VR.OW).toBytes shouldBe pixeDataFragments()
     FragmentElement(4, Value(Array[Byte](1, 2, 3, 4))).toBytes shouldBe item(4) ++ Array[Byte](1, 2, 3, 4)

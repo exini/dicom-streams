@@ -118,9 +118,9 @@ object DicomParts {
       val headerBytes =
         if (explicitVR)
           if (vr.headerLength == 8)
-            tagToBytes(tag, bigEndian) ++ CharacterSets.encode(vr.toString) ++ shortToBytes(length.toShort, bigEndian)
+            tagToBytes(tag, bigEndian) ++ vr.toString.utf8Bytes ++ shortToBytes(length.toShort, bigEndian)
           else
-            tagToBytes(tag, bigEndian) ++ CharacterSets.encode(vr.toString) ++ bytes(0, 0) ++ intToBytes(
+            tagToBytes(tag, bigEndian) ++ vr.toString.utf8Bytes ++ bytes(0, 0) ++ intToBytes(
               length.toInt,
               bigEndian
             )

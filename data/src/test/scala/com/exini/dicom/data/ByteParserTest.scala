@@ -11,21 +11,21 @@ class ByteParserTest extends AnyFlatSpec with Matchers {
   import ByteParserTest._
 
   "Parsing a string of bytes" should "produce the correct values for valid byte sequence" in new Fixture(
-    Seq(CharacterSets.encode("STARTBoat,Car,Airplane"))
+    Seq("STARTBoat,Car,Airplane".utf8Bytes)
   ) {
     parse()
     result shouldBe Seq("Boat", "Car", "Airplane")
     isCompleted shouldBe true
   }
 
-  it should "throw an error for invalid byte sequence" in new Fixture(Seq(CharacterSets.encode("Car,Boat"))) {
+  it should "throw an error for invalid byte sequence" in new Fixture(Seq("Car,Boat".utf8Bytes)) {
     assertThrows[ParseException] {
       parse()
     }
   }
 
   it should "accept data in chunks" in new Fixture(
-    Seq(CharacterSets.encode("STARTBoat,Car"), CharacterSets.encode("Airplane"))
+    Seq("STARTBoat,Car".utf8Bytes, "Airplane".utf8Bytes)
   ) {
     parse()
     result shouldBe Seq("Boat", "Car", "Airplane")

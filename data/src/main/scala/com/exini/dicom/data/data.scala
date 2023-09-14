@@ -16,8 +16,6 @@
 
 package com.exini.dicom
 
-import com.exini.dicom.data.CharacterSets.utf8Charset
-
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.nio.{ ByteBuffer, ByteOrder }
@@ -193,8 +191,12 @@ package object data {
   def createNameBasedUID(name: Array[Byte]): String                 = nameBasedUID(name, uidRoot)
   def createNameBasedUID(name: Array[Byte], root: String): String   = nameBasedUID(name, root)
 
-  implicit class RichByteArray(bytes: Array[Byte]) {
-    def utf8String: String  = if (bytes.isEmpty) "" else new String(bytes, utf8Charset)
+  implicit class RichByteArray(val bytes: Array[Byte]) extends AnyVal {
+    def utf8String: String  = if (bytes.isEmpty) "" else new String(bytes, StandardCharsets.UTF_8)
     def arrayString: String = bytes.mkString("[", ", ", "]") // TODO limit here?
+  }
+
+  implicit class RichString(val s: String) extends AnyVal {
+    def utf8Bytes: Array[Byte] = s.getBytes(StandardCharsets.UTF_8)
   }
 }

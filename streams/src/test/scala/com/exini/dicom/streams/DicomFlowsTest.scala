@@ -1062,9 +1062,9 @@ class DicomFlowsTest
   }
 
   "The utf8 flow" should "transform a japanese patient name encoded with multiple character sets to valid utf8" in {
-    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ CharacterSets.encode("CS") ++
-      shortToBytesLE(0x001e.toShort) ++ padToEvenLength(CharacterSets.encode("ISO 2022 IR 13\\ISO 2022 IR 87"), VR.CS)
-    val patientName = tagToBytesLE(0x00100010) ++ CharacterSets.encode("PN") ++ shortToBytesLE(0x0038) ++
+    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ "CS".utf8Bytes ++
+      shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
+    val patientName = tagToBytesLE(0x00100010) ++ "PN".utf8Bytes ++ shortToBytesLE(0x0038) ++
       padToEvenLength(
         bytes(0xd4, 0xcf, 0xc0, 0xde, 0x5e, 0xc0, 0xdb, 0xb3, 0x3d, 0x1b, 0x24, 0x42, 0x3b, 0x33, 0x45, 0x44, 0x1b,
           0x28, 0x4a, 0x5e, 0x1b, 0x24, 0x42, 0x42, 0x40, 0x4f, 0x3a, 0x1b, 0x28, 0x4a, 0x3d, 0x1b, 0x24, 0x42, 0x24,
@@ -1091,7 +1091,7 @@ class DicomFlowsTest
 
   it should "set specific character set to ISO_IR 192 (UTF-8)" in {
     val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ ByteString("CS") ++
-      shortToBytesLE(0x001e.toShort) ++ padToEvenLength(CharacterSets.encode("ISO 2022 IR 13\\ISO 2022 IR 87"), VR.CS)
+      shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
 
     val bytes = specificCharacterSet
 
@@ -1129,10 +1129,10 @@ class DicomFlowsTest
       tagToBytesLE(Tag.SpecificCharacterSet) ++
         ByteString("CS") ++
         shortToBytesLE(0x001e.toShort) ++
-        padToEvenLength(CharacterSets.encode("ISO 2022 IR 13\\ISO 2022 IR 87"), VR.CS)
+        padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
     val patientName =
       tagToBytesLE(0x00100010) ++
-        CharacterSets.encode("PN") ++
+        "PN".utf8Bytes ++
         shortToBytesLE(0x0004) ++
         padToEvenLength(bytes(0xd4, 0xcf, 0xc0, 0xde), VR.PN)
 
@@ -1159,8 +1159,8 @@ class DicomFlowsTest
   }
 
   it should "not transform data with VR that doesn't support non-default encodings" in {
-    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ CharacterSets.encode("CS") ++
-      shortToBytesLE(0x001e.toShort) ++ padToEvenLength(CharacterSets.encode("ISO 2022 IR 13\\ISO 2022 IR 87"), VR.CS)
+    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ "CS".utf8Bytes ++
+      shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
     val patientNameCS = tagToBytesLE(0x00100010) ++ ByteString("CS") ++ shortToBytesLE(0x0004) ++ padToEvenLength(
       bytes(0xd4, 0xcf, 0xc0, 0xde),
       VR.PN
@@ -1222,8 +1222,8 @@ class DicomFlowsTest
   }
 
   it should "should handle fragments appearing just after an updated attribute" in {
-    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ CharacterSets.encode("CS") ++
-      shortToBytesLE(0x001e.toShort) ++ padToEvenLength(CharacterSets.encode("ISO 2022 IR 13\\ISO 2022 IR 87"), VR.CS)
+    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ "CS".utf8Bytes ++
+      shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
 
     val bytes = specificCharacterSet ++ personNameJohnDoe() ++ pixeDataFragments() ++ item(4) ++
       ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
@@ -1374,7 +1374,7 @@ class DicomFlowsTest
       ValueElement(
         tag,
         Lookup.vrOf(tag),
-        Value(CharacterSets.encode(value)),
+        Value(value.utf8Bytes),
         bigEndian = false,
         explicitVR = true
       ).toBytes

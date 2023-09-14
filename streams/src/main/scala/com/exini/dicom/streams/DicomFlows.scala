@@ -560,7 +560,7 @@ object DicomFlows {
                     val header = currentHeader
                     currentHeader = None
                     val newValue = header
-                      .map(h => CharacterSets.encode(characterSets.decode(h.vr, currentValue.toArrayUnsafe())))
+                      .map(h => characterSets.decode(h.vr, currentValue.toArrayUnsafe()).utf8Bytes)
                       .map(ByteString.apply)
                     val newLength = newValue.map(_.length)
                     val newElement = for {
@@ -592,7 +592,7 @@ object DicomFlows {
       Seq(
         TagModification.equals(
           TagPath.fromTag(Tag.TransferSyntaxUID),
-          _ => ByteString(padToEvenLength(CharacterSets.encode(UID.ExplicitVRLittleEndian), VR.UI))
+          _ => ByteString(padToEvenLength(UID.ExplicitVRLittleEndian.utf8Bytes, VR.UI))
         )
       )
     ).via(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {

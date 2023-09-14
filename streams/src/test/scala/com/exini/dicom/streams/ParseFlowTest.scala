@@ -788,7 +788,7 @@ class ParseFlowTest
       ValueElement(
         tag,
         Lookup.vrOf(tag),
-        Value(CharacterSets.encode(value)),
+        Value(value.utf8Bytes),
         bigEndian = false,
         explicitVR = true
       ).toBytes

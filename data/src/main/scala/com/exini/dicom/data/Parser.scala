@@ -222,8 +222,8 @@ object Parser {
 
     private def maybeSwitchTs(reader: ByteReader, state: AttributeState): AttributeState = {
       reader.ensure(8)
-      val data = reader.remainingData.take(8)
-      val tag  = bytesToTag(data, state.bigEndian)
+      val data       = reader.remainingData.take(8)
+      val tag        = bytesToTag(data, state.bigEndian)
       val explicitVR = VR.withValue(bytesToVR(data.drop(4))).isDefined
       if (isSpecial(tag))
         AttributeState(maySwitchTs = false, bigEndian = state.bigEndian, explicitVR = state.explicitVR, state.inflater)

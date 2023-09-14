@@ -210,7 +210,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   it should "parse sequences with VR UN as a block of bytes" in {
     val unSequence =
-      tagToBytes(Tag.CTExposureSequence) ++ CharacterSets.encode("UN") ++ Array[Byte](0, 0) ++ intToBytes(24)
+      tagToBytes(Tag.CTExposureSequence) ++ "UN".utf8Bytes ++ Array[Byte](0, 0) ++ intToBytes(24)
     val bytes    = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate()
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
@@ -218,7 +218,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   it should "parse sequences with VR UN, and where the nested data set(s) have implicit VR, as a block of bytes" in {
     val unSequence =
-      tagToBytes(Tag.CTExposureSequence) ++ CharacterSets.encode("UN") ++ Array[Byte](0, 0) ++ intToBytes(24)
+      tagToBytes(Tag.CTExposureSequence) ++ "UN".utf8Bytes ++ Array[Byte](0, 0) ++ intToBytes(24)
     val bytes    = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate(explicitVR = false)
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes

@@ -20,7 +20,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "split a string according to the DICOM multiple value delimiter" in {
-    Value(CharacterSets.encode("one\\two\\three")).toStrings(VR.SH) shouldBe Seq("one", "two", "three")
+    Value("one\\two\\three".utf8Bytes).toStrings(VR.SH) shouldBe Seq("one", "two", "three")
   }
 
   it should "trim any characters at beginning and end" in {
@@ -28,7 +28,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "trim any characters at or below 0x20 at beginning and end of each value" in {
-    Value(CharacterSets.encode("  one \\ two \\three  ")).toStrings(VR.SH) shouldBe Seq("one", "two", "three")
+    Value("  one \\ two \\three  ".utf8Bytes).toStrings(VR.SH) shouldBe Seq("one", "two", "three")
   }
 
   it should "split and trim strings with multiple character set encodings" in {
@@ -47,11 +47,11 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "not split a string with DICOM multiple value delimiters" in {
-    Value(CharacterSets.encode("one\\two\\three")).toSingleString(VR.SH) shouldBe Some("one\\two\\three")
+    Value("one\\two\\three".utf8Bytes).toSingleString(VR.SH) shouldBe Some("one\\two\\three")
   }
 
   it should "trim the string components" in {
-    Value(CharacterSets.encode("   one two  ")).toSingleString(VR.SH) shouldBe Some("one two")
+    Value("   one two  ".utf8Bytes).toSingleString(VR.SH) shouldBe Some("one two")
   }
 
   "Parsing int values" should "return empty sequence for empty byte string" in {
@@ -71,9 +71,9 @@ class ValueTest extends AnyFlatSpec with Matchers {
     Value(intToBytes(-3)).toInts(VR.UL) shouldBe Seq(-3)
     Value(longToBytes(-3)).toInts(VR.SV) shouldBe Seq(-3)
     Value(longToBytes(3)).toInts(VR.UV) shouldBe Seq(3)
-    Value(CharacterSets.encode("3.1415")).toInts(VR.DS) shouldBe Seq(3)
-    Value(CharacterSets.encode("-3")).toInts(VR.IS) shouldBe Seq(-3)
-    Value(CharacterSets.encode("-3")).toInts(VR.AT) shouldBe empty
+    Value("3.1415".utf8Bytes).toInts(VR.DS) shouldBe Seq(3)
+    Value("-3".utf8Bytes).toInts(VR.IS) shouldBe Seq(-3)
+    Value("-3".utf8Bytes).toInts(VR.AT) shouldBe empty
   }
 
   "Parsing a single int value" should "return the first entry among multiple values" in {
@@ -101,9 +101,9 @@ class ValueTest extends AnyFlatSpec with Matchers {
     Value(intToBytes(-3)).toLongs(VR.UL) shouldBe Seq((1L << 32) - 3L)
     Value(longToBytes(-3)).toLongs(VR.SV) shouldBe Seq(-3L)
     Value(longToBytes(3)).toLongs(VR.UV) shouldBe Seq(3L)
-    Value(CharacterSets.encode("3.1415")).toLongs(VR.DS) shouldBe Seq(3L)
-    Value(CharacterSets.encode("-3")).toLongs(VR.IS) shouldBe Seq(-3L)
-    Value(VR.AT, CharacterSets.encode("-3")).toLongs(VR.AT) shouldBe empty
+    Value("3.1415".utf8Bytes).toLongs(VR.DS) shouldBe Seq(3L)
+    Value("-3".utf8Bytes).toLongs(VR.IS) shouldBe Seq(-3L)
+    Value(VR.AT, "-3".utf8Bytes).toLongs(VR.AT) shouldBe empty
   }
 
   "Parsing a single long value" should "return the first entry among multiple values" in {
@@ -136,9 +136,9 @@ class ValueTest extends AnyFlatSpec with Matchers {
     Value(intToBytes(-3)).toVeryLongs(VR.UL) shouldBe Seq(BigInteger.valueOf((1L << 32) - 3L))
     Value(longToBytes(-3)).toVeryLongs(VR.SV) shouldBe Seq(BigInteger.valueOf(-3))
     Value(longToBytes(3)).toVeryLongs(VR.UV) shouldBe Seq(BigInteger.valueOf(3L))
-    Value(CharacterSets.encode("3.1415")).toVeryLongs(VR.DS) shouldBe Seq(BigInteger.valueOf(3))
-    Value(CharacterSets.encode("-3")).toVeryLongs(VR.IS) shouldBe Seq(BigInteger.valueOf(-3))
-    Value(VR.AT, CharacterSets.encode("-3")).toVeryLongs(VR.AT) shouldBe empty
+    Value("3.1415".utf8Bytes).toVeryLongs(VR.DS) shouldBe Seq(BigInteger.valueOf(3))
+    Value("-3".utf8Bytes).toVeryLongs(VR.IS) shouldBe Seq(BigInteger.valueOf(-3))
+    Value(VR.AT, "-3".utf8Bytes).toVeryLongs(VR.AT) shouldBe empty
   }
 
   "Parsing a single very long value" should "return the first entry among multiple values" in {
@@ -168,9 +168,9 @@ class ValueTest extends AnyFlatSpec with Matchers {
     Value(intToBytes(-3)).toShorts(VR.UL) shouldBe Seq(-3.toShort)
     Value(longToBytes(-3)).toShorts(VR.SV) shouldBe Seq(-3.toShort)
     Value(longToBytes(3)).toShorts(VR.UV) shouldBe Seq(3.toShort)
-    Value(CharacterSets.encode("3.1415")).toShorts(VR.DS) shouldBe Seq(3.toShort)
-    Value(CharacterSets.encode("-3")).toShorts(VR.IS) shouldBe Seq(-3.toShort)
-    Value(CharacterSets.encode("-3")).toShorts(VR.AT) shouldBe empty
+    Value("3.1415".utf8Bytes).toShorts(VR.DS) shouldBe Seq(3.toShort)
+    Value("-3".utf8Bytes).toShorts(VR.IS) shouldBe Seq(-3.toShort)
+    Value("-3".utf8Bytes).toShorts(VR.AT) shouldBe empty
   }
 
   "Parsing a single short value" should "return the first entry among multiple values" in {
@@ -198,9 +198,9 @@ class ValueTest extends AnyFlatSpec with Matchers {
     Value(intToBytes(-3)).toFloats(VR.UL) shouldBe Seq(((1L << 32) - 3).toFloat)
     Value(longToBytes(-3)).toFloats(VR.SV) shouldBe Seq(-3.toFloat)
     Value(longToBytes(3)).toFloats(VR.UV) shouldBe Seq(3.toFloat)
-    Value(CharacterSets.encode("3.1415")).toFloats(VR.DS) shouldBe Seq(3.1415.toFloat)
-    Value(CharacterSets.encode("-3")).toFloats(VR.IS) shouldBe Seq(-3.toFloat)
-    Value(CharacterSets.encode("-3")).toFloats(VR.AT) shouldBe empty
+    Value("3.1415".utf8Bytes).toFloats(VR.DS) shouldBe Seq(3.1415.toFloat)
+    Value("-3".utf8Bytes).toFloats(VR.IS) shouldBe Seq(-3.toFloat)
+    Value("-3".utf8Bytes).toFloats(VR.AT) shouldBe empty
   }
 
   "Parsing a single float value" should "return the first entry among multiple values" in {
@@ -228,9 +228,9 @@ class ValueTest extends AnyFlatSpec with Matchers {
     Value(intToBytes(-3)).toDoubles(VR.UL) shouldBe Seq((1L << 32) - 3.0)
     Value(longToBytes(-3)).toDoubles(VR.SV) shouldBe Seq(-3.0)
     Value(longToBytes(3)).toDoubles(VR.UV) shouldBe Seq(3.0)
-    Value(CharacterSets.encode("3.1415")).toDoubles(VR.DS) shouldBe Seq(3.1415)
-    Value(CharacterSets.encode("-3")).toDoubles(VR.IS) shouldBe Seq(-3.0)
-    Value(CharacterSets.encode("-3")).toDoubles(VR.AT) shouldBe empty
+    Value("3.1415".utf8Bytes).toDoubles(VR.DS) shouldBe Seq(3.1415)
+    Value("-3".utf8Bytes).toDoubles(VR.IS) shouldBe Seq(-3.0)
+    Value("-3".utf8Bytes).toDoubles(VR.AT) shouldBe empty
   }
 
   "Parsing a single double value" should "return the first entry among multiple values" in {
@@ -247,24 +247,24 @@ class ValueTest extends AnyFlatSpec with Matchers {
 
   it should "parse properly formatted date strings" in {
     val date = LocalDate.of(2004, 3, 29)
-    Value(CharacterSets.encode("20040329\\2004.03.29")).toDates(VR.DA) shouldBe Seq(date, date)
+    Value("20040329\\2004.03.29".utf8Bytes).toDates(VR.DA) shouldBe Seq(date, date)
   }
 
   it should "ignore improperly formatted entries" in {
     val date = LocalDate.of(2004, 3, 29)
-    Value(CharacterSets.encode("20040329\\one\\2004.03.29")).toDates(VR.DA) shouldBe Seq(date, date)
-    Value(CharacterSets.encode("one")).toDates(VR.DA) shouldBe Seq.empty
+    Value("20040329\\one\\2004.03.29".utf8Bytes).toDates(VR.DA) shouldBe Seq(date, date)
+    Value("one".utf8Bytes).toDates(VR.DA) shouldBe Seq.empty
   }
 
   it should "trim whitespace" in {
     val date = LocalDate.of(2004, 3, 29)
-    Value(CharacterSets.encode(" 20040329 \\20040329 \\one\\2004.03.29  "))
+    Value(" 20040329 \\20040329 \\one\\2004.03.29  ".utf8Bytes)
       .toDates(VR.DA) shouldBe Seq(date, date, date)
   }
 
   "Parsing a single date string" should "return the first valid entry among multiple values" in {
     val date = LocalDate.of(2004, 3, 29)
-    Value(CharacterSets.encode("one\\20040329\\20050401")).toDate(VR.DA) shouldBe Some(date)
+    Value("one\\20040329\\20050401".utf8Bytes).toDate(VR.DA) shouldBe Some(date)
   }
 
   "Parsing time strings" should "return empty sequence for empty byte string" in {
@@ -276,33 +276,29 @@ class ValueTest extends AnyFlatSpec with Matchers {
     val hhmm    = LocalTime.of(1, 2)
     val hhmmss  = LocalTime.of(1, 2, 3)
     val hhmmssS = LocalTime.of(1, 2, 3, 400000000)
-    Value(
-      CharacterSets.encode(
-        "01\\0102\\010203\\010203.400000"
-      )
-    ).toTimes(VR.TM) shouldBe Seq(hh, hhmm, hhmmss, hhmmssS)
+    Value("01\\0102\\010203\\010203.400000".utf8Bytes).toTimes(VR.TM) shouldBe Seq(hh, hhmm, hhmmss, hhmmssS)
   }
 
   it should "parse properly formatted time strings" in {
     val time = LocalTime.of(10, 9, 8, 765432000)
-    Value(CharacterSets.encode("100908.765432\\10:09:08.765432")).toTimes(VR.TM) shouldBe Seq(time, time)
+    Value("100908.765432\\10:09:08.765432".utf8Bytes).toTimes(VR.TM) shouldBe Seq(time, time)
   }
 
   it should "ignore improperly formatted entries" in {
     val time = LocalTime.of(10, 9, 8, 765432000)
-    Value(CharacterSets.encode("100908.765432\\one\\10:09:08.765432")).toTimes(VR.TM) shouldBe Seq(time, time)
-    Value(CharacterSets.encode("one")).toTimes(VR.TM) shouldBe Seq.empty
+    Value("100908.765432\\one\\10:09:08.765432".utf8Bytes).toTimes(VR.TM) shouldBe Seq(time, time)
+    Value("one".utf8Bytes).toTimes(VR.TM) shouldBe Seq.empty
   }
 
   it should "trim whitespace" in {
     val time = LocalTime.of(10, 9, 8, 765432000)
-    Value(CharacterSets.encode(" 100908.765432 \\100908.765432 \\one\\10:09:08.765432  "))
+    Value(" 100908.765432 \\100908.765432 \\one\\10:09:08.765432  ".utf8Bytes)
       .toTimes(VR.TM) shouldBe Seq(time, time, time)
   }
 
   "Parsing a single time string" should "return the first valid entry among multiple values" in {
     val time = LocalTime.of(10, 9, 8, 765432000)
-    Value(CharacterSets.encode("one\\100908.765432\\100908.765432")).toTime(VR.TM) shouldBe Some(time)
+    Value("one\\100908.765432\\100908.765432".utf8Bytes).toTime(VR.TM) shouldBe Some(time)
   }
 
   "Parsing date time strings" should "return empty sequence for empty byte string" in {
@@ -320,9 +316,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
     val yyyyMMddHHmmssS  = ZonedDateTime.of(2004, 3, 29, 11, 59, 35, 123456000, zone)
     val yyyyMMddHHmmssSZ = ZonedDateTime.of(2004, 3, 29, 11, 59, 35, 123456000, ZoneOffset.UTC)
     Value(
-      CharacterSets.encode(
-        "2004\\200403\\20040329\\2004032911\\200403291159\\20040329115935\\20040329115935.123456\\20040329115935.123456+0000\\20040329115935.123456-0000"
-      )
+      "2004\\200403\\20040329\\2004032911\\200403291159\\20040329115935\\20040329115935.123456\\20040329115935.123456+0000\\20040329115935.123456-0000".utf8Bytes
     ).toDateTimes(VR.DT) shouldBe Seq(
       yyyy,
       yyyyMM,
@@ -338,34 +332,30 @@ class ValueTest extends AnyFlatSpec with Matchers {
 
   it should "ignore improperly formatted entries" in {
     Value(
-      CharacterSets.encode(
-        "200\\2004ab\\20040\\2004032\\200403291\\20040329115\\2004032911593\\200403291159356\\20040329115935.1234567\\20040329115935.12345+000\\20040329115935.123456+00000"
-      )
+      "200\\2004ab\\20040\\2004032\\200403291\\20040329115\\2004032911593\\200403291159356\\20040329115935.1234567\\20040329115935.12345+000\\20040329115935.123456+00000".utf8Bytes
     ).toDateTimes(VR.DT) shouldBe empty
   }
 
   it should "allow time zone also with null components" in {
     val dateTime = ZonedDateTime.of(2004, 1, 1, 0, 0, 0, 0, ZoneOffset.of("+0500"))
-    Value(CharacterSets.encode("2004+0500")).toDateTime(VR.DT) shouldBe Some(dateTime)
+    Value("2004+0500".utf8Bytes).toDateTime(VR.DT) shouldBe Some(dateTime)
   }
 
   it should "trim whitespace" in {
     val dateTime = ZonedDateTime.of(2004, 3, 29, 5, 35, 59, 12345000, ZoneOffset.UTC)
     Value(
-      CharacterSets.encode(
-        " 20040329053559.012345+0000 \\20040329053559.012345+0000 \\one\\20040329053559.012345+0000  "
-      )
+      " 20040329053559.012345+0000 \\20040329053559.012345+0000 \\one\\20040329053559.012345+0000  ".utf8Bytes
     ).toDateTimes(VR.DT) shouldBe Seq(dateTime, dateTime, dateTime)
   }
 
   it should "parse time zones" in {
     val dateTime = ZonedDateTime.of(2004, 3, 29, 5, 35, 59, 12345000, ZoneOffset.ofHours(3))
-    Value(CharacterSets.encode("20040329053559.012345+0300")).toDateTime(VR.DT) shouldBe Some(dateTime)
+    Value("20040329053559.012345+0300".utf8Bytes).toDateTime(VR.DT) shouldBe Some(dateTime)
   }
 
   "Parsing a single date time string" should "return the first valid entry among multiple values" in {
     val dateTime = ZonedDateTime.of(2004, 3, 29, 5, 35, 59, 12345000, ZoneOffset.UTC)
-    Value(CharacterSets.encode("one\\20040329053559.012345+0000\\20050329053559.012345+0000"))
+    Value("one\\20040329053559.012345+0000\\20050329053559.012345+0000".utf8Bytes)
       .toDateTime(VR.DT) shouldBe Some(
       dateTime
     )
@@ -460,21 +450,19 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "format ST values" in {
-    val e = Value(CharacterSets.encode("   Short text   \\   and some more   "))
+    val e = Value("   Short text   \\   and some more   ".utf8Bytes)
     e.toStrings(VR.ST) should have length 1
     e.toSingleString(VR.ST) shouldBe Some("   Short text   \\   and some more")
   }
 
   it should "format DT values" in {
     val dt = "20040329053559.012345+0300"
-    Value(CharacterSets.encode(dt)).toString(VR.DT) shouldBe Some(dt)
+    Value(dt.utf8Bytes).toString(VR.DT) shouldBe Some(dt)
   }
 
   "Parsing a patient name" should "divide into parts and components" in {
     Value(
-      CharacterSets.encode(
-        "aFamily^aGiven^aMiddle^aPrefix^aSuffix=iFamily^iGiven^iMiddle^iPrefix^iSuffix=pFamily^pGiven^pMiddle^pPrefix^pSuffix"
-      )
+      "aFamily^aGiven^aMiddle^aPrefix^aSuffix=iFamily^iGiven^iMiddle^iPrefix^iSuffix=pFamily^pGiven^pMiddle^pPrefix^pSuffix".utf8Bytes
     ).toPersonNames() shouldBe Seq(
       PersonName(
         ComponentGroup("aFamily", "iFamily", "pFamily"),
@@ -487,7 +475,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "handle null components" in {
-    Value(CharacterSets.encode("^^aMiddle^aPrefix^=iFamily^^^^=pFamily^^^pPrefix^pSuffix"))
+    Value("^^aMiddle^aPrefix^=iFamily^^^^=pFamily^^^pPrefix^pSuffix".utf8Bytes)
       .toPersonNames() shouldBe Seq(
       PersonName(
         ComponentGroup("", "iFamily", "pFamily"),
@@ -498,7 +486,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
       )
     )
 
-    Value(CharacterSets.encode("aFamily^^aMiddle=iFamily"))
+    Value("aFamily^^aMiddle=iFamily".utf8Bytes)
       .toPersonNames() shouldBe Seq(
       PersonName(
         ComponentGroup("aFamily", "iFamily", ""),
@@ -511,7 +499,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "trim whitespace within each component" in {
-    Value(CharacterSets.encode("   aFamily   ^^    aMiddle    =   iFamily"))
+    Value("   aFamily   ^^    aMiddle    =   iFamily".utf8Bytes)
       .toPersonNames() shouldBe Seq(
       PersonName(
         ComponentGroup("aFamily", "iFamily", ""),
@@ -524,7 +512,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   "Parsing a URI" should "work for valid URI strings" in {
-    val uri = Value(CharacterSets.encode("https://example.com:8080/path?q1=45&q2=46")).toURI()
+    val uri = Value("https://example.com:8080/path?q1=45&q2=46".utf8Bytes).toURI()
     uri shouldBe defined
     uri.get.getScheme shouldBe "https"
     uri.get.getHost shouldBe "example.com"
@@ -534,14 +522,14 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "not parse invalid URIs" in {
-    val uri = Value(CharacterSets.encode("not < a > uri")).toURI()
+    val uri = Value("not < a > uri".utf8Bytes).toURI()
     uri shouldBe empty
   }
 
   "An element" should "update its value bytes" in {
-    val updated = Value.empty ++ CharacterSets.encode("ABC")
-    updated.bytes shouldBe CharacterSets.encode("ABC") // not compliant
-    updated.ensurePadding(VR.SH).bytes shouldBe CharacterSets.encode("ABC ")
+    val updated = Value.empty ++ "ABC".utf8Bytes
+    updated.bytes shouldBe "ABC".utf8Bytes // not compliant
+    updated.ensurePadding(VR.SH).bytes shouldBe "ABC ".utf8Bytes
   }
 
   "Creating an element" should "produce the expected bytes from string(s)" in {
