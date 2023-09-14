@@ -21,7 +21,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{ Flow, Source }
 import akka.util.ByteString
 import com.exini.dicom.data.DicomParts.DicomPart
-import com.exini.dicom.data.Elements
+import com.exini.dicom.data._
 
 import scala.concurrent.duration.{ DurationInt, FiniteDuration }
 import scala.concurrent.{ Await, ExecutionContext, Future }
@@ -48,4 +48,11 @@ package object streams {
   ): Elements =
     Await.result(toElements(source), d)
 
+  implicit class RichByteString(val s: ByteString) extends AnyVal {
+    def toBytes: Bytes = s.toArrayUnsafe().wrap
+  }
+
+  implicit class BytesWithByteStringSupport(val bytes: Bytes) extends AnyVal {
+    def toByteString: ByteString = ByteString(bytes)
+  }
 }

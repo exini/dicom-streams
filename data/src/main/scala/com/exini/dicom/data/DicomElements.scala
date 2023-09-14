@@ -26,7 +26,7 @@ object DicomElements {
     */
   trait Element {
     val bigEndian: Boolean
-    def toBytes: Array[Byte]
+    def toBytes: Bytes
     def toParts: List[DicomPart]
   }
 
@@ -38,13 +38,13 @@ object DicomElements {
     val vr: VR
     val bigEndian: Boolean
     val explicitVR: Boolean
-    def toBytes: Array[Byte]
+    def toBytes: Bytes
     def toElements: List[Element]
   }
 
   case object PreambleElement extends Element {
     override val bigEndian: Boolean       = false
-    override def toBytes: Array[Byte]     = new Array[Byte](128) ++ magicBytes
+    override def toBytes: Bytes           = zeroBytes(128) ++ magicBytes
     override def toString: String         = "PreambleElement(0, ..., 0, D, I, C, M)"
     override def toParts: List[DicomPart] = PreamblePart(toBytes) :: Nil
   }
@@ -54,7 +54,7 @@ object DicomElements {
       with ElementSet {
     val length: Long                         = value.length.toLong
     def setValue(value: Value): ValueElement = copy(value = value.ensurePadding(vr))
-    override def toBytes: Array[Byte]        = toParts.map(_.bytes).reduce(_ ++ _)
+    override def toBytes: Bytes              = toParts.map(_.bytes).reduce(_ ++ _)
     override def toParts: List[DicomPart] =
       if (length > 0)
         HeaderPart(tag, vr, length, isFileMetaInformation(tag), bigEndian, explicitVR) :: ValueChunk(
@@ -76,7 +76,7 @@ object DicomElements {
   object ValueElement {
     def apply(tag: Int, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
       ValueElement(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
-    def fromBytes(tag: Int, bytes: Array[Byte], bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
+    def fromBytes(tag: Int, bytes: Bytes, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
       apply(tag, Value(bytes), bigEndian, explicitVR)
     def fromString(tag: Int, string: String, bigEndian: Boolean = false, explicitVR: Boolean = true): ValueElement =
       apply(tag, Value.fromString(Lookup.vrOf(tag), string, bigEndian), bigEndian, explicitVR)
@@ -87,7 +87,7 @@ object DicomElements {
   case class SequenceElement(tag: Int, length: Long, bigEndian: Boolean = false, explicitVR: Boolean = true)
       extends Element {
     def indeterminate: Boolean            = length == indeterminateLength
-    override def toBytes: Array[Byte]     = HeaderPart(tag, VR.SQ, length, isFmi = false, bigEndian, explicitVR).bytes
+    override def toBytes: Bytes           = HeaderPart(tag, VR.SQ, length, isFmi = false, bigEndian, explicitVR).bytes
     override def toParts: List[DicomPart] = SequencePart(tag, length, bigEndian, explicitVR, toBytes) :: Nil
     override def toString: String =
       s"SequenceElement(${tagToString(tag)} SQ # $length ${Lookup.keywordOf(tag).getOrElse("")})"
@@ -95,7 +95,7 @@ object DicomElements {
 
   case class FragmentsElement(tag: Int, vr: VR, bigEndian: Boolean = false, explicitVR: Boolean = true)
       extends Element {
-    override def toBytes: Array[Byte] = toParts.head.bytes
+    override def toBytes: Bytes = toParts.head.bytes
     override def toParts: List[DicomPart] =
       FragmentsPart(
         tag,
@@ -110,7 +110,7 @@ object DicomElements {
   }
 
   case class FragmentElement(length: Long, value: Value, bigEndian: Boolean = false) extends Element {
-    override def toBytes: Array[Byte] = toParts.map(_.bytes).reduce(_ ++ _)
+    override def toBytes: Bytes = toParts.map(_.bytes).reduce(_ ++ _)
     override def toParts: List[DicomPart] =
       if (value.length > 0)
         ItemElement(value.length.toLong, bigEndian).toParts ::: ValueChunk(bigEndian, value.bytes, last = true) :: Nil
@@ -126,19 +126,19 @@ object DicomElements {
 
   case class ItemElement(length: Long, bigEndian: Boolean = false) extends Element {
     def indeterminate: Boolean            = length == indeterminateLength
-    override def toBytes: Array[Byte]     = tagToBytes(Tag.Item, bigEndian) ++ intToBytes(length.toInt, bigEndian)
+    override def toBytes: Bytes           = tagToBytes(Tag.Item, bigEndian) ++ intToBytes(length.toInt, bigEndian)
     override def toParts: List[DicomPart] = ItemPart(length, bigEndian, toBytes) :: Nil
     override def toString: String         = s"ItemElement(length = $length)"
   }
 
   case class ItemDelimitationElement(bigEndian: Boolean = false) extends Element {
-    override def toBytes: Array[Byte]     = tagToBytes(Tag.ItemDelimitationItem, bigEndian) ++ bytes(0, 0, 0, 0)
+    override def toBytes: Bytes           = tagToBytes(Tag.ItemDelimitationItem, bigEndian) ++ bytesi(0, 0, 0, 0)
     override def toParts: List[DicomPart] = ItemDelimitationPart(bigEndian, toBytes) :: Nil
     override def toString: String         = s"ItemDelimitationElement"
   }
 
   case class SequenceDelimitationElement(bigEndian: Boolean = false) extends Element {
-    override def toBytes: Array[Byte]     = tagToBytes(Tag.SequenceDelimitationItem, bigEndian) ++ bytes(0, 0, 0, 0)
+    override def toBytes: Bytes           = tagToBytes(Tag.SequenceDelimitationItem, bigEndian) ++ bytesi(0, 0, 0, 0)
     override def toParts: List[DicomPart] = SequenceDelimitationPart(bigEndian, toBytes) :: Nil
     override def toString: String         = s"SequenceDelimitationElement"
   }
@@ -162,7 +162,7 @@ object DicomElements {
         copy(items = items.patch(index - 1, Nil, 1))
       else
         copy(length = length - item(index).map(_.toBytes.length).getOrElse(0), items = items.patch(index - 1, Nil, 1))
-    override def toBytes: Array[Byte] = toElements.map(_.toBytes).reduce(_ ++ _)
+    override def toBytes: Bytes = toElements.map(_.toBytes).reduce(_ ++ _)
     override def toElements: List[Element] =
       SequenceElement(tag, length, bigEndian, explicitVR) ::
         items.flatMap(_.toElements) ::: (if (indeterminate) SequenceDelimitationElement(bigEndian) :: Nil else Nil)
@@ -209,7 +209,7 @@ object DicomElements {
     def toElements: List[Element] =
       ItemElement(length, bigEndian) :: elements.toElements(false) :::
         (if (indeterminate) ItemDelimitationElement(bigEndian) :: Nil else Nil)
-    def toBytes: Array[Byte] = toElements.map(_.toBytes).reduce(_ ++ _)
+    def toBytes: Bytes = toElements.map(_.toBytes).reduce(_ ++ _)
     def setElements(elements: Elements): Item = {
       val newLength = if (this.indeterminate) indeterminateLength else elements.toBytes(withPreamble = false).length
       copy(elements = elements, length = newLength.toLong)
@@ -267,19 +267,19 @@ object DicomElements {
     def frameCount: Int = if (offsets.isEmpty && fragments.isEmpty) 0 else if (offsets.isEmpty) 1 else offsets.size
 
     /**
-      * @return an `Iterator[Array[Byte]]` over the frames encoded in this `Fragments`
+      * @return an `Iterator[Bytes]` over the frames encoded in this `Fragments`
       */
-    def frameIterator: Iterator[Array[Byte]] =
-      new Iterator[Array[Byte]] {
+    def frameIterator: Iterator[Bytes] =
+      new Iterator[Bytes] {
         val totalLength: Long = fragments.map(_.length).sum
         val frameOffsets: List[Long] =
           if (totalLength <= 0) List(0L) else offsets.filter(_.nonEmpty).getOrElse(List(0L)) :+ totalLength
         val fragmentIterator: Iterator[Fragment] = fragments.iterator
         var offsetIndex: Int                     = 0
-        var bytes: Array[Byte]                   = Array.emptyByteArray
+        var bytes: Bytes                         = emptyBytes
 
         override def hasNext: Boolean = offsetIndex < frameOffsets.length - 1
-        override def next(): Array[Byte] = {
+        override def next(): Bytes = {
           val frameLength = (frameOffsets(offsetIndex + 1) - frameOffsets(offsetIndex)).toInt
           while (fragmentIterator.hasNext && bytes.length < frameLength)
             bytes = bytes ++ fragmentIterator.next().value.bytes
@@ -302,8 +302,8 @@ object DicomElements {
         )
       else
         copy(fragments = fragments :+ fragment)
-    def toBytes: Array[Byte] = toElements.map(_.toBytes).reduce(_ ++ _)
-    def size: Int            = fragments.length
+    def toBytes: Bytes = toElements.map(_.toBytes).reduce(_ ++ _)
+    def size: Int      = fragments.length
     override def toElements: List[Element] =
       FragmentsElement(tag, vr, bigEndian, explicitVR) ::
         offsets
@@ -312,7 +312,7 @@ object DicomElements {
               4L * o.length,
               Value(
                 o.map(offset => truncate(4, longToBytes(offset, bigEndian), bigEndian))
-                  .foldLeft(Array.emptyByteArray)(_ ++ _)
+                  .foldLeft(emptyBytes)(_ ++ _)
               ),
               bigEndian
             ) :: Nil

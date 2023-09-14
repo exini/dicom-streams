@@ -59,12 +59,12 @@ object ElementFlows {
 
                 // aggregate, emit if at end
                 case valueChunk: ValueChunk =>
-                  bytes = bytes ++ ByteString(valueChunk.bytes)
+                  bytes = bytes ++ valueChunk.bytes.toByteString
                   if (valueChunk.last)
                     if (inFragments)
-                      currentFragment.map(_.copy(value = Value(bytes.toArrayUnsafe())) :: Nil).getOrElse(Nil)
+                      currentFragment.map(_.copy(value = Value(bytes.toBytes)) :: Nil).getOrElse(Nil)
                     else
-                      currentValue.map(_.copy(value = Value(bytes.toArrayUnsafe())) :: Nil).getOrElse(Nil)
+                      currentValue.map(_.copy(value = Value(bytes.toBytes)) :: Nil).getOrElse(Nil)
                   else
                     Nil
 

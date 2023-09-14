@@ -35,7 +35,7 @@ class CollectFlowTest
     val bytes = studyDate() ++ personNameJohnDoe()
     val tags  = Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag)
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(collectFlow(tags, "tag"))
 
@@ -60,7 +60,7 @@ class CollectFlowTest
     val bytes = ByteString.empty
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes)
       .via(parseFlow)
       .via(collectFlow(Set.empty, "tag"))
 
@@ -77,7 +77,7 @@ class CollectFlowTest
     val bytes = personNameJohnDoe() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(collectFlow(Set(Tag.Modality, Tag.SeriesInstanceUID).map(TagTree.fromTag), "tag"))
 
@@ -98,7 +98,7 @@ class CollectFlowTest
     val bytes = studyDate() ++ personNameJohnDoe() ++ pixelData(2000)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow(chunkSize = 500))
       .via(collectFlow(Set(Tag.StudyDate, Tag.PatientName).map(TagTree.fromTag), "tag", maxBufferSize = 1000))
 
@@ -128,7 +128,7 @@ class CollectFlowTest
     val bytes = studyDate() ++ personNameJohnDoe() ++ pixelData(2000)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow(chunkSize = 500))
       .via(collectFlow(_.tag == Tag.PatientName, _.tag > Tag.PixelData, "tag", maxBufferSize = 1000))
 
@@ -148,7 +148,7 @@ class CollectFlowTest
       ) ++ patientID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow(chunkSize = 500))
       .via(
         collectFlow(
@@ -174,11 +174,11 @@ class CollectFlowTest
   }
 
   it should "collect fragments" in {
-    val bytes = studyDate() ++ pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
-      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+    val bytes = studyDate() ++ pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow(chunkSize = 500))
       .via(collectFlow(Set(TagTree.fromTag(Tag.PixelData)), "tag"))
 

@@ -8,7 +8,7 @@ import scala.util.Random
 class CompressionTest extends AnyFlatSpec with Matchers {
 
   "Compressing a dataset" should "reduce its size" in {
-    val bytes   = Random.nextBytes(256) ++ Array.fill[Byte](256)(127)
+    val bytes   = Random.nextBytes(256).wrap ++ Array.fill[Byte](256)(127)
     val zipped1 = Compression.compress(bytes)
     val zipped2 = Compression.compress(bytes, gzip = true)
     zipped1.length should be < bytes.length
@@ -16,7 +16,7 @@ class CompressionTest extends AnyFlatSpec with Matchers {
   }
 
   it should "be perfectly restored when decompressed again" in {
-    val bytes     = Random.nextBytes(256) ++ Array.fill[Byte](256)(127)
+    val bytes     = Random.nextBytes(256).wrap ++ Array.fill[Byte](256)(127)
     val zipped1   = Compression.compress(bytes)
     val zipped2   = Compression.compress(bytes, gzip = true)
     val restored1 = Compression.decompress(zipped1)

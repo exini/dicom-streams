@@ -90,8 +90,8 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def getValueElement(tagPath: TagPathTag): Option[ValueElement] = getPath(tagPath, Option.apply)
   def getValue(tag: Int): Option[Value]                          = getValueElement(tag).map(_.value)
   def getValue(tagPath: TagPathTag): Option[Value]               = getValueElement(tagPath).map(_.value)
-  def getBytes(tag: Int): Option[Array[Byte]]                    = getValue(tag).map(_.bytes)
-  def getBytes(tagPath: TagPathTag): Option[Array[Byte]]         = getValue(tagPath).map(_.bytes)
+  def getBytes(tag: Int): Option[Bytes]                          = getValue(tag).map(_.bytes)
+  def getBytes(tagPath: TagPathTag): Option[Bytes]               = getValue(tagPath).map(_.bytes)
   def getStrings(tag: Int): Seq[String]                          = getAll(tag, v => v.value.toStrings(v.vr, v.bigEndian, characterSets))
   def getStrings(tagPath: TagPathTag): Seq[String] =
     getAllPath(tagPath, v => v.value.toStrings(v.vr, v.bigEndian, characterSets))
@@ -305,9 +305,9 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def setValue(tag: Int, value: Value, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
     setValue(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
-  def setBytes(tag: Int, vr: VR, value: Array[Byte], bigEndian: Boolean, explicitVR: Boolean): Elements =
+  def setBytes(tag: Int, vr: VR, value: Bytes, bigEndian: Boolean, explicitVR: Boolean): Elements =
     setValue(tag, vr, Value(value), bigEndian, explicitVR)
-  def setBytes(tag: Int, value: Array[Byte], bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
+  def setBytes(tag: Int, value: Bytes, bigEndian: Boolean = false, explicitVR: Boolean = true): Elements =
     setBytes(tag, Lookup.vrOf(tag), value, bigEndian, explicitVR)
 
   def setStrings(tag: Int, vr: VR, values: Seq[String], bigEndian: Boolean, explicitVR: Boolean): Elements =
@@ -450,14 +450,14 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def setNestedBytes(
       tagPath: TagPathTag,
       vr: VR,
-      value: Array[Byte],
+      value: Bytes,
       bigEndian: Boolean,
       explicitVR: Boolean
   ): Elements =
     setNestedValue(tagPath, vr, Value(value), bigEndian, explicitVR)
   def setNestedBytes(
       tagPath: TagPathTag,
-      value: Array[Byte],
+      value: Bytes,
       bigEndian: Boolean = false,
       explicitVR: Boolean = true
   ): Elements =
@@ -788,11 +788,11 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
   def toElements(withPreamble: Boolean = true): List[Element] =
     if (withPreamble) PreambleElement :: toList.flatMap(_.toElements) else toList.flatMap(_.toElements)
   def toParts(withPreamble: Boolean = true): List[DicomPart] = toElements(withPreamble).flatMap(_.toParts)
-  def toBytes(withPreamble: Boolean = true): Array[Byte] = {
-    val preambleBytes               = if (withPreamble) PreambleElement.toBytes else Array.emptyByteArray
+  def toBytes(withPreamble: Boolean = true): Bytes = {
+    val preambleBytes               = if (withPreamble) PreambleElement.toBytes else emptyBytes
     val (fmiElements, dataElements) = data.partition(e => isFileMetaInformation(e.tag))
-    val fmiBytes                    = fmiElements.map(_.toBytes).foldLeft(Array.emptyByteArray)(_ ++ _)
-    val dataBytes                   = dataElements.map(_.toBytes).foldLeft(Array.emptyByteArray)(_ ++ _)
+    val fmiBytes                    = fmiElements.map(_.toBytes).foldLeft(emptyBytes)(_ ++ _)
+    val dataBytes                   = dataElements.map(_.toBytes).foldLeft(emptyBytes)(_ ++ _)
     if (getString(Tag.TransferSyntaxUID).exists(isDeflated))
       preambleBytes ++ fmiBytes ++ compress(dataBytes)
     else
@@ -885,7 +885,7 @@ object Elements {
       transferSyntax: String
   ): List[ValueElement] = {
     val fmiElements = List(
-      ValueElement.fromBytes(Tag.FileMetaInformationVersion, bytes(0, 1)),
+      ValueElement.fromBytes(Tag.FileMetaInformationVersion, bytesi(0, 1)),
       ValueElement
         .fromBytes(
           Tag.MediaStorageSOPClassUID,

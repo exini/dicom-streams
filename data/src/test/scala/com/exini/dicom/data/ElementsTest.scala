@@ -233,7 +233,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
 
   it should "return fragments" in {
     val elements =
-      create(studyDate, Fragments(Tag.PixelData, VR.OB, Some(Nil), List(Fragment(4, Value(Array[Byte](1, 2, 3, 4))))))
+      create(studyDate, Fragments(Tag.PixelData, VR.OB, Some(Nil), List(Fragment(4, Value(bytesi(1, 2, 3, 4))))))
     elements.getFragments(Tag.PixelData) shouldBe defined
     elements.getFragments(Tag.SeriesDate) shouldBe empty
     elements.getFragments(Tag.StudyDate) shouldBe empty
@@ -682,7 +682,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return an empty byte string when aggregating bytes with no data" in {
-    Elements.empty().toBytes(withPreamble = false) shouldBe Array.emptyByteArray
+    Elements.empty().toBytes(withPreamble = false) shouldBe emptyBytes
   }
 
   it should "render an informative string representation" in {
@@ -709,7 +709,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
   }
 
   it should "provide a legible toString" in {
-    val updated = elements.set(Fragments(Tag.PixelData, VR.OB, None, List(Fragment(4, Value(Array[Byte](1, 2, 3, 4))))))
+    val updated = elements.set(Fragments(Tag.PixelData, VR.OB, None, List(Fragment(4, Value(bytesi(1, 2, 3, 4))))))
     updated.toString.count(_ == System.lineSeparator.charAt(0)) shouldBe updated.toElements(false).length - 1
   }
 
@@ -720,7 +720,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       (12 + 5 * 8 + 2 + 4 + 4 + 2 +
         padToEvenLength(Implementation.classUid.utf8Bytes, Tag.ImplementationClassUID).length +
         padToEvenLength(Implementation.versionName.utf8Bytes, Tag.ImplementationVersionName).length)
-    fmi.getBytes(Tag.FileMetaInformationVersion).get shouldBe Array[Byte](0, 1)
+    fmi.getBytes(Tag.FileMetaInformationVersion).get shouldBe bytesi(0, 1)
     fmi.getString(Tag.MediaStorageSOPClassUID).get shouldBe "cuid"
     fmi.getString(Tag.MediaStorageSOPInstanceUID).get shouldBe "iuid"
     fmi.getString(Tag.TransferSyntaxUID).get shouldBe "ts"
@@ -738,7 +738,7 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     ).bytes ++ "20010101".utf8Bytes
     SequenceElement(Tag.DerivationCodeSequence, 10).toBytes shouldBe sequence(Tag.DerivationCodeSequence, 10)
     FragmentsElement(Tag.PixelData, VR.OW).toBytes shouldBe pixeDataFragments()
-    FragmentElement(4, Value(Array[Byte](1, 2, 3, 4))).toBytes shouldBe item(4) ++ Array[Byte](1, 2, 3, 4)
+    FragmentElement(4, Value(bytesi(1, 2, 3, 4))).toBytes shouldBe item(4) ++ bytesi(1, 2, 3, 4)
     ItemElement(10).toBytes shouldBe item(10)
     ItemDelimitationElement().toBytes shouldBe itemDelimitation()
     SequenceDelimitationElement().toBytes shouldBe sequenceDelimitation()
@@ -749,8 +749,8 @@ class ElementsTest extends AnyFlatSpec with Matchers {
       Tag.PixelData,
       VR.OW,
       Some(Nil),
-      List(Fragment(4, Value(Array[Byte](1, 2, 3, 4))))
-    ).toBytes shouldBe pixeDataFragments() ++ item(0) ++ item(4) ++ Array[Byte](1, 2, 3, 4) ++ sequenceDelimitation()
+      List(Fragment(4, Value(bytesi(1, 2, 3, 4))))
+    ).toBytes shouldBe pixeDataFragments() ++ item(0) ++ item(4) ++ bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
   }
 
   it should "have expected string representations in terms of number of lines" in {
@@ -760,13 +760,13 @@ class ElementsTest extends AnyFlatSpec with Matchers {
     checkString(ValueElement(Tag.StudyDate, Value.fromString(VR.DA, "20010101")).toString, 1)
     checkString(SequenceElement(Tag.DerivationCodeSequence, 10).toString, 1)
     checkString(FragmentsElement(Tag.PixelData, VR.OW).toString, 1)
-    checkString(FragmentElement(4, Value(Array[Byte](1, 2, 3, 4))).toString, 1)
+    checkString(FragmentElement(4, Value(bytesi(1, 2, 3, 4))).toString, 1)
     checkString(ItemElement(10).toString, 1)
     checkString(ItemDelimitationElement.toString, 1)
     checkString(SequenceDelimitationElement().toString, 1)
     checkString(Sequence(Tag.DerivationCodeSequence, indeterminateLength, List(Item(Elements.empty()))).toString, 1)
     checkString(
-      Fragments(Tag.PixelData, VR.OW, Some(Nil), List(Fragment(4, Value(Array[Byte](1, 2, 3, 4))))).toString,
+      Fragments(Tag.PixelData, VR.OW, Some(Nil), List(Fragment(4, Value(bytesi(1, 2, 3, 4))))).toString,
       1
     )
   }

@@ -91,7 +91,7 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
 
       final val transferSyntaxLengthLimit = 1024
 
-      private def toDatasetStep(firstTwoBytes: Array[Byte], state: FmiHeaderState): DicomParseStep = {
+      private def toDatasetStep(firstTwoBytes: Bytes, state: FmiHeaderState): DicomParseStep = {
         val tsuid = state.tsuid.getOrElse {
           log.warning("Missing Transfer Syntax (0002,0010) - assume Explicit VR Little Endian")
           UID.ExplicitVRLittleEndian
@@ -114,7 +114,7 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
         warnIfOdd(header.tag, header.vr, header.valueLength, log)
         if (groupNumber(header.tag) != 2) {
           log.warning("Missing or wrong File Meta Information Group Length (0002,0000)")
-          ParseResult(None, toDatasetStep(bytes(0, 0), state))
+          ParseResult(None, toDatasetStep(bytesi(0, 0), state))
         } else {
           // no meta elements can lead to vr = null
           val updatedVr  = if (header.vr == VR.UN) Lookup.vrOf(header.tag) else header.vr
@@ -267,7 +267,7 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
         if (reader.hasRemaining)
           super.onTruncation(reader)
         else {
-          emit(objOut, ValueChunk(state.bigEndian, Array.emptyByteArray, last = true))
+          emit(objOut, ValueChunk(state.bigEndian, emptyBytes, last = true))
           completeStage()
         }
     }
@@ -365,7 +365,7 @@ object ParseFlow {
         )
         val partition = builder.add(Partition[(DicomPart, Int)](3, _._2))
         val toPart    = Flow.fromFunction[(DicomPart, Int), DicomPart](_._1)
-        val toBytes   = Flow.fromFunction[(DicomPart, Int), ByteString] { case (a, _) => ByteString(a.bytes) }
+        val toBytes   = Flow.fromFunction[(DicomPart, Int), ByteString] { case (a, _) => a.bytes.toByteString }
         val inflater1 = Compression.inflate(maxBytesPerChunk = chunkSize, nowrap = true)
         val inflater2 = Compression.inflate(maxBytesPerChunk = chunkSize, nowrap = false)
         val merge     = builder.add(MergePreferred.create[DicomPart](2))

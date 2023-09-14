@@ -3,7 +3,6 @@ package com.exini.dicom.streams
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{ FileIO, Source }
 import akka.testkit.TestKit
-import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
@@ -52,8 +51,8 @@ class ElementSinkTest
       SequenceDelimitationElement(),
       ValueElement.fromString(Tag.PatientName, "Doe^John"),
       FragmentsElement(Tag.PixelData, VR.OB),
-      FragmentElement(4, Value(bytes(1, 2, 3, 4))),
-      FragmentElement(4, Value(bytes(1, 2, 3, 4))),
+      FragmentElement(4, Value(bytesi(1, 2, 3, 4))),
+      FragmentElement(4, Value(bytesi(1, 2, 3, 4))),
       SequenceDelimitationElement()
     )
 
@@ -145,7 +144,7 @@ class ElementSinkTest
       personNameJohnDoe(explicitVR = false) ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
       .via(elementFlow)
 
@@ -157,7 +156,7 @@ class ElementSinkTest
   "Fragments" should "be empty" in {
     val bytes = pixeDataFragments() ++ sequenceDelimitation()
 
-    val fragments = toElementsBlocking(Source.single(ByteString(bytes))).getFragments(Tag.PixelData).get
+    val fragments = toElementsBlocking(Source.single(bytes.toByteString)).getFragments(Tag.PixelData).get
     fragments.size shouldBe 0
     fragments.offsets shouldBe empty
   }
@@ -166,7 +165,7 @@ class ElementSinkTest
     val elementList = List(
       FragmentsElement(Tag.PixelData, VR.OB),
       FragmentElement(0, Value.empty),
-      FragmentElement(0, Value(bytes(1, 2, 3, 4))),
+      FragmentElement(0, Value(bytesi(1, 2, 3, 4))),
       SequenceDelimitationElement()
     )
 
@@ -192,9 +191,9 @@ class ElementSinkTest
   }
 
   it should "convert an empty first item to an empty offsets list" in {
-    val bytes = pixeDataFragments() ++ item(0) ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(0) ++ item(4) ++ bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
 
-    val fragments = toElementsBlocking(Source.single(ByteString(bytes))).getFragments(Tag.PixelData).get
+    val fragments = toElementsBlocking(Source.single(bytes.toByteString)).getFragments(Tag.PixelData).get
     fragments.offsets shouldBe defined
     fragments.offsets.get shouldBe empty
     fragments.size shouldBe 1
@@ -202,22 +201,22 @@ class ElementSinkTest
 
   it should "convert first item to offsets" in {
     val bytes = pixeDataFragments() ++ item(8) ++ intToBytesLE(0) ++ intToBytesLE(456) ++ item(4) ++
-      ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+      bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
 
-    val fragments = toElementsBlocking(Source.single(ByteString(bytes))).getFragments(Tag.PixelData).get
+    val fragments = toElementsBlocking(Source.single(bytes.toByteString)).getFragments(Tag.PixelData).get
     fragments.offsets shouldBe defined
     fragments.offsets.get shouldBe List(0, 456)
   }
 
   it should "support access to frames based on fragments and offsets" in {
     val bytes = pixeDataFragments() ++ item(8) ++ intToBytesLE(0) ++ intToBytesLE(6) ++ item(4) ++
-      ByteString(1, 2, 3, 4) ++ item(4) ++ ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+      bytesi(1, 2, 3, 4) ++ item(4) ++ bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
 
-    val iter = toElementsBlocking(Source.single(ByteString(bytes))).getFragments(Tag.PixelData).get.frameIterator
+    val iter = toElementsBlocking(Source.single(bytes.toByteString)).getFragments(Tag.PixelData).get.frameIterator
     iter.hasNext shouldBe true
-    iter.next() shouldBe ByteString(1, 2, 3, 4, 5, 6)
+    iter.next() shouldBe bytesi(1, 2, 3, 4, 5, 6)
     iter.hasNext shouldBe true
-    iter.next() shouldBe ByteString(7, 8)
+    iter.next() shouldBe bytesi(7, 8)
     iter.hasNext shouldBe false
   }
 
@@ -228,11 +227,11 @@ class ElementSinkTest
     val bytes4 = pixeDataFragments() ++ item(4) ++ intToBytesLE(0) ++ sequenceDelimitation()
     val bytes5 = pixeDataFragments() ++ item(4) ++ intToBytesLE(0) ++ item(0) ++ sequenceDelimitation()
 
-    val iter1 = toElementsBlocking(Source.single(ByteString(bytes1))).getFragments(Tag.PixelData).get.frameIterator
-    val iter2 = toElementsBlocking(Source.single(ByteString(bytes2))).getFragments(Tag.PixelData).get.frameIterator
-    val iter3 = toElementsBlocking(Source.single(ByteString(bytes3))).getFragments(Tag.PixelData).get.frameIterator
-    val iter4 = toElementsBlocking(Source.single(ByteString(bytes4))).getFragments(Tag.PixelData).get.frameIterator
-    val iter5 = toElementsBlocking(Source.single(ByteString(bytes5))).getFragments(Tag.PixelData).get.frameIterator
+    val iter1 = toElementsBlocking(Source.single(bytes1.toByteString)).getFragments(Tag.PixelData).get.frameIterator
+    val iter2 = toElementsBlocking(Source.single(bytes2.toByteString)).getFragments(Tag.PixelData).get.frameIterator
+    val iter3 = toElementsBlocking(Source.single(bytes3.toByteString)).getFragments(Tag.PixelData).get.frameIterator
+    val iter4 = toElementsBlocking(Source.single(bytes4.toByteString)).getFragments(Tag.PixelData).get.frameIterator
+    val iter5 = toElementsBlocking(Source.single(bytes5.toByteString)).getFragments(Tag.PixelData).get.frameIterator
 
     iter1.hasNext shouldBe false
     iter2.hasNext shouldBe false
@@ -243,22 +242,20 @@ class ElementSinkTest
 
   it should "support many frames per fragment and many fragments per frame" in {
     val bytes1 = pixeDataFragments() ++ item(12) ++ List(0, 2, 3).map(intToBytesLE).reduce(_ ++ _) ++ item(4) ++
-      ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
-    val bytes2 = pixeDataFragments() ++ item(0) ++ item(2) ++ ByteString(1, 2) ++
-      item(2) ++ ByteString(1, 2) ++ item(2) ++ ByteString(1, 2) ++ item(2) ++ ByteString(
-      1,
-      2
-    ) ++ sequenceDelimitation()
+      bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
+    val bytes2 = pixeDataFragments() ++ item(0) ++ item(2) ++ bytesi(1, 2) ++
+      item(2) ++ bytesi(1, 2) ++ item(2) ++ bytesi(1, 2) ++ item(2) ++
+      bytesi(1, 2) ++ sequenceDelimitation()
 
-    val iter1 = toElementsBlocking(Source.single(ByteString(bytes1))).getFragments(Tag.PixelData).get.frameIterator
-    val iter2 = toElementsBlocking(Source.single(ByteString(bytes2))).getFragments(Tag.PixelData).get.frameIterator
+    val iter1 = toElementsBlocking(Source.single(bytes1.toByteString)).getFragments(Tag.PixelData).get.frameIterator
+    val iter2 = toElementsBlocking(Source.single(bytes2.toByteString)).getFragments(Tag.PixelData).get.frameIterator
 
-    iter1.next() shouldBe ByteString(1, 2)
-    iter1.next() shouldBe ByteString(3)
-    iter1.next() shouldBe ByteString(4)
+    iter1.next() shouldBe bytesi(1, 2)
+    iter1.next() shouldBe bytesi(3)
+    iter1.next() shouldBe bytesi(4)
     iter1.hasNext shouldBe false
 
-    iter2.next() shouldBe ByteString(1, 2, 1, 2, 1, 2, 1, 2)
+    iter2.next() shouldBe bytesi(1, 2, 1, 2, 1, 2, 1, 2)
     iter2.hasNext shouldBe false
   }
 
@@ -271,7 +268,7 @@ class ElementSinkTest
       .runWith(elementSink)
       .futureValue(Timeout(5.seconds))
 
-    val elements2 = new Parser().parse(Files.readAllBytes(file.toPath)).result()
+    val elements2 = new Parser().parse(Files.readAllBytes(file.toPath).wrap).result()
 
     elements1 shouldBe elements2
   }

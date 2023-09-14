@@ -6,7 +6,6 @@ import akka.stream.scaladsl.{ FileIO, Flow, Sink, Source }
 import akka.stream.stage.GraphStageLogic
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
-import akka.util.ByteString
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data._
 import com.exini.dicom.streams.ParseFlow.parseFlow
@@ -43,10 +42,10 @@ class DicomFlowTest
       personNameJohnDoe() ++ sequence(
       Tag.DerivationCodeSequence
     ) ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation() ++
-      pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+      pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new DicomFlow[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
@@ -107,7 +106,7 @@ class DicomFlowTest
       personNameJohnDoe() // attribute
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new DeferToPartFlow[DicomPart] with InSequence[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
@@ -137,7 +136,7 @@ class DicomFlowTest
     var expectedDelimitationLengths = List(0, 8, 0, 8, 0, 8)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new IdentityFlow with GuaranteedDelimitationEvents[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
@@ -185,7 +184,7 @@ class DicomFlowTest
       sequence(Tag.DerivationCodeSequence, 32) ++ item() ++ studyDate() ++ itemDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -205,7 +204,7 @@ class DicomFlowTest
       sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -238,7 +237,7 @@ class DicomFlowTest
       )
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -265,7 +264,7 @@ class DicomFlowTest
         sequence(Tag.DerivationCodeSequence, 16) ++ item(8) ++ emptyPatientName()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -306,7 +305,7 @@ class DicomFlowTest
     }
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(flow1)
       .via(flow2)
@@ -323,7 +322,7 @@ class DicomFlowTest
       sequenceDelimitation() ++ itemDelimitation() ++ sequenceDelimitation() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -354,7 +353,7 @@ class DicomFlowTest
     var expectedChunkLengths = List(8, 0)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new IdentityFlow with GuaranteedValueEvent[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
@@ -392,7 +391,7 @@ class DicomFlowTest
     }
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(flow1)
       .via(flow2)
@@ -412,7 +411,7 @@ class DicomFlowTest
     }
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(flow)
 
@@ -492,7 +491,7 @@ class DicomFlowTest
     }
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(flow)
 
@@ -516,7 +515,7 @@ class DicomFlowTest
       sequence(Tag.EnergyWindowRangeSequence, 24) ++ item(16) ++ studyDate() ++ // nested sequence (determinate length)
       itemDelimitation() ++ sequenceDelimitation() ++
       personNameJohnDoe() ++ // attribute
-      pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+      pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
 
     var expectedPaths = List(
       EmptyTagPath,                                                                    // preamble
@@ -566,7 +565,7 @@ class DicomFlowTest
     }
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
@@ -617,7 +616,7 @@ class DicomFlowTest
     }
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
@@ -642,7 +641,7 @@ class DicomFlowTest
     val flow = new IdentityFlow with TagPathTracking[DicomPart]
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(flow)
       .via(flow)
@@ -657,14 +656,14 @@ class DicomFlowTest
   }
 
   it should "support sequences and items with explicit length" in {
-    val bytez = personNameJohnDoe() ++
+    val bytes = personNameJohnDoe() ++
       sequence(Tag.DigitalSignaturesSequence, 680) ++
       item(672) ++
-      element(Tag.MACIDNumber, bytes(1, 1), bigEndian = false, explicitVR = true) ++
+      element(Tag.MACIDNumber, bytesi(1, 1), bigEndian = false, explicitVR = true) ++
       element(Tag.DigitalSignatureUID, "1" * 54) ++
       element(Tag.CertificateType, "A" * 14) ++
-      element(Tag.CertificateOfSigner, new Array[Byte](426), bigEndian = false, explicitVR = true) ++
-      element(Tag.Signature, new Array[Byte](128), bigEndian = false, explicitVR = true)
+      element(Tag.CertificateOfSigner, zeroBytes(426), bigEndian = false, explicitVR = true) ++
+      element(Tag.Signature, zeroBytes(128), bigEndian = false, explicitVR = true)
 
     var expectedPaths = List(
       TagPath.fromTag(Tag.PatientName),
@@ -691,7 +690,7 @@ class DicomFlowTest
     }
 
     val source = Source
-      .single(ByteString(bytez))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new DeferToPartFlow[DicomPart] with TagPathTracking[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
@@ -747,7 +746,7 @@ class DicomFlowTest
       studyDate().length
     ) ++ studyDate()
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new IdentityFlow with GroupLengthWarnings[DicomPart])
 
@@ -768,7 +767,7 @@ class DicomFlowTest
   it should "issue a warning when determinate length sequences and items are encountered" in {
     val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate()
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new IdentityFlow with GroupLengthWarnings[DicomPart])
 
@@ -784,7 +783,7 @@ class DicomFlowTest
   it should "not warn when silent" in {
     val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate()
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(new IdentityFlow with GroupLengthWarnings[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
@@ -805,7 +804,7 @@ class DicomFlowTest
   it should "not warn after re-encoding to indeterminate length sequences and items" in {
     val bytes = sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate()
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
       .via(new IdentityFlow with GroupLengthWarnings[DicomPart])

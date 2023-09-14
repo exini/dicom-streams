@@ -1,7 +1,6 @@
 package com.exini.dicom.streams
 
 import akka.stream.testkit.TestSubscriber
-import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data._
@@ -39,19 +38,17 @@ object StreamTestUtils {
           case p                                                 => throw new RuntimeException(s"Expected ValueChunk with length = $length, got $p")
         }
 
-    def expectValueChunk(bytes: ByteString): PartProbe =
+    def expectValueChunk(bytes: Bytes): PartProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case chunk: ValueChunk if chunk.bytes.sameElements(bytes.toArrayUnsafe()) => true
+          case chunk: ValueChunk if chunk.bytes == bytes => true
           case chunk: ValueChunk =>
             throw new RuntimeException(
               s"Expected ValueChunk with bytes = $bytes, got $chunk with bytes ${chunk.bytes.arrayString}"
             )
           case p => throw new RuntimeException(s"Expected ValueChunk with bytes = $bytes, got $p")
         }
-
-    def expectValueChunk(bytes: Array[Byte]): PartProbe = expectValueChunk(ByteString(bytes))
 
     def expectItem(): PartProbe =
       probe
@@ -211,12 +208,12 @@ object StreamTestUtils {
           case p                                   => throw new RuntimeException(s"Expected Element with tag $tag, got $p")
         }
 
-    def expectElement(tag: Int, value: ByteString): ElementProbe =
+    def expectElement(tag: Int, value: Bytes): ElementProbe =
       probe
         .request(1)
         .expectNextChainingPF {
-          case e: ValueElement if e.tag == tag && e.value.bytes.sameElements(value.toArrayUnsafe()) => true
-          case p                                                                                    => throw new RuntimeException(s"Expected Element with tag $tag and value $value, got $p")
+          case e: ValueElement if e.tag == tag && e.value.bytes == value => true
+          case p                                                         => throw new RuntimeException(s"Expected Element with tag $tag and value $value, got $p")
         }
 
     def expectFragments(tag: Int): ElementProbe =

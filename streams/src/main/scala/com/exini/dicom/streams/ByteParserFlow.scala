@@ -41,7 +41,7 @@ abstract class ByteParserFlow[T] extends GraphStage[FlowShape[ByteString, T]] {
 
     def onPush(): Unit = {
       val chunk = grab(bytesIn)
-      parser ++= chunk.toArrayUnsafe()
+      parser ++= chunk.toBytes
       parser.parse()
     }
 

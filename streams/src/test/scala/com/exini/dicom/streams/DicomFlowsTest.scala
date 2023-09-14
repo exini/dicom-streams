@@ -18,6 +18,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import java.io.File
+import scala.collection.immutable
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ Await, ExecutionContextExecutor }
 
@@ -38,7 +39,7 @@ class DicomFlowsTest
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(printFlow)
 
@@ -58,7 +59,7 @@ class DicomFlowsTest
     val bytes = studyDate() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(stopTagFlow(Tag.PatientName))
 
@@ -73,7 +74,7 @@ class DicomFlowsTest
     val bytes = studyDate() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(stopTagFlow(Tag.StudyDate + 1))
 
@@ -90,7 +91,7 @@ class DicomFlowsTest
     ) ++ itemDelimitation() ++ sequenceDelimitation() ++ personNameJohnDoe() ++ pixelData(100)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(stopTagFlow(Tag.PatientName + 1))
 
@@ -116,7 +117,7 @@ class DicomFlowsTest
     ) ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(groupLengthDiscardFilter)
 
@@ -153,7 +154,7 @@ class DicomFlowsTest
       preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(fmiDiscardFilter)
 
@@ -186,7 +187,7 @@ class DicomFlowsTest
     ) ++ item() ++ studyDate() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(tagFilter(tagPath => tagPath.tag != Tag.PatientName))
 
@@ -208,7 +209,7 @@ class DicomFlowsTest
     ) ++ fmiVersion() ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(tagFilter(tagPath => groupNumber(tagPath.tag) >= 8, _ => false))
 
@@ -242,7 +243,7 @@ class DicomFlowsTest
     ) ++ fmiVersion() ++ transferSyntaxUID() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(tagFilter(tagPath => !isFileMetaInformation(tagPath.tag), _ => false))
 
@@ -288,7 +289,7 @@ class DicomFlowsTest
       preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(allowFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
 
@@ -305,7 +306,7 @@ class DicomFlowsTest
     ) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(allowFilter(Set(TagTree.fromTag(Tag.StudyDate)), _ => false))
 
@@ -315,11 +316,11 @@ class DicomFlowsTest
   }
 
   it should "also work on fragments" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
-      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(allowFilter(Set.empty, _ => false))
 
@@ -334,7 +335,7 @@ class DicomFlowsTest
     ) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(allowFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.StudyDate)), _ => false))
 
@@ -355,7 +356,7 @@ class DicomFlowsTest
     ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(allowFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate)), _ => false))
 
@@ -380,7 +381,7 @@ class DicomFlowsTest
       personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(denyFilter(Set(TagTree.fromAnyItem(Tag.DerivationCodeSequence)), _ => false))
 
@@ -400,7 +401,7 @@ class DicomFlowsTest
       ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         denyFilter(
@@ -427,7 +428,7 @@ class DicomFlowsTest
       ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(denyFilter(Set(TagTree.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate)), _ => true))
 
@@ -454,7 +455,7 @@ class DicomFlowsTest
         item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(headerFilter(header => header.vr == VR.PN))
 
@@ -480,7 +481,7 @@ class DicomFlowsTest
       mediaStorageSOPClassUID() ++ mediaStorageSOPInstanceUID() ++ transferSyntaxUID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(validateContextFlow(contexts))
 
@@ -505,7 +506,7 @@ class DicomFlowsTest
       mediaStorageSOPInstanceUID() ++ transferSyntaxUID() ++ sopClassUID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(validateContextFlow(contexts))
 
@@ -532,7 +533,7 @@ class DicomFlowsTest
       fmiVersion() ++ mediaStorageSOPClassUID() ++ mediaStorageSOPInstanceUID() ++ transferSyntaxUID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(validateContextFlow(contexts))
 
@@ -548,7 +549,7 @@ class DicomFlowsTest
       fmiVersion() ++ mediaStorageSOPInstanceUID() ++ transferSyntaxUID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(validateContextFlow(contexts))
 
@@ -564,7 +565,7 @@ class DicomFlowsTest
       fmiVersion() ++ mediaStorageSOPClassUID() ++ mediaStorageSOPInstanceUID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(validateContextFlow(contexts))
 
@@ -582,7 +583,7 @@ class DicomFlowsTest
       fmiVersion() ++ mediaStorageSOPClassUID() ++ mediaStorageSOPInstanceUID() ++ transferSyntaxUID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(validateContextFlow(contexts))
 
@@ -595,17 +596,17 @@ class DicomFlowsTest
     val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(modifications =
           Seq(
             TagModification.equals(
               TagPath.fromTag(Tag.FileMetaInformationGroupLength),
-              _ => ByteString(fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)).drop(8))
+              _ => fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)).drop(8)
             ),
             TagModification
-              .equals(TagPath.fromTag(Tag.TransferSyntaxUID), _ => ByteString(UID.DeflatedExplicitVRLittleEndian))
+              .equals(TagPath.fromTag(Tag.TransferSyntaxUID), _ => UID.DeflatedExplicitVRLittleEndian.utf8Bytes)
           )
         )
       )
@@ -631,17 +632,17 @@ class DicomFlowsTest
     val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(modifications =
           Seq(
             TagModification.equals(
               TagPath.fromTag(Tag.FileMetaInformationGroupLength),
-              _ => ByteString(fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)).drop(8))
+              _ => fmiGroupLength(transferSyntaxUID(UID.DeflatedExplicitVRLittleEndian)).drop(8)
             ),
             TagModification
-              .equals(TagPath.fromTag(Tag.TransferSyntaxUID), _ => ByteString(UID.DeflatedExplicitVRLittleEndian))
+              .equals(TagPath.fromTag(Tag.TransferSyntaxUID), _ => UID.DeflatedExplicitVRLittleEndian.utf8Bytes)
           )
         )
       )
@@ -660,7 +661,7 @@ class DicomFlowsTest
     val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(deflateDatasetFlow)
 
@@ -681,7 +682,7 @@ class DicomFlowsTest
     val bytes = ByteString.empty
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes)
       .via(parseFlow)
       .via(deflateDatasetFlow)
 
@@ -695,7 +696,7 @@ class DicomFlowsTest
       preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe() ++ pixelData(1000)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(bulkDataFilter)
 
@@ -717,7 +718,7 @@ class DicomFlowsTest
     ) ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(bulkDataFilter)
 
@@ -740,7 +741,7 @@ class DicomFlowsTest
     ) ++ itemDelimitation() ++ sequenceDelimitation() ++ personNameJohnDoe() ++ waveformData(100)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(bulkDataFilter)
 
@@ -760,11 +761,11 @@ class DicomFlowsTest
   }
 
   it should "remove fragments data" in {
-    val bytes = personNameJohnDoe() ++ pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
-      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+    val bytes = personNameJohnDoe() ++ pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(bulkDataFilter)
 
@@ -783,7 +784,7 @@ class DicomFlowsTest
     ) ++ fmiVersion() ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(denyFilter(Set(TagTree.fromTag(Tag.FileMetaInformationVersion)), _ => true))
       .via(fmiGroupLengthFlow)
@@ -805,7 +806,7 @@ class DicomFlowsTest
     val bytes         = preamble ++ transferSyntaxUID() // missing file meta information group length
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(fmiGroupLengthFlow)
 
@@ -824,7 +825,7 @@ class DicomFlowsTest
     val bytes         = transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(fmiGroupLengthFlow)
 
@@ -843,7 +844,7 @@ class DicomFlowsTest
     val bytes = ByteString.empty
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes)
       .via(parseFlow)
       .via(fmiGroupLengthFlow)
 
@@ -856,7 +857,7 @@ class DicomFlowsTest
     val bytes = preamble ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(fmiGroupLengthFlow)
 
@@ -869,17 +870,17 @@ class DicomFlowsTest
   }
 
   it should "keep a zero length group length attribute" in {
-    val bytes = fmiGroupLength(Array.emptyByteArray) ++ personNameJohnDoe()
+    val bytes = fmiGroupLength(emptyBytes) ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(fmiGroupLengthFlow)
 
     source
       .runWith(TestSink())
       .expectHeader(Tag.FileMetaInformationGroupLength)
-      .expectValueChunk(ByteString(0, 0, 0, 0))
+      .expectValueChunk(bytesi(0, 0, 0, 0))
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectDicomComplete()
@@ -892,7 +893,7 @@ class DicomFlowsTest
     val bytes         = preamble ++ transferSyntaxUID() // missing file meta information group length
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .prepend(Source.single(SomePart))
       .map { p =>
@@ -925,7 +926,7 @@ class DicomFlowsTest
       ) ++ studyDate() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -959,7 +960,7 @@ class DicomFlowsTest
       sequence(Tag.DerivationCodeSequence, 32) ++ item() ++ studyDate() ++ itemDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -976,12 +977,12 @@ class DicomFlowsTest
 
   it should "should not remove length from items in fragments" in {
     val bytes =
-      pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation() ++
+      pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ sequenceDelimitation() ++
         sequence(Tag.DerivationCodeSequence, 40) ++ item(32) ++
-        pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+        pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -1007,7 +1008,7 @@ class DicomFlowsTest
       sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ studyDate() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -1040,7 +1041,7 @@ class DicomFlowsTest
       )
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toIndeterminateLengthSequences)
 
@@ -1066,17 +1067,17 @@ class DicomFlowsTest
       shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
     val patientName = tagToBytesLE(0x00100010) ++ "PN".utf8Bytes ++ shortToBytesLE(0x0038) ++
       padToEvenLength(
-        bytes(0xd4, 0xcf, 0xc0, 0xde, 0x5e, 0xc0, 0xdb, 0xb3, 0x3d, 0x1b, 0x24, 0x42, 0x3b, 0x33, 0x45, 0x44, 0x1b,
+        bytesi(0xd4, 0xcf, 0xc0, 0xde, 0x5e, 0xc0, 0xdb, 0xb3, 0x3d, 0x1b, 0x24, 0x42, 0x3b, 0x33, 0x45, 0x44, 0x1b,
           0x28, 0x4a, 0x5e, 0x1b, 0x24, 0x42, 0x42, 0x40, 0x4f, 0x3a, 0x1b, 0x28, 0x4a, 0x3d, 0x1b, 0x24, 0x42, 0x24,
           0x64, 0x24, 0x5e, 0x24, 0x40, 0x1b, 0x28, 0x4a, 0x5e, 0x1b, 0x24, 0x42, 0x24, 0x3f, 0x24, 0x6d, 0x24, 0x26,
           0x1b, 0x28, 0x4a),
         VR.PN
       )
 
-    val bytez = specificCharacterSet ++ patientName
+    val bytes = specificCharacterSet ++ patientName
 
     val source = Source
-      .single(ByteString(bytez))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toUtf8Flow)
 
@@ -1085,25 +1086,25 @@ class DicomFlowsTest
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectHeader(Tag.PatientName)
-      .expectValueChunk(ByteString("ﾔﾏﾀﾞ^ﾀﾛｳ=山田^太郎=やまだ^たろう"))
+      .expectValueChunk("ﾔﾏﾀﾞ^ﾀﾛｳ=山田^太郎=やまだ^たろう".utf8Bytes)
       .expectDicomComplete()
   }
 
   it should "set specific character set to ISO_IR 192 (UTF-8)" in {
-    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ ByteString("CS") ++
+    val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ "CS".utf8Bytes ++
       shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
 
     val bytes = specificCharacterSet
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toUtf8Flow)
 
     source
       .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
-      .expectValueChunk(ByteString("ISO_IR 192"))
+      .expectValueChunk("ISO_IR 192".utf8Bytes)
       .expectDicomComplete()
   }
 
@@ -1111,14 +1112,14 @@ class DicomFlowsTest
     val bytes = personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toUtf8Flow)
 
     source
       .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
-      .expectValueChunk(ByteString("ISO_IR 192"))
+      .expectValueChunk("ISO_IR 192".utf8Bytes)
       .expectHeader(Tag.PatientName)
       .expectValueChunk(personNameJohnDoe().drop(8))
       .expectDicomComplete()
@@ -1127,21 +1128,21 @@ class DicomFlowsTest
   it should "transform data contained in sequences" in {
     val specificCharacterSet =
       tagToBytesLE(Tag.SpecificCharacterSet) ++
-        ByteString("CS") ++
+        "CS".utf8Bytes ++
         shortToBytesLE(0x001e.toShort) ++
         padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
     val patientName =
       tagToBytesLE(0x00100010) ++
         "PN".utf8Bytes ++
         shortToBytesLE(0x0004) ++
-        padToEvenLength(bytes(0xd4, 0xcf, 0xc0, 0xde), VR.PN)
+        padToEvenLength(bytesi(0xd4, 0xcf, 0xc0, 0xde), VR.PN)
 
-    val bytez = specificCharacterSet ++ sequence(
+    val bytes = specificCharacterSet ++ sequence(
       Tag.DerivationCodeSequence
     ) ++ item() ++ patientName ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytez))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toUtf8Flow)
 
@@ -1152,7 +1153,7 @@ class DicomFlowsTest
       .expectSequence(Tag.DerivationCodeSequence)
       .expectItem()
       .expectHeader(Tag.PatientName)
-      .expectValueChunk(ByteString("ﾔﾏﾀﾞ"))
+      .expectValueChunk("ﾔﾏﾀﾞ".utf8Bytes)
       .expectItemDelimitation()
       .expectSequenceDelimitation()
       .expectDicomComplete()
@@ -1161,15 +1162,15 @@ class DicomFlowsTest
   it should "not transform data with VR that doesn't support non-default encodings" in {
     val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ "CS".utf8Bytes ++
       shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
-    val patientNameCS = tagToBytesLE(0x00100010) ++ ByteString("CS") ++ shortToBytesLE(0x0004) ++ padToEvenLength(
-      bytes(0xd4, 0xcf, 0xc0, 0xde),
+    val patientNameCS = tagToBytesLE(0x00100010) ++ "CS".utf8Bytes ++ shortToBytesLE(0x0004) ++ padToEvenLength(
+      bytesi(0xd4, 0xcf, 0xc0, 0xde),
       VR.PN
     )
 
-    val bytez = specificCharacterSet ++ patientNameCS
+    val bytes = specificCharacterSet ++ patientNameCS
 
     val source = Source
-      .single(ByteString(bytez))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toUtf8Flow)
 
@@ -1178,21 +1179,20 @@ class DicomFlowsTest
       .expectHeader(Tag.SpecificCharacterSet)
       .expectValueChunk()
       .expectHeader(Tag.PatientName)
-      .expectValueChunk(ByteString(0xd4, 0xcf, 0xc0, 0xde))
+      .expectValueChunk(bytesi(0xd4, 0xcf, 0xc0, 0xde))
       .expectDicomComplete()
   }
 
   it should "not change a file already encoded with ISO_IR 192 (UTF-8)" in {
     val specificCharacterSet =
-      tagToBytesLE(Tag.SpecificCharacterSet) ++ ByteString("CS") ++ shortToBytesLE(0x000a.toShort) ++ ByteString(
-        "ISO_IR 192"
-      )
+      tagToBytesLE(Tag.SpecificCharacterSet) ++ "CS".utf8Bytes ++ shortToBytesLE(0x000a.toShort) ++
+        "ISO_IR 192".utf8Bytes
     val patientName =
-      tagToBytesLE(Tag.PatientName) ++ ByteString("PN") ++ shortToBytesLE(0x000c.toShort) ++ ByteString("ABC^ÅÖ^ﾔ")
+      tagToBytesLE(Tag.PatientName) ++ "PN".utf8Bytes ++ shortToBytesLE(0x000c.toShort) ++ "ABC^ÅÖ^ﾔ".utf8Bytes
     val bytes = specificCharacterSet ++ patientName
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toUtf8Flow)
       .map(_.bytes)
@@ -1209,7 +1209,7 @@ class DicomFlowsTest
     val bytes = emptyPatientName()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toUtf8Flow)
 
@@ -1226,22 +1226,22 @@ class DicomFlowsTest
       shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)
 
     val bytes = specificCharacterSet ++ personNameJohnDoe() ++ pixeDataFragments() ++ item(4) ++
-      ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+      bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toUtf8Flow)
 
     source
       .runWith(TestSink())
       .expectHeader(Tag.SpecificCharacterSet)
-      .expectValueChunk(ByteString("ISO_IR 192"))
+      .expectValueChunk("ISO_IR 192".utf8Bytes)
       .expectHeader(Tag.PatientName)
       .expectValueChunk()
       .expectFragments()
       .expectFragment(4)
-      .expectValueChunk(ByteString(1, 2, 3, 4))
+      .expectValueChunk(bytesi(1, 2, 3, 4))
       .expectFragmentsDelimitation()
       .expectDicomComplete()
   }
@@ -1260,7 +1260,7 @@ class DicomFlowsTest
       (1 to 500).map(_.toShort).map(shortToBytesBE).reduce(_ ++ _) ++ sequenceDelimitation(bigEndian)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toExplicitVrLittleEndianFlow)
 
@@ -1296,7 +1296,7 @@ class DicomFlowsTest
     val bytes = personNameJohnDoe(explicitVR = false)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toExplicitVrLittleEndianFlow)
       .map(_.bytes)
@@ -1305,7 +1305,7 @@ class DicomFlowsTest
     source
       .runWith(TestSink())
       .request(1)
-      .expectNextChainingPF { case newBytes: Array[Byte] => newBytes shouldBe personNameJohnDoe() }
+      .expectNextChainingPF { case newBytes: immutable.ArraySeq[_] => newBytes shouldBe personNameJohnDoe() }
       .expectComplete()
   }
 
@@ -1322,7 +1322,7 @@ class DicomFlowsTest
         (1 to 500).map(_.toShort).map(shortToBytesLE).reduce(_ ++ _) ++ sequenceDelimitation(bigEndian)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toExplicitVrLittleEndianFlow)
       .map(_.bytes)
@@ -1331,7 +1331,7 @@ class DicomFlowsTest
     source
       .runWith(TestSink())
       .request(1)
-      .expectNextChainingPF { case newBytes: Array[Byte] => newBytes shouldBe bytes }
+      .expectNextChainingPF { case newBytes: immutable.ArraySeq[_] => newBytes shouldBe bytes }
       .expectComplete()
   }
 
@@ -1339,7 +1339,7 @@ class DicomFlowsTest
     val bytes = emptyPatientName(bigEndian = true)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(toExplicitVrLittleEndianFlow)
 
@@ -1356,7 +1356,7 @@ class DicomFlowsTest
 
     val actualBytes = Await.result(
       Source
-        .single(ByteString(bytes))
+        .single(bytes.toByteString)
         .via(parseFlow)
         .via(toExplicitVrLittleEndianFlow)
         .map(_.bytes)
@@ -1365,12 +1365,12 @@ class DicomFlowsTest
       5.seconds
     )
 
-    actualBytes shouldBe ByteString(expectedBytes)
+    actualBytes shouldBe expectedBytes.toByteString
   }
 
   "The even value length flow" should "pad odd length attributes" in {
 
-    def odd(tag: Int, value: String): Array[Byte] =
+    def odd(tag: Int, value: String): Bytes =
       ValueElement(
         tag,
         Lookup.vrOf(tag),
@@ -1390,14 +1390,14 @@ class DicomFlowsTest
 
     val bytes = fmiGroupLength(mediaSopUidOdd) ++ mediaSopUidOdd ++ sopUidOdd ++
       sequence(Tag.DerivationCodeSequence, 25) ++ item(17) ++ personNameOdd ++
-      pixeDataFragments() ++ item(3) ++ ByteString(1, 2, 3) ++ sequenceDelimitation()
+      pixeDataFragments() ++ item(3) ++ bytesi(1, 2, 3) ++ sequenceDelimitation()
     val expectedBytes = fmiGroupLength(mediaSopUid) ++ mediaSopUid ++ sopUid ++
       sequence(Tag.DerivationCodeSequence) ++ item() ++ personName ++ itemDelimitation() ++ sequenceDelimitation() ++
-      pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 0) ++ sequenceDelimitation()
+      pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 0) ++ sequenceDelimitation()
 
     val actualBytes = Await.result(
       Source
-        .single(ByteString(bytes))
+        .single(bytes.toByteString)
         .via(parseFlow)
         .via(toIndeterminateLengthSequences)
         .via(toEvenValueLengthFlow)
@@ -1407,6 +1407,6 @@ class DicomFlowsTest
       5.seconds
     )
 
-    actualBytes shouldBe ByteString(expectedBytes)
+    actualBytes shouldBe expectedBytes.toByteString
   }
 }
