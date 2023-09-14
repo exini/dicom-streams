@@ -1371,7 +1371,13 @@ class DicomFlowsTest
   "The even value length flow" should "pad odd length attributes" in {
 
     def odd(tag: Int, value: String): Array[Byte] =
-      ValueElement(tag, Lookup.vrOf(tag), Value(CharacterSets.encode(value)), bigEndian = false, explicitVR = true).toBytes
+      ValueElement(
+        tag,
+        Lookup.vrOf(tag),
+        Value(CharacterSets.encode(value)),
+        bigEndian = false,
+        explicitVR = true
+      ).toBytes
 
     val mediaSopUidOdd =
       odd(Tag.MediaStorageSOPInstanceUID, "1.2.276.0.7230010.3.1.4.1536491920.17152.1480884676.735")

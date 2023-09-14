@@ -18,10 +18,10 @@ package com.exini.dicom.data
 
 import com.exini.dicom.data.VR._
 
-import java.math.{BigDecimal, BigInteger}
+import java.math.{ BigDecimal, BigInteger }
 import java.net.URI
 import java.time._
-import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder, SignStyle}
+import java.time.format.{ DateTimeFormatter, DateTimeFormatterBuilder, SignStyle }
 import java.time.temporal.ChronoField._
 import java.util
 
@@ -334,10 +334,11 @@ case class Value private[data] (bytes: Array[Byte]) {
     */
   def ensurePadding(vr: VR): Value = copy(bytes = padToEvenLength(bytes, vr))
 
-  override def equals(obj: Any): Boolean = obj match {
-    case v: Value => bytes.sameElements(v.bytes)
-    case _ => false
-  }
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case v: Value => bytes.sameElements(v.bytes)
+      case _        => false
+    }
 
   override def hashCode(): Int = 31 * 7 + util.Arrays.hashCode(bytes)
 }

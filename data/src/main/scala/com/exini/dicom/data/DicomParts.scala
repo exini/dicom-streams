@@ -26,10 +26,11 @@ object DicomParts {
   trait DicomPart {
     def bigEndian: Boolean
     def bytes: Array[Byte]
-    override def equals(obj: Any): Boolean = obj match {
-      case p: DicomPart => bigEndian == p.bigEndian && bytes.sameElements(p.bytes)
-      case _ => false
-    }
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case p: DicomPart => bigEndian == p.bigEndian && bytes.sameElements(p.bytes)
+        case _            => false
+      }
     override def hashCode(): Int = 31 * (31 * 7 + bigEndian.hashCode()) + util.Arrays.hashCode(bytes)
   }
 
@@ -162,10 +163,11 @@ object DicomParts {
   }
 
   trait Singleton {
-    override def equals(obj: Any): Boolean = obj match {
-      case o: AnyRef if o.eq(this) => true
-      case _ => false
-    }
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case o: AnyRef if o.eq(this) => true
+        case _                       => false
+      }
   }
 
   /**

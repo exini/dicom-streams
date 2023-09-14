@@ -245,7 +245,9 @@ trait GuaranteedValueEvent[Out] extends DicomFlow[Out] with InFragments[Out] {
   }
 }
 
-object SequenceDelimitationPartMarker extends SequenceDelimitationPart(bigEndian = false, Array.emptyByteArray) with Singleton
+object SequenceDelimitationPartMarker
+    extends SequenceDelimitationPart(bigEndian = false, Array.emptyByteArray)
+    with Singleton
 
 object ItemDelimitationPartMarker extends ItemDelimitationPart(bigEndian = false, Array.emptyByteArray) with Singleton
 
