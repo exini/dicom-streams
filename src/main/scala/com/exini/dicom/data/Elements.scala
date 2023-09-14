@@ -18,7 +18,7 @@ package com.exini.dicom.data
 
 import java.math.BigInteger
 import java.net.URI
-import java.time.{LocalDate, LocalTime, ZoneOffset, ZonedDateTime}
+import java.time.{ LocalDate, LocalTime, ZoneOffset, ZonedDateTime }
 import akka.util.ByteString
 import com.exini.dicom.data.Compression.compress
 import com.exini.dicom.data.DicomElements._
@@ -790,10 +790,10 @@ case class Elements(characterSets: CharacterSets, zoneOffset: ZoneOffset, data: 
     if (withPreamble) PreambleElement :: toList.flatMap(_.toElements) else toList.flatMap(_.toElements)
   def toParts(withPreamble: Boolean = true): List[DicomPart] = toElements(withPreamble).flatMap(_.toParts)
   def toBytes(withPreamble: Boolean = true): ByteString = {
-    val preambleBytes = if (withPreamble) PreambleElement.toBytes else ByteString.empty
+    val preambleBytes               = if (withPreamble) PreambleElement.toBytes else ByteString.empty
     val (fmiElements, dataElements) = data.partition(e => isFileMetaInformation(e.tag))
-    val fmiBytes = fmiElements.map(_.toBytes).foldLeft(ByteString.empty)(_ ++ _)
-    val dataBytes = dataElements.map(_.toBytes).foldLeft(ByteString.empty)(_ ++ _)
+    val fmiBytes                    = fmiElements.map(_.toBytes).foldLeft(ByteString.empty)(_ ++ _)
+    val dataBytes                   = dataElements.map(_.toBytes).foldLeft(ByteString.empty)(_ ++ _)
     if (getString(Tag.TransferSyntaxUID).exists(isDeflated))
       preambleBytes ++ fmiBytes ++ compress(dataBytes)
     else

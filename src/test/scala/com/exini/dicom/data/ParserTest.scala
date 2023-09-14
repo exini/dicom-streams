@@ -35,7 +35,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   }
 
   it should "read DICOM data in chunks" in {
-    val bytes  = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
+    val bytes    = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
     val elements = parse(bytes, Some(7))
     elements.toBytes() shouldBe bytes
   }

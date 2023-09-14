@@ -1,7 +1,7 @@
 package com.exini.dicom.streams
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{FileIO, Source}
+import akka.stream.scaladsl.{ FileIO, Source }
 import akka.testkit.TestKit
 import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
@@ -19,7 +19,7 @@ import org.scalatest.matchers.should.Matchers
 import java.io.File
 import java.nio.file.Files
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{ Await, ExecutionContextExecutor }
 
 class ElementSinkTest
     extends TestKit(ActorSystem("ElementSinkSpec"))

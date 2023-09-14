@@ -17,9 +17,9 @@ class CompressionTest extends AnyFlatSpec with Matchers {
   }
 
   it should "be perfectly restored when decompressed again" in {
-    val bytes   = ByteString(Random.nextBytes(256)) ++ ByteString(Array.fill[Byte](256)(127))
-    val zipped1 = Compression.compress(bytes)
-    val zipped2 = Compression.compress(bytes, gzip = true)
+    val bytes     = ByteString(Random.nextBytes(256)) ++ ByteString(Array.fill[Byte](256)(127))
+    val zipped1   = Compression.compress(bytes)
+    val zipped2   = Compression.compress(bytes, gzip = true)
     val restored1 = Compression.decompress(zipped1)
     val restored2 = Compression.decompress(zipped2, gzip = true)
     restored1 shouldBe bytes

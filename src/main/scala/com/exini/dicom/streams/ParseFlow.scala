@@ -34,7 +34,8 @@ class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
 
   protected class DicomParsingLogic extends ParsingLogic with StageLogging {
 
-    case class DatasetHeaderState(override val maySwitchTs: Boolean, bigEndian: Boolean, explicitVR: Boolean) extends ParseState
+    case class DatasetHeaderState(override val maySwitchTs: Boolean, bigEndian: Boolean, explicitVR: Boolean)
+        extends ParseState
 
     case class FmiHeaderState(
         tsuid: Option[String],
