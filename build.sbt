@@ -65,7 +65,7 @@ lazy val dataLib = project
 lazy val streamsLib = project
   .in(file("streams"))
   .settings(libraryDependencies ++= Dependencies.streams)
-  .dependsOn(dataLib)
+  .dependsOn(dataLib % "test->test;compile->compile")
 
 lazy val root = project
   .in(file("."))
