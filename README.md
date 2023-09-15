@@ -6,9 +6,13 @@ Gitter            | [![Join the chat at https://gitter.im/exini/dicom-streams](h
 
 The purpose of this project is to create a streaming API for reading and processing DICOM data using [akka-streams](http://doc.akka.io/docs/akka/current/scala/stream/index.html). 
 
-Advantages of streaming DICOM data include better control over resource allocation such as memory via strict bounds on 
-DICOM data chunk size and network utilization using back-pressure as specified in the 
+Advantages of streaming DICOM data include better control over resource allocation such as memory via strict bounds on
+DICOM data chunk size and network utilization using back-pressure as specified in the
 [Reactive Streams](http://www.reactive-streams.org/) protocol.
+
+The library is split in two projects. The `data` project defines data structures and common functionality with minimal
+dependencies and offers synchronous parsing of (possibly chunked) binary data. The `streams` project provides 
+functionality for streaming DICOM data and pulls in Akka as a required dependency.
 
 The logic of parsing and handling DICOM data is inspired by [dcm4che](https://github.com/dcm4che/dcm4che)
 which provides a far more complete (albeit blocking and synchronous) implementation of the DICOM standard.
@@ -24,6 +28,10 @@ resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snap
 The library is included by
 ```scala
 libraryDependencies += "com.exini" %% "dicom-streams" % "x.y.z"
+```
+If you want to use the basic data package without the streams functionality use
+```scala
+libraryDependencies += "com.exini" %% "dicom-data" % "x.y.z"
 ```
 
 ### Data Model

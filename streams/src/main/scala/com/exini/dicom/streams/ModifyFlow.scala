@@ -75,7 +75,7 @@ object ModifyFlow {
 
   /**
     * Modification flow for inserting or overwriting the values of specified elements. When inserting a new element,
-    * the corresponding modification function will be called with an empty `ByteString`. A modification is specified by
+    * the corresponding modification function will be called with an empty `Bytes`. A modification is specified by
     * a tag path, a modification function from current value bytes to their replacement, and a flag specifying whether
     * the element should be inserted if not present. Elements are inserted only if they point to existing datasets.
     * That means that sequences are never inserted, only modified. Insertion works according to the `TagPathTag#contains`

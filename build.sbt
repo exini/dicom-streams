@@ -58,12 +58,14 @@ lazy val coverageSettings = Seq(
 lazy val dataLib = project
   .in(file("data"))
   .enablePlugins(BuildInfoPlugin)
+  .settings(name := "dicom-data")
   .settings(buildInfoSettings)
   .settings(managedSourcesSettings)
   .settings(libraryDependencies ++= Dependencies.data)
 
 lazy val streamsLib = project
   .in(file("streams"))
+  .settings(name := "dicom-streams")
   .settings(libraryDependencies ++= Dependencies.streams)
   .dependsOn(dataLib % "test->test;compile->compile")
 
