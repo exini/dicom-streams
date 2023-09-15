@@ -20,7 +20,7 @@ import akka.stream.stage._
 import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath._
-import com.exini.dicom.data.{ Tag, TagPath, isGroupLength }
+import com.exini.dicom.data.{ Tag, TagPath, emptyBytes, isGroupLength }
 
 /**
   * This class defines events for modular construction of DICOM flows. Events correspond to the DICOM parts commonly
@@ -219,7 +219,7 @@ trait InSequence[Out] extends DicomFlow[Out] with GuaranteedDelimitationEvents[O
   }
 }
 
-object ValueChunkMarker extends ValueChunk(bigEndian = false, Array.emptyByteArray, last = true) with RefEquals
+object ValueChunkMarker extends ValueChunk(bigEndian = false, emptyBytes, last = true)
 
 /**
   * This mixin makes sure the `onValueChunk` event is called also for empty elements. This special case requires
@@ -245,11 +245,9 @@ trait GuaranteedValueEvent[Out] extends DicomFlow[Out] with InFragments[Out] {
   }
 }
 
-object SequenceDelimitationPartMarker
-    extends SequenceDelimitationPart(bigEndian = false, Array.emptyByteArray)
-    with RefEquals
+object SequenceDelimitationPartMarker extends SequenceDelimitationPart(bigEndian = false, emptyBytes)
 
-object ItemDelimitationPartMarker extends ItemDelimitationPart(bigEndian = false, Array.emptyByteArray) with RefEquals
+object ItemDelimitationPartMarker extends ItemDelimitationPart(bigEndian = false, emptyBytes)
 
 /**
   * By mixing in this trait, sequences and items with determinate length will be concluded by delimitation events, just

@@ -18,7 +18,7 @@ object Parsing {
 
   def isSpecial(tag: Int): Boolean = tag == 0xfffee000 || tag == 0xfffee00d || tag == 0xfffee0dd
 
-  def tagVr(data: Array[Byte], bigEndian: Boolean, explicitVr: Boolean): (Int, VR) = {
+  def tagVr(data: Bytes, bigEndian: Boolean, explicitVr: Boolean): (Int, VR) = {
     val tag = bytesToTag(data, bigEndian)
     if (isSpecial(tag))
       (tag, null)
@@ -29,11 +29,11 @@ object Parsing {
       (tag, Lookup.vrOf(tag))
   }
 
-  def tryReadHeader(data: Array[Byte]): Option[HeaderInfo] =
+  def tryReadHeader(data: Bytes): Option[HeaderInfo] =
     tryReadHeader(data, assumeBigEndian = false)
       .orElse(tryReadHeader(data, assumeBigEndian = true))
 
-  def tryReadHeader(data: Array[Byte], assumeBigEndian: Boolean): Option[HeaderInfo] = {
+  def tryReadHeader(data: Bytes, assumeBigEndian: Boolean): Option[HeaderInfo] = {
     val (tag, vr) = tagVr(data, assumeBigEndian, explicitVr = false)
     if (vr == VR.UN)
       None
@@ -65,13 +65,11 @@ object Parsing {
       AttributeInfo(tag, vr, 8, lengthToLong(bytesToInt(tagVrBytes.drop(4), state.bigEndian)))
   }
 
-  def isPreamble(data: Array[Byte]): Boolean =
-    data.length >= dicomPreambleLength && data
-      .slice(dicomPreambleLength - 4, dicomPreambleLength)
-      .sameElements(magicBytes)
+  def isPreamble(data: Bytes): Boolean =
+    data.length >= dicomPreambleLength && data.slice(dicomPreambleLength - 4, dicomPreambleLength) == magicBytes
 
   def isDeflated(transferSyntaxUid: String): Boolean =
     transferSyntaxUid == UID.DeflatedExplicitVRLittleEndian || transferSyntaxUid == UID.JPIPReferencedDeflate
 
-  def hasZLIBHeader(firstTwoBytes: Array[Byte]): Boolean = bytesToUShortBE(firstTwoBytes) == 0x789c
+  def hasZLIBHeader(firstTwoBytes: Bytes): Boolean = bytesToUShortBE(firstTwoBytes) == 0x789c
 }

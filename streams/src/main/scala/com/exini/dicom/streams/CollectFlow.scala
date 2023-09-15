@@ -83,7 +83,7 @@ object CollectFlow {
             var buffer: List[DicomPart]                  = Nil
             var currentBufferSize                        = 0
             var hasEmitted                               = false
-            var bytes: Array[Byte]                       = Array.emptyByteArray
+            var bytes: Bytes                             = emptyBytes
             var currentValue: Option[ValueElement]       = None
             var currentFragment: Option[FragmentElement] = None
 
@@ -134,12 +134,12 @@ object CollectFlow {
                   case header: HeaderPart =>
                     currentValue =
                       Option(ValueElement.empty(header.tag, header.vr, header.bigEndian, header.explicitVR))
-                    bytes = Array.emptyByteArray
+                    bytes = emptyBytes
                     Nil
 
                   case item: ItemPart if inFragments =>
                     currentFragment = Option(FragmentElement.empty(item.length, item.bigEndian))
-                    bytes = Array.emptyByteArray
+                    bytes = emptyBytes
                     Nil
 
                   case valueChunk: ValueChunk =>

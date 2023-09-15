@@ -13,7 +13,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   import com.exini.dicom.data.TestData._
 
-  private def parse(bytes: Array[Byte], chunkSize: Option[Int] = None): Elements = {
+  private def parse(bytes: Bytes, chunkSize: Option[Int] = None): Elements = {
     val parser = new Parser()
     chunkSize match {
       case Some(size) =>
@@ -65,13 +65,13 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   }
 
   it should "treat a preamble alone with non-zero data as a valid DICOM file" in {
-    val bytes    = Random.nextBytes(128) ++ magicBytes
+    val bytes    = Random.nextBytes(128).wrap ++ magicBytes
     val elements = parse(bytes)
     elements.size shouldBe 0
   }
 
   it should "handle a preamble with non-zero data" in {
-    val bytes    = Random.nextBytes(128) ++ magicBytes ++ personNameJohnDoe()
+    val bytes    = Random.nextBytes(128).wrap ++ magicBytes ++ personNameJohnDoe()
     val elements = parse(bytes, Some(1))
     elements.size shouldBe 1
     elements.head.tag shouldBe Tag.PatientName
@@ -90,11 +90,11 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   }
 
   it should "handle zero-length values" in {
-    val bytez    = bytes(8, 0, 32, 0, 68, 65, 0, 0, 16, 0, 16, 0, 80, 78, 0, 0)
-    val elements = parse(bytez)
-    elements.getBytes(Tag.StudyDate) should contain(Array.emptyByteArray)
-    elements.getBytes(Tag.PatientName) should contain(Array.emptyByteArray)
-    elements.toBytes(withPreamble = false) shouldBe bytez
+    val bytes    = bytesi(8, 0, 32, 0, 68, 65, 0, 0, 16, 0, 16, 0, 80, 78, 0, 0)
+    val elements = parse(bytes)
+    elements.getBytes(Tag.StudyDate) should contain(emptyBytes)
+    elements.getBytes(Tag.PatientName) should contain(emptyBytes)
+    elements.toBytes(withPreamble = false) shouldBe bytes
   }
 
   it should "output a warning when non-meta information is included in the header" in {
@@ -132,22 +132,22 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   }
 
   it should "read DICOM data with fragments" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ Array[Byte](1, 2, 3, 4) ++ item(4) ++
-      Array[Byte](5, 6, 7, 8) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
   }
 
   it should "issue a warning when a fragments delimitation tag has nonzero length" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ Array[Byte](1, 2, 3, 4) ++ item(4) ++
-      Array[Byte](5, 6, 7, 8) ++ sequenceEndNonZeroLength()
+    val bytes = pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceEndNonZeroLength()
     parse(bytes)
     succeed
   }
 
   it should "parse a tag which is not an item, item data nor fragments delimitation inside fragments as unknown" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ Array[Byte](1, 2, 3, 4) ++ studyDate() ++ item(4) ++
-      Array[Byte](5, 6, 7, 8) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ studyDate() ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
     parse(bytes)
     succeed
   }
@@ -168,7 +168,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   }
 
   it should "not accept a non-DICOM file" in {
-    val bytes = Array[Byte](1, 2, 3, 4, 5, 6, 7, 8, 9)
+    val bytes = bytesi(1, 2, 3, 4, 5, 6, 7, 8, 9)
     assertThrows[ParseException] {
       parse(bytes)
     }
@@ -202,7 +202,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   }
 
   it should "handle fragments with empty basic offset table (first item)" in {
-    val bytes = pixeDataFragments() ++ item(0) ++ item(4) ++ Array[Byte](1, 2, 3, 4) ++
+    val bytes = pixeDataFragments() ++ item(0) ++ item(4) ++ bytesi(1, 2, 3, 4) ++
       sequenceDelimitation()
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
@@ -210,7 +210,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   it should "parse sequences with VR UN as a block of bytes" in {
     val unSequence =
-      tagToBytes(Tag.CTExposureSequence) ++ "UN".utf8Bytes ++ Array[Byte](0, 0) ++ intToBytes(24)
+      tagToBytes(Tag.CTExposureSequence) ++ "UN".utf8Bytes ++ bytesi(0, 0) ++ intToBytes(24)
     val bytes    = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate()
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes
@@ -218,7 +218,7 @@ class ParserTest extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   it should "parse sequences with VR UN, and where the nested data set(s) have implicit VR, as a block of bytes" in {
     val unSequence =
-      tagToBytes(Tag.CTExposureSequence) ++ "UN".utf8Bytes ++ Array[Byte](0, 0) ++ intToBytes(24)
+      tagToBytes(Tag.CTExposureSequence) ++ "UN".utf8Bytes ++ bytesi(0, 0) ++ intToBytes(24)
     val bytes    = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate(explicitVR = false)
     val elements = parse(bytes)
     elements.toBytes(withPreamble = false) shouldBe bytes

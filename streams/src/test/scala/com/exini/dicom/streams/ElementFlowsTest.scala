@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
-import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TestData._
@@ -35,7 +34,7 @@ class ElementFlowsTest
     val bytes = personNameJohnDoe() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
       .via(elementFlow)
 
@@ -47,15 +46,11 @@ class ElementFlowsTest
   }
 
   it should "combine items in fragments into fragment elements" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++ ByteString(
-      5,
-      6,
-      7,
-      8
-    ) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
       .via(elementFlow)
 
@@ -69,18 +64,18 @@ class ElementFlowsTest
   }
 
   it should "handle elements and fragments of zero length" in {
-    val bytes = ByteString(8, 0, 32, 0, 68, 65, 0, 0) ++ personNameJohnDoe() ++
-      pixeDataFragments() ++ item(0) ++ item(4) ++ ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+    val bytes = bytesi(8, 0, 32, 0, 68, 65, 0, 0) ++ personNameJohnDoe() ++
+      pixeDataFragments() ++ item(0) ++ item(4) ++ bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
       .via(elementFlow)
 
     source
       .runWith(TestSink())
-      .expectElement(Tag.StudyDate, ByteString.empty)
-      .expectElement(Tag.PatientName, ByteString("John^Doe"))
+      .expectElement(Tag.StudyDate, emptyBytes)
+      .expectElement(Tag.PatientName, "John^Doe".utf8Bytes)
       .expectFragments(Tag.PixelData)
       .expectFragment(0)
       .expectFragment(4)
@@ -93,7 +88,7 @@ class ElementFlowsTest
       sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
       .via(elementFlow)
 
@@ -111,10 +106,10 @@ class ElementFlowsTest
       sequence(
         Tag.DerivationCodeSequence
       ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation() ++
-      pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+      pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
       .via(elementFlow)
       .via(tagPathFlow)
@@ -195,7 +190,7 @@ class ElementFlowsTest
       sequence(Tag.DerivationCodeSequence, 24) ++ item(16) ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
       .via(elementFlow)
       .via(tagPathFlow)

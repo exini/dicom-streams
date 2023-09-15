@@ -45,7 +45,7 @@ class Parser(val stop: Option[(AttributeInfo, Int) => Boolean] = None) {
   }
 
   private val byteParser: ByteParser[Element] = new ByteParser[Element](byteParserTarget) {
-    override def ++=(chunk: Array[Byte]): Unit = {
+    override def ++=(chunk: Bytes): Unit = {
       canMakeProgress |= chunk.nonEmpty
       current match {
         case step: DicomParseStep =>
@@ -78,7 +78,7 @@ class Parser(val stop: Option[(AttributeInfo, Int) => Boolean] = None) {
     * @param last lets the parser know whether this chunk of data is the last or if there is more to come
     * @return a reference to this parser for chaining commands
     */
-  def parse(chunk: Array[Byte], last: Boolean = true): Parser = {
+  def parse(chunk: Bytes, last: Boolean = true): Parser = {
     isLastChunk = last
     byteParser ++= chunk
     while (canMakeProgress) byteParser.parse()

@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
-import akka.util.ByteString
 import com.exini.dicom.data.Compression.compress
 import com.exini.dicom.data.DicomElements.ValueElement
 import com.exini.dicom.data._
@@ -35,7 +34,7 @@ class ParseFlowTest
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -54,7 +53,7 @@ class ParseFlowTest
     val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -72,7 +71,7 @@ class ParseFlowTest
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -89,7 +88,7 @@ class ParseFlowTest
     val bytes = personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -100,9 +99,9 @@ class ParseFlowTest
   }
 
   it should "not output value chunks when value length is zero" in {
-    val bytes = ByteString(8, 0, 32, 0, 68, 65, 0, 0) ++ ByteString(16, 0, 16, 0, 80, 78, 0, 0)
+    val bytes = bytesi(8, 0, 32, 0, 68, 65, 0, 0) ++ bytesi(16, 0, 16, 0, 80, 78, 0, 0)
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -116,7 +115,7 @@ class ParseFlowTest
     val bytes = fmiGroupLength(transferSyntaxUID(), studyDate()) ++ transferSyntaxUID() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -135,7 +134,7 @@ class ParseFlowTest
       fmiGroupLength(mediaStorageSOPInstanceUID()) ++ mediaStorageSOPInstanceUID() ++ transferSyntaxUID() ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -155,7 +154,7 @@ class ParseFlowTest
     val bytes = preamble
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -166,13 +165,11 @@ class ParseFlowTest
 
   it should "skip very long (and obviously erroneous) transfer syntaxes (see warning log message)" in {
     val malformedTsuid =
-      transferSyntaxUID().take(6) ++ ByteString(20, 8) ++ transferSyntaxUID().takeRight(20) ++ ByteString.fromArray(
-        new Array[Byte](2048)
-      )
+      transferSyntaxUID().take(6) ++ bytesi(20, 8) ++ transferSyntaxUID().takeRight(20) ++ zeroBytes(2048)
     val bytes = fmiGroupLength(malformedTsuid) ++ malformedTsuid ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -190,7 +187,7 @@ class ParseFlowTest
     val bytes = fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe().dropRight(2)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow(inflate = false))
 
     source
@@ -209,7 +206,7 @@ class ParseFlowTest
     ) ++ compress(personNameJohnDoe() ++ studyDate())
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -231,7 +228,7 @@ class ParseFlowTest
     ) ++ compress(personNameJohnDoe() ++ studyDate(), gzip = true)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -253,7 +250,7 @@ class ParseFlowTest
     ) ++ compress(personNameJohnDoe() ++ studyDate())
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow(inflate = false))
 
     source
@@ -267,11 +264,11 @@ class ParseFlowTest
   }
 
   it should "read DICOM data with fragments" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
-      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -286,11 +283,11 @@ class ParseFlowTest
   }
 
   it should "issue a warning when a fragments delimitation tag has nonzero length" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ item(4) ++
-      ByteString(5, 6, 7, 8) ++ sequenceEndNonZeroLength()
+    val bytes = pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceEndNonZeroLength()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -305,11 +302,11 @@ class ParseFlowTest
   }
 
   it should "parse a tag which is not an item, item data nor fragments delimitation inside fragments as unknown" in {
-    val bytes = pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4) ++ studyDate() ++ item(4) ++
-      ByteString(5, 6, 7, 8) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4) ++ studyDate() ++ item(4) ++
+      bytesi(5, 6, 7, 8) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -330,7 +327,7 @@ class ParseFlowTest
     ) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -352,7 +349,7 @@ class ParseFlowTest
     ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -376,7 +373,7 @@ class ParseFlowTest
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(new Chunker(chunkSize = 1))
       .via(ParseFlow())
 
@@ -393,10 +390,10 @@ class ParseFlowTest
   }
 
   it should "not accept a non-DICOM file" in {
-    val bytes = ByteString(1, 2, 3, 4, 5, 6, 7, 8, 9)
+    val bytes = bytesi(1, 2, 3, 4, 5, 6, 7, 8, 9)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -410,7 +407,7 @@ class ParseFlowTest
     ) ++ personNameJohnDoe(bigEndian = true)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -431,7 +428,7 @@ class ParseFlowTest
     ) ++ personNameJohnDoe(explicitVR = false)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -450,7 +447,7 @@ class ParseFlowTest
     val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow(chunkSize = 5))
 
     source
@@ -475,7 +472,7 @@ class ParseFlowTest
     ) ++ compress(personNameJohnDoe() ++ studyDate())
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow(chunkSize = 25, inflate = false))
 
     source
@@ -495,7 +492,7 @@ class ParseFlowTest
         transferSyntaxUID(explicitVR = false) ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -512,16 +509,16 @@ class ParseFlowTest
 
   it should "handle values with length larger than the signed int range" in {
     val length = Int.MaxValue.toLong + 1
-    val bytes  = ByteString(0xe0, 0x7f, 0x10, 0x00, 0x4f, 0x57, 0, 0) ++ intToBytes(length.toInt)
+    val bytes  = bytesi(0xe0, 0x7f, 0x10, 0x00, 0x4f, 0x57, 0, 0) ++ intToBytes(length.toInt)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
       .runWith(TestSink())
       .expectHeader(Tag.PixelData, VR.OW, length)
-      .expectValueChunk(ByteString.empty)
+      .expectValueChunk(emptyBytes)
       .expectDicomComplete()
   }
 
@@ -531,7 +528,7 @@ class ParseFlowTest
     ) ++ studyDate() ++ personNameJohnDoe()) ++ personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -550,10 +547,10 @@ class ParseFlowTest
   }
 
   it should "handle fragments with empty basic offset table (first item)" in {
-    val bytes = pixeDataFragments() ++ item(0) ++ item(4) ++ ByteString(1, 2, 3, 4) ++ sequenceDelimitation()
+    val bytes = pixeDataFragments() ++ item(0) ++ item(4) ++ bytesi(1, 2, 3, 4) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -567,11 +564,11 @@ class ParseFlowTest
   }
 
   it should "parse sequences with VR UN as a block of bytes" in {
-    val unSequence = tagToBytes(Tag.CTExposureSequence) ++ ByteString('U', 'N', 0, 0) ++ intToBytes(24)
+    val unSequence = tagToBytes(Tag.CTExposureSequence) ++ bytesi('U', 'N', 0, 0) ++ intToBytes(24)
     val bytes      = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -584,11 +581,11 @@ class ParseFlowTest
   }
 
   it should "parse sequences of determinate length with VR UN with contents in implicit VR as a block of bytes" in {
-    val unSequence = tagToBytes(Tag.CTExposureSequence) ++ ByteString('U', 'N', 0, 0) ++ intToBytes(24)
+    val unSequence = tagToBytes(Tag.CTExposureSequence) ++ bytesi('U', 'N', 0, 0) ++ intToBytes(24)
     val bytes      = personNameJohnDoe() ++ unSequence ++ item(16) ++ studyDate(explicitVR = false)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -609,7 +606,7 @@ class ParseFlowTest
       sequenceDelimitation() ++ pixelData(10)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -635,7 +632,7 @@ class ParseFlowTest
       itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -659,7 +656,7 @@ class ParseFlowTest
       sequence(Tag.CollimatorShapeSequence) ++ item() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -688,7 +685,7 @@ class ParseFlowTest
       ValueElement(0x00990110, VR.SH, Value.fromString(VR.SH, "Value"), bigEndian = false, explicitVR = true).toBytes
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -709,10 +706,10 @@ class ParseFlowTest
   it should "handle a CP-246 sequence followed by fragments" in {
     val bytes = personNameJohnDoe() ++
       cp264Sequence ++ item() ++ personNameJohnDoe(explicitVR = false) ++ itemDelimitation() ++
-      sequenceDelimitation() ++ pixeDataFragments() ++ item(4) ++ ByteString(1, 2, 3, 4)
+      sequenceDelimitation() ++ pixeDataFragments() ++ item(4) ++ bytesi(1, 2, 3, 4)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -737,7 +734,7 @@ class ParseFlowTest
       itemDelimitation() ++ sequenceDelimitation() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -761,11 +758,11 @@ class ParseFlowTest
     // length of implicit attribute will be encoded as 0x4441 (little endian) which reads as VR 'DA'
     // this is the smallest length that could lead to such problems
     val bytes = personNameJohnDoe() ++ cp264Sequence ++ item() ++
-      element(Tag.CodeMeaning, new Array[Byte](0x4144), bigEndian = false, explicitVR = false) ++
+      element(Tag.CodeMeaning, zeroBytes(0x4144), bigEndian = false, explicitVR = false) ++
       itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source
@@ -784,7 +781,7 @@ class ParseFlowTest
 
   it should "handle odd-length attributes" in {
 
-    def element(tag: Int, value: String): Array[Byte] =
+    def element(tag: Int, value: String): Bytes =
       ValueElement(
         tag,
         Lookup.vrOf(tag),
@@ -801,7 +798,7 @@ class ParseFlowTest
       sequence(Tag.DerivationCodeSequence, 25) ++ item(17) ++ personNameOdd
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(ParseFlow())
 
     source

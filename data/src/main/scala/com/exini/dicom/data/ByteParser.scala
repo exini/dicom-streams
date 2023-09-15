@@ -32,9 +32,9 @@ import scala.util.control.{ NoStackTrace, NonFatal }
 class ByteParser[T](target: ByteParserTarget[T]) {
 
   protected var current: ParseStep[T]     = FinishedParser
-  protected var reader                    = new ByteReader(Array.emptyByteArray)
+  protected var reader                    = new ByteReader(emptyBytes)
   protected var acceptNoMoreDataAvailable = true
-  protected var buffer: Array[Byte]       = Array.emptyByteArray
+  protected var buffer: Bytes             = emptyBytes
 
   def startWith(step: ParseStep[T]): Unit =
     current = step
@@ -42,14 +42,14 @@ class ByteParser[T](target: ByteParserTarget[T]) {
   protected def recursionLimit: Int = 1000
 
   protected def complete(): Unit = {
-    buffer = Array.emptyByteArray
+    buffer = emptyBytes
     reader = null
     target.complete()
   }
 
   protected def fail(ex: Throwable): Unit = {
-    buffer = Array.emptyByteArray
-    reader = new ByteReader(Array.emptyByteArray)
+    buffer = emptyBytes
+    reader = new ByteReader(emptyBytes)
     target.fail(ex)
   }
 
@@ -113,7 +113,7 @@ class ByteParser[T](target: ByteParserTarget[T]) {
     * Append the input data
     * @param chunk input data
     */
-  def ++=(chunk: Array[Byte]): Unit = if (chunk.nonEmpty) buffer ++= chunk
+  def ++=(chunk: Bytes): Unit = if (chunk.nonEmpty) buffer ++= chunk
 
   /**
     * Trigger a parse cycle which, if successful, will emit a single element
@@ -148,11 +148,11 @@ object ByteParser {
 
   val NeedMoreData = new Exception with NoStackTrace
 
-  class ByteReader(private var input: Array[Byte]) {
+  class ByteReader(private var input: Bytes) {
 
     private[this] var off = 0
 
-    def setInput(input: Array[Byte]): Unit = {
+    def setInput(input: Bytes): Unit = {
       this.input = input
       off = 0
     }
@@ -163,20 +163,20 @@ object ByteParser {
 
     def currentOffset: Int = off
 
-    def remainingData: Array[Byte] = input.drop(off)
+    def remainingData: Bytes = input.drop(off)
 
-    def fromStartToHere: Array[Byte] = input.take(off)
+    def fromStartToHere: Bytes = input.take(off)
 
     def ensure(n: Int): Unit = if (remainingSize < n) throw NeedMoreData
 
-    def take(n: Int): Array[Byte] =
+    def take(n: Int): Bytes =
       if (off + n <= input.length) {
         val o = off
         off = o + n
         input.slice(o, off)
       } else throw NeedMoreData
 
-    def takeAll(): Array[Byte] = {
+    def takeAll(): Bytes = {
       val ret = remainingData
       off = input.size
       ret

@@ -32,14 +32,14 @@ object ModifyFlow {
     *                     (may mean e.g. equals, starts with or ends with)
     * @param modification a modification function
     */
-  case class TagModification(matches: TagPath => Boolean, modification: ByteString => ByteString)
+  case class TagModification(matches: TagPath => Boolean, modification: Bytes => Bytes)
 
   object TagModification {
 
     /**
       * Modification that will modify dataset elements matching its tag path.
       */
-    def equals(tagPath: TagPathTag, modification: ByteString => ByteString): TagModification =
+    def equals(tagPath: TagPathTag, modification: Bytes => Bytes): TagModification =
       TagModification(tagPath.equals, modification)
 
     /**
@@ -47,7 +47,7 @@ object ModifyFlow {
       * modification. E.g. both the dataset elements (0010,0010) and (0008,9215)[1].(0010,0010) will be modified if
       * this tag path is (0010,0010). Useful for changing all instances of a certain element.
       */
-    def endsWith(tagPath: TagPathTag, modification: ByteString => ByteString): TagModification =
+    def endsWith(tagPath: TagPathTag, modification: Bytes => Bytes): TagModification =
       TagModification(_.endsWith(tagPath), modification)
   }
 
@@ -57,7 +57,7 @@ object ModifyFlow {
     * @param tagPath   tag path pointing to position to insert or replace data
     * @param insertion insertion data as a function of existing data, if present
     */
-  case class TagInsertion(tagPath: TagPathTag, insertion: Option[ByteString] => ByteString)
+  case class TagInsertion(tagPath: TagPathTag, insertion: Option[Bytes] => Bytes)
 
   /**
     * Meta-part carrying tag modifications and element insertions that when received by modify flow are picked up and
@@ -116,12 +116,12 @@ object ModifyFlow {
               var currentInsertions: List[TagInsertion]       = Nil
               set(modifications, insertions)
 
-              var currentModification: Option[TagModification] = None             // current modification
-              var currentHeader: Option[HeaderPart]            = None             // header of current element being modified
-              var latestTagPath: TagPath                       = EmptyTagPath     // last seen new tag path
-              var value: ByteString                            = ByteString.empty // value of current element being modified
-              var bigEndian                                    = false            // endianness of current element
-              var explicitVR                                   = true             // VR representation of current element
+              var currentModification: Option[TagModification] = None         // current modification
+              var currentHeader: Option[HeaderPart]            = None         // header of current element being modified
+              var latestTagPath: TagPath                       = EmptyTagPath // last seen new tag path
+              var value: Bytes                                 = emptyBytes   // value of current element being modified
+              var bigEndian                                    = false        // endianness of current element
+              var explicitVR                                   = true         // VR representation of current element
 
               def set(m: Seq[TagModification], i: Seq[TagInsertion]): Unit = {
                 currentModifications = m.toList
@@ -138,7 +138,7 @@ object ModifyFlow {
               }
 
               def valueOrNot(bytes: ByteString): List[DicomPart] =
-                if (bytes.isEmpty) Nil else ValueChunk(bigEndian, bytes.toArrayUnsafe(), last = true) :: Nil
+                if (bytes.isEmpty) Nil else ValueChunk(bigEndian, bytes.toBytes, last = true) :: Nil
 
               def headerAndValueParts(tagPath: TagPath, valueBytes: ByteString): List[DicomPart] = {
                 val vr = Lookup.vrOf(tagPath.tag)
@@ -165,7 +165,7 @@ object ModifyFlow {
                   .flatMap(i =>
                     headerAndValueParts(
                       i.tagPath,
-                      ByteString(padToEvenLength(i.insertion(None).toArrayUnsafe(), i.tagPath.tag))
+                      padToEvenLength(i.insertion(None), i.tagPath.tag).toByteString
                     )
                   )
 
@@ -175,7 +175,7 @@ object ModifyFlow {
                   .map { tagModification =>
                     currentHeader = Some(header)
                     currentModification = Some(tagModification)
-                    value = ByteString.empty
+                    value = emptyBytes
                     Nil
                   }
                   .orElse {
@@ -185,7 +185,7 @@ object ModifyFlow {
                         currentHeader = Some(header)
                         currentModification =
                           Some(TagModification(_ == insertion.tagPath, v => insertion.insertion(Some(v))))
-                        value = ByteString.empty
+                        value = emptyBytes
                         Nil
                       }
                   }
@@ -214,14 +214,12 @@ object ModifyFlow {
 
                   case chunk: ValueChunk =>
                     if (currentModification.isDefined && currentHeader.isDefined) {
-                      value = value ++ ByteString(chunk.bytes)
+                      value = value ++ chunk.bytes
                       if (chunk.last) {
-                        val newValue = ByteString(
-                          padToEvenLength(
-                            currentModification.get.modification(value).toArrayUnsafe(),
-                            currentHeader.get.vr
-                          )
-                        )
+                        val newValue = padToEvenLength(
+                          currentModification.get.modification(value),
+                          currentHeader.get.vr
+                        ).toByteString
                         val newHeader = currentHeader.get.withUpdatedLength(newValue.length.toLong)
                         currentModification = None
                         currentHeader = None
@@ -245,7 +243,7 @@ object ModifyFlow {
                     .flatMap(m =>
                       headerAndValueParts(
                         m.tagPath,
-                        ByteString(padToEvenLength(m.insertion(None).toArrayUnsafe(), m.tagPath.tag))
+                        padToEvenLength(m.insertion(None), m.tagPath.tag).toByteString
                       )
                     )
             }

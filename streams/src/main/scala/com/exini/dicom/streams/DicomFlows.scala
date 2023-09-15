@@ -294,28 +294,28 @@ object DicomFlows {
 
         def deflate(dicomPart: DicomPart) = {
           val input = dicomPart.bytes
-          deflater.setInput(input)
-          var output = ByteString.empty
+          deflater.setInput(input.unwrap)
+          var output = emptyBytes
           while (!deflater.needsInput) {
             val bytesDeflated = deflater.deflate(buffer)
-            output = output ++ ByteString(buffer.take(bytesDeflated))
+            output = output ++ buffer.take(bytesDeflated)
           }
-          if (output.isEmpty) Nil else DeflatedChunk(dicomPart.bigEndian, output.toArrayUnsafe(), nowrap = true) :: Nil
+          if (output.isEmpty) Nil else DeflatedChunk(dicomPart.bigEndian, output, nowrap = true) :: Nil
         }
 
         def finishDeflating() = {
           deflater.finish()
-          var output = ByteString.empty
+          var output = emptyBytes
           var done   = false
           while (!done) {
             val bytesDeflated = deflater.deflate(buffer)
             if (bytesDeflated == 0)
               done = true
             else
-              output = output ++ ByteString(buffer.take(bytesDeflated))
+              output = output ++ buffer.take(bytesDeflated)
           }
           deflater.end()
-          if (output.isEmpty) Nil else DeflatedChunk(bigEndian = false, output.toArrayUnsafe(), nowrap = true) :: Nil
+          if (output.isEmpty) Nil else DeflatedChunk(bigEndian = false, output, nowrap = true) :: Nil
         }
 
         {
@@ -326,7 +326,7 @@ object DicomFlows {
             collectingTs = header.tag == Tag.TransferSyntaxUID
             header :: Nil
           case value: ValueChunk if collectingTs => // collect transfer syntax bytes so we can check if deflated
-            tsBytes = tsBytes ++ ByteString(value.bytes)
+            tsBytes = tsBytes ++ value.bytes.toByteString
             value :: Nil
           case header: HeaderPart => // dataset header, remember we are no longer in FMI, deflate
             inFmi = false
@@ -474,7 +474,7 @@ object DicomFlows {
 
         override def createLogic(attr: Attributes): GraphStageLogic =
           new IdentityLogic with GuaranteedDelimitationEventsLogic {
-            val indeterminateBytes: ByteString = ByteString(0xff, 0xff, 0xff, 0xff)
+            val indeterminateBytes: Bytes = bytesi(0xff, 0xff, 0xff, 0xff)
 
             override def onSequence(part: SequencePart): List[DicomPart] =
               super.onSequence(part).map {
@@ -524,7 +524,7 @@ object DicomFlows {
       .via(collectFlow(Set(TagTree.fromTag(Tag.SpecificCharacterSet)), "toutf8"))
       .via(
         modifyFlow(insertions =
-          Seq(TagInsertion(TagPath.fromTag(Tag.SpecificCharacterSet), _ => ByteString("ISO_IR 192")))
+          Seq(TagInsertion(TagPath.fromTag(Tag.SpecificCharacterSet), _ => "ISO_IR 192".utf8Bytes))
         )
       )
       .via(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {
@@ -555,12 +555,12 @@ object DicomFlows {
                     header :: Nil
                   }
                 case value: ValueChunk if currentHeader.isDefined && !inFragments =>
-                  currentValue = currentValue ++ ByteString(value.bytes)
+                  currentValue = currentValue ++ value.bytes.toByteString
                   if (value.last) {
                     val header = currentHeader
                     currentHeader = None
                     val newValue = header
-                      .map(h => characterSets.decode(h.vr, currentValue.toArrayUnsafe()).utf8Bytes)
+                      .map(h => characterSets.decode(h.vr, currentValue.toBytes).utf8Bytes)
                       .map(ByteString.apply)
                     val newLength = newValue.map(_.length)
                     val newElement = for {
@@ -568,7 +568,7 @@ object DicomFlows {
                       v <- newValue
                       l <- newLength
                     } yield h
-                      .withUpdatedLength(l.toLong) :: ValueChunk(h.bigEndian, v.toArrayUnsafe(), last = true) :: Nil
+                      .withUpdatedLength(l.toLong) :: ValueChunk(h.bigEndian, v.toBytes, last = true) :: Nil
                     newElement.getOrElse(Nil)
                   } else Nil
                 case p: DicomPart =>
@@ -592,20 +592,20 @@ object DicomFlows {
       Seq(
         TagModification.equals(
           TagPath.fromTag(Tag.TransferSyntaxUID),
-          _ => ByteString(padToEvenLength(UID.ExplicitVRLittleEndian.utf8Bytes, VR.UI))
+          _ => padToEvenLength(UID.ExplicitVRLittleEndian.utf8Bytes, VR.UI)
         )
       )
     ).via(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {
 
-        case class SwapResult(bytes: Array[Byte], carry: Array[Byte])
+        case class SwapResult(bytes: Bytes, carry: Bytes)
 
-        def swap(k: Int, b: Array[Byte]): SwapResult =
+        def swap(k: Int, b: Bytes): SwapResult =
           SwapResult(b.grouped(k).map(_.reverse).reduce(_ ++ _), b.takeRight(b.length % k))
 
         override def createLogic(attr: Attributes): GraphStageLogic =
           new DeferToPartLogic with GroupLengthWarningsLogic {
-            var currentVr: Option[VR]   = None
-            var carryBytes: Array[Byte] = Array.emptyByteArray
+            var currentVr: Option[VR] = None
+            var carryBytes: Bytes     = emptyBytes
 
             def updatedValue(swapResult: SwapResult, last: Boolean): ValueChunk = {
               carryBytes = swapResult.carry
@@ -618,7 +618,7 @@ object DicomFlows {
               part match {
                 case h: HeaderPart if h.bigEndian || !h.explicitVR =>
                   if (h.bigEndian) {
-                    carryBytes = Array.emptyByteArray
+                    carryBytes = emptyBytes
                     currentVr = Some(h.vr)
                   } else currentVr = None
                   HeaderPart(h.tag, h.vr, h.length, h.isFmi) :: Nil
@@ -642,13 +642,13 @@ object DicomFlows {
                     s.length,
                     bigEndian = false,
                     explicitVR = true,
-                    tagToBytesLE(s.tag) ++ ByteString('S', 'Q', 0, 0) ++ s.bytes.takeRight(4).reverse
+                    tagToBytesLE(s.tag) ++ bytesi('S', 'Q', 0, 0) ++ s.bytes.takeRight(4).reverse
                   ) :: Nil
 
                 case _: SequenceDelimitationPart =>
                   SequenceDelimitationPart(
                     bigEndian = false,
-                    tagToBytesLE(Tag.SequenceDelimitationItem) ++ ByteString(0, 0, 0, 0)
+                    tagToBytesLE(Tag.SequenceDelimitationItem) ++ bytesi(0, 0, 0, 0)
                   ) :: Nil
 
                 case i: ItemPart =>
@@ -657,12 +657,12 @@ object DicomFlows {
                 case _: ItemDelimitationPart =>
                   ItemDelimitationPart(
                     bigEndian = false,
-                    tagToBytesLE(Tag.ItemDelimitationItem) ++ ByteString(0, 0, 0, 0)
+                    tagToBytesLE(Tag.ItemDelimitationItem) ++ bytesi(0, 0, 0, 0)
                   ) :: Nil
 
                 case f: FragmentsPart =>
                   if (f.bigEndian) {
-                    carryBytes = Array.emptyByteArray
+                    carryBytes = emptyBytes
                     currentVr = Some(f.vr)
                   } else currentVr = None
                   FragmentsPart(
@@ -694,8 +694,8 @@ object DicomFlows {
       .via(new DeferToPartFlow[DicomPart] with InFragments[DicomPart] with GroupLengthWarnings[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
           new DeferToPartLogic with InFragmentsLogic with GroupLengthWarningsLogic {
-            var isOdd: Boolean  = false
-            var pad: ByteString = ByteString(0)
+            var isOdd: Boolean = false
+            var pad: Bytes     = bytesi(0)
 
             override def onPart(part: DicomPart): List[DicomPart] =
               part match {
@@ -703,11 +703,11 @@ object DicomFlows {
                   p.copy(bytes = p.bytes ++ pad) :: Nil
                 case p: HeaderPart if p.length % 2 > 0 =>
                   isOdd = true
-                  pad = if (p.vr == null) ByteString(0) else ByteString(p.vr.paddingByte)
+                  pad = if (p.vr == null) bytesb(0.toByte) else bytesb(p.vr.paddingByte)
                   HeaderPart(p.tag, p.vr, p.length + 1, p.isFmi, p.bigEndian, p.explicitVR) :: Nil
                 case p: ItemPart if inFragments && p.length % 2 > 0 =>
                   isOdd = true
-                  pad = ByteString(0)
+                  pad = bytesb(0.toByte)
                   p.copy(length = p.length + 1, bytes = item((p.length + 1).toInt, p.bigEndian)) :: Nil
                 case p =>
                   p :: Nil

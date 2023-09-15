@@ -16,8 +16,6 @@
 
 package com.exini.dicom.data
 
-import java.util
-
 object DicomParts {
 
   /**
@@ -25,7 +23,7 @@ object DicomParts {
     */
   trait DicomPart {
     def bigEndian: Boolean
-    def bytes: Array[Byte]
+    def bytes: Bytes
   }
 
   /**
@@ -50,24 +48,7 @@ object DicomParts {
     def vr: VR
   }
 
-  trait BinaryEquals { this: DicomPart =>
-    override def equals(obj: Any): Boolean =
-      obj match {
-        case p: DicomPart => bigEndian == p.bigEndian && bytes.sameElements(p.bytes)
-        case _            => false
-      }
-    override def hashCode(): Int = 31 * (31 * 7 + bigEndian.hashCode()) + util.Arrays.hashCode(bytes)
-  }
-
-  trait RefEquals {
-    override def equals(obj: Any): Boolean =
-      obj match {
-        case a: AnyRef => a.eq(this)
-        case _         => false
-      }
-  }
-
-  case class PreamblePart(bytes: Array[Byte]) extends DicomPart with BinaryEquals {
+  case class PreamblePart(bytes: Bytes) extends DicomPart {
     def bigEndian         = false
     override def toString = s"${getClass.getSimpleName} (${bytes.length} bytes)"
   }
@@ -79,12 +60,11 @@ object DicomParts {
       isFmi: Boolean,
       bigEndian: Boolean,
       explicitVR: Boolean,
-      bytes: Array[Byte]
+      bytes: Bytes
   ) extends DicomPart
       with TagPart
       with VrPart
-      with LengthPart
-      with BinaryEquals {
+      with LengthPart {
 
     def withUpdatedLength(newLength: Long): HeaderPart =
       if (newLength == length)
@@ -120,7 +100,7 @@ object DicomParts {
           if (vr.headerLength == 8)
             tagToBytes(tag, bigEndian) ++ vr.toString.utf8Bytes ++ shortToBytes(length.toShort, bigEndian)
           else
-            tagToBytes(tag, bigEndian) ++ vr.toString.utf8Bytes ++ bytes(0, 0) ++ intToBytes(
+            tagToBytes(tag, bigEndian) ++ vr.toString.utf8Bytes ++ bytesi(0, 0) ++ intToBytes(
               length.toInt,
               bigEndian
             )
@@ -130,50 +110,48 @@ object DicomParts {
     }
   }
 
-  case class ValueChunk(bigEndian: Boolean, bytes: Array[Byte], last: Boolean) extends DicomPart with BinaryEquals {
+  case class ValueChunk(bigEndian: Boolean, bytes: Bytes, last: Boolean) extends DicomPart {
     override def toString =
       s"${getClass.getSimpleName} ${if (last) "(last) " else ""}length = ${bytes.length} ${if (bigEndian) "(big endian) "
       else ""}${if (bytes.length <= 64) "ASCII = " + bytes.utf8String else ""}"
   }
 
-  case class DeflatedChunk(bigEndian: Boolean, bytes: Array[Byte], nowrap: Boolean) extends DicomPart with BinaryEquals
+  case class DeflatedChunk(bigEndian: Boolean, bytes: Bytes, nowrap: Boolean) extends DicomPart
 
-  case class ItemPart(length: Long, bigEndian: Boolean, bytes: Array[Byte]) extends LengthPart with BinaryEquals {
+  case class ItemPart(length: Long, bigEndian: Boolean, bytes: Bytes) extends LengthPart {
     override def toString =
       s"${getClass.getSimpleName} length = $length ${if (bigEndian) "(big endian) " else ""}${bytes.arrayString}"
   }
 
-  case class ItemDelimitationPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart with BinaryEquals
+  case class ItemDelimitationPart(bigEndian: Boolean, bytes: Bytes) extends DicomPart
 
-  case class SequencePart(tag: Int, length: Long, bigEndian: Boolean, explicitVR: Boolean, bytes: Array[Byte])
+  case class SequencePart(tag: Int, length: Long, bigEndian: Boolean, explicitVR: Boolean, bytes: Bytes)
       extends DicomPart
       with TagPart
       with VrPart
-      with LengthPart
-      with BinaryEquals {
+      with LengthPart {
     override val vr: VR = VR.SQ
     override def toString =
       s"${getClass.getSimpleName} ${tagToString(tag)} length = $length ${if (bigEndian) "(big endian) " else ""}${if (!explicitVR) "(implicit) "
       else ""}${bytes.arrayString}"
   }
 
-  case class SequenceDelimitationPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart with BinaryEquals
+  case class SequenceDelimitationPart(bigEndian: Boolean, bytes: Bytes) extends DicomPart
 
-  case class FragmentsPart(tag: Int, length: Long, vr: VR, bigEndian: Boolean, explicitVR: Boolean, bytes: Array[Byte])
+  case class FragmentsPart(tag: Int, length: Long, vr: VR, bigEndian: Boolean, explicitVR: Boolean, bytes: Bytes)
       extends DicomPart
       with TagPart
       with VrPart
-      with LengthPart
-      with BinaryEquals {
+      with LengthPart {
     override def toString =
       s"${getClass.getSimpleName} ${tagToString(tag)} $vr ${if (bigEndian) "(big endian) " else ""}${bytes.arrayString}"
   }
 
-  case class UnknownPart(bigEndian: Boolean, bytes: Array[Byte]) extends DicomPart with BinaryEquals
+  case class UnknownPart(bigEndian: Boolean, bytes: Bytes) extends DicomPart
 
   trait MetaPart extends DicomPart {
     def bigEndian: Boolean = false
-    def bytes: Array[Byte] = Array.emptyByteArray
+    def bytes: Bytes       = emptyBytes
   }
 
   /**

@@ -44,19 +44,19 @@ class CharacterSets(val charsetNames: Seq[String]) {
     else
       defaultCharsetObj
 
-  def decode(vr: VR, b: Array[Byte]): String =
+  def decode(vr: VR, b: Bytes): String =
     if (!isVrAffectedBySpecificCharacterSet(vr))
       defaultOnly.decode(b)
     else
       decode(b)
 
-  private def decode(b: Array[Byte]): String =
+  private def decode(b: Bytes): String =
     if (charsetExtensionsEnabled)
       decodeWithExtensions(b)
     else
-      new String(b, initialCharsetObj.charset)
+      new String(b.unwrap, initialCharsetObj.charset)
 
-  private def decodeWithExtensions(b: Array[Byte]) = {
+  private def decodeWithExtensions(b: Bytes) = {
     var charsetObj = initialCharsetObj
     var off        = 0
     var cur        = 0
@@ -65,7 +65,7 @@ class CharacterSets(val charsetNames: Seq[String]) {
     while (cur < b.length)
       if (b(cur) == 0x1b) {
         // ESC
-        if (off < cur) sb.append(new String(b, off, cur - off, charsetObj.charset))
+        if (off < cur) sb.append(new String(b.unwrap, off, cur - off, charsetObj.charset))
         cur += 3
         var key = ((b(cur - 2) & 0xff) << 8) + (b(cur - 1) & 0xff)
         if (key == 0x2428 || key == 0x2429) {
@@ -75,14 +75,14 @@ class CharacterSets(val charsetNames: Seq[String]) {
         charsetObj = Option(escToCharset(key)).getOrElse {
           // decode invalid ESC sequence as chars
           val byteCount = if ((key & 0xff0000) != 0) 4 else 3 // if second msb of key is set then 4 otherwise 3
-          sb.append(new String(b, cur - byteCount, byteCount, charsetObj.charset))
+          sb.append(new String(b.unwrap, cur - byteCount, byteCount, charsetObj.charset))
           charsetObj
         }
         off = cur
       } else // Step -1 -> chars in G0 one byte, chars in G1 two bytes.
         cur += (if (charsetObj.charlength > 0) charsetObj.charlength else if (b(cur) < 0) 2 else 1)
     if (off < cur)
-      sb.append(new String(b, off, cur - off, charsetObj.charset))
+      sb.append(new String(b.unwrap, off, cur - off, charsetObj.charset))
     sb.toString
   }
 
@@ -113,23 +113,23 @@ object CharacterSets {
     "ISO_IR 13"  -> CharsetObj("JIS_X0201"),
     "ISO_IR 166" -> CharsetObj("TIS-620"),
     // Single-Byte Character Sets with Code Extensions
-    "ISO 2022 IR 6"   -> CharsetObj("ISO-8859-1", 1, Some(bytes(0x28, 0x42))),
-    "ISO 2022 IR 100" -> CharsetObj("ISO-8859-1", 1, Some(bytes(0x2d, 0x41))),
-    "ISO 2022 IR 101" -> CharsetObj("ISO-8859-2", 1, Some(bytes(0x2d, 0x42))),
-    "ISO 2022 IR 109" -> CharsetObj("ISO-8859-3", 1, Some(bytes(0x2d, 0x43))),
-    "ISO 2022 IR 110" -> CharsetObj("ISO-8859-4", 1, Some(bytes(0x2d, 0x44))),
-    "ISO 2022 IR 144" -> CharsetObj("ISO-8859-5", 1, Some(bytes(0x2d, 0x4c))),
-    "ISO 2022 IR 127" -> CharsetObj("ISO-8859-6", 1, Some(bytes(0x2d, 0x47))),
-    "ISO 2022 IR 126" -> CharsetObj("ISO-8859-7", 1, Some(bytes(0x2d, 0x46))),
-    "ISO 2022 IR 138" -> CharsetObj("ISO-8859-8", 1, Some(bytes(0x28, 0x48))),
-    "ISO 2022 IR 148" -> CharsetObj("ISO-8859-9", 1, Some(bytes(0x28, 0x4d))),
-    "ISO 2022 IR 13"  -> CharsetObj("JIS_X0201", 1, Some(bytes(0x29, 0x49))),
-    "ISO 2022 IR 166" -> CharsetObj("TIS-620", 1, Some(bytes(0x2d, 0x54))),
+    "ISO 2022 IR 6"   -> CharsetObj("ISO-8859-1", 1, Some(bytesi(0x28, 0x42))),
+    "ISO 2022 IR 100" -> CharsetObj("ISO-8859-1", 1, Some(bytesi(0x2d, 0x41))),
+    "ISO 2022 IR 101" -> CharsetObj("ISO-8859-2", 1, Some(bytesi(0x2d, 0x42))),
+    "ISO 2022 IR 109" -> CharsetObj("ISO-8859-3", 1, Some(bytesi(0x2d, 0x43))),
+    "ISO 2022 IR 110" -> CharsetObj("ISO-8859-4", 1, Some(bytesi(0x2d, 0x44))),
+    "ISO 2022 IR 144" -> CharsetObj("ISO-8859-5", 1, Some(bytesi(0x2d, 0x4c))),
+    "ISO 2022 IR 127" -> CharsetObj("ISO-8859-6", 1, Some(bytesi(0x2d, 0x47))),
+    "ISO 2022 IR 126" -> CharsetObj("ISO-8859-7", 1, Some(bytesi(0x2d, 0x46))),
+    "ISO 2022 IR 138" -> CharsetObj("ISO-8859-8", 1, Some(bytesi(0x28, 0x48))),
+    "ISO 2022 IR 148" -> CharsetObj("ISO-8859-9", 1, Some(bytesi(0x28, 0x4d))),
+    "ISO 2022 IR 13"  -> CharsetObj("JIS_X0201", 1, Some(bytesi(0x29, 0x49))),
+    "ISO 2022 IR 166" -> CharsetObj("TIS-620", 1, Some(bytesi(0x2d, 0x54))),
     // Multi-Byte Character Sets with Code Extensions
-    "ISO 2022 IR 87"  -> CharsetObj("X-JIS0208", 2, Some(bytes(0x24, 0x42))),
-    "ISO 2022 IR 159" -> CharsetObj("JIS_X0212-1990", 2, Some(bytes(0x24, 0x28, 0x44))),
-    "ISO 2022 IR 149" -> CharsetObj("EUC-KR", -1, Some(bytes(0x24, 0x29, 0x43))),
-    "ISO 2022 IR 58"  -> CharsetObj("GB2312", -1, Some(bytes(0x24, 0x29, 0x41))),
+    "ISO 2022 IR 87"  -> CharsetObj("X-JIS0208", 2, Some(bytesi(0x24, 0x42))),
+    "ISO 2022 IR 159" -> CharsetObj("JIS_X0212-1990", 2, Some(bytesi(0x24, 0x28, 0x44))),
+    "ISO 2022 IR 149" -> CharsetObj("EUC-KR", -1, Some(bytesi(0x24, 0x29, 0x43))),
+    "ISO 2022 IR 58"  -> CharsetObj("GB2312", -1, Some(bytesi(0x24, 0x29, 0x41))),
     // Multi-Byte Character Sets Without Code Extensions
     "ISO_IR 192" -> CharsetObj("UTF-8", -1, None),
     "GB18030"    -> CharsetObj("GB18030", -1, None),
@@ -160,7 +160,7 @@ object CharacterSets {
     if (s.isEmpty || s.length == 1 && s.head.isEmpty) defaultOnly else new CharacterSets(s)
   }
 
-  def apply(specificCharacterSetBytes: Array[Byte]): CharacterSets =
+  def apply(specificCharacterSetBytes: Bytes): CharacterSets =
     apply(
       ValueElement(
         Tag.SpecificCharacterSet,
@@ -182,15 +182,15 @@ object CharacterSets {
       case _     => false
     }
 
-  def encode(s: String): Array[Byte] = s.getBytes(utf8Charset)
+  def encode(s: String): Bytes = s.utf8Bytes
 }
 
-case class CharsetObj(charset: Charset, charlength: Int, escapeSequence: Option[Array[Byte]]) {
+case class CharsetObj(charset: Charset, charlength: Int, escapeSequence: Option[Bytes]) {
   def hasEscapeSeq: Boolean = escapeSequence.isDefined
 }
 
 object CharsetObj {
-  def apply(charsetName: String, charlength: Int, escapeSequence: Option[Array[Byte]]) =
+  def apply(charsetName: String, charlength: Int, escapeSequence: Option[Bytes]) =
     new CharsetObj(Charset.forName(charsetName), charlength, escapeSequence)
 
   def apply(charsetName: String) =

@@ -23,14 +23,13 @@ import java.net.URI
 import java.time._
 import java.time.format.{ DateTimeFormatter, DateTimeFormatterBuilder, SignStyle }
 import java.time.temporal.ChronoField._
-import java.util
 
 /**
   * This class describes a DICOM data value
   *
   * @param bytes     the binary data of this value
   */
-case class Value private[data] (bytes: Array[Byte]) {
+case class Value private[data] (bytes: Bytes) {
   import Value._
 
   val length: Int = bytes.length
@@ -327,38 +326,30 @@ case class Value private[data] (bytes: Array[Byte]) {
     * @param bytes additional bytes
     * @return a new Value with bytes added
     */
-  def ++(bytes: Array[Byte]): Value = copy(bytes = this.bytes ++ bytes)
+  def ++(bytes: Bytes): Value = copy(bytes = this.bytes ++ bytes)
 
   /**
     * @return a new Value guaranteed to have even length, padded if necessary with the correct padding byte
     */
   def ensurePadding(vr: VR): Value = copy(bytes = padToEvenLength(bytes, vr))
-
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case v: Value => bytes.sameElements(v.bytes)
-      case _        => false
-    }
-
-  override def hashCode(): Int = 31 * 7 + util.Arrays.hashCode(bytes)
 }
 
 object Value {
 
   final val multiValueDelimiterRegex = """\\"""
 
-  private def combine(vr: VR, values: Seq[Array[Byte]]): Array[Byte] =
+  private def combine(vr: VR, values: Seq[Bytes]): Bytes =
     vr match {
       case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD => values.reduce(_ ++ _)
       case _ =>
-        if (values.isEmpty) Array.emptyByteArray
-        else values.tail.foldLeft(values.head)((bytes, b) => bytes ++ Array[Byte]('\\') ++ b)
+        if (values.isEmpty) emptyBytes
+        else values.tail.foldLeft(values.head)((bytes, b) => bytes ++ bytesb('\\') ++ b)
     }
 
   /**
     * A Value with empty value
     */
-  val empty: Value = Value(Array.emptyByteArray)
+  val empty: Value = Value(emptyBytes)
 
   /**
     * Create a new Value, padding the input if necessary to ensure even length
@@ -366,15 +357,15 @@ object Value {
     * @param bytes     value bytes
     * @return a new Value
     */
-  def apply(vr: VR, bytes: Array[Byte]): Value = Value(padToEvenLength(bytes, vr))
+  def apply(vr: VR, bytes: Bytes): Value = Value(padToEvenLength(bytes, vr))
 
-  private def toBytes(bi: BigInteger, length: Int, bigEndian: Boolean): Array[Byte] = {
+  private def toBytes(bi: BigInteger, length: Int, bigEndian: Boolean): Bytes = {
     val bytes = bi.toByteArray
-    val out   = new Array[Byte](Math.max(0, length - bytes.length)) ++ bytes.takeRight(length)
+    val out   = zeroBytes(Math.max(0, length - bytes.length)) ++ bytes.takeRight(length)
     if (bigEndian) out else out.reverse
   }
 
-  private def stringBytes(vr: VR, value: String, bigEndian: Boolean): Array[Byte] =
+  private def stringBytes(vr: VR, value: String, bigEndian: Boolean): Bytes =
     vr match {
       case AT                          => tagToBytes(Integer.parseInt(value, 16), bigEndian)
       case FL                          => floatToBytes(java.lang.Float.parseFloat(value), bigEndian)
@@ -393,7 +384,7 @@ object Value {
   def fromStrings(vr: VR, values: Seq[String], bigEndian: Boolean = false): Value =
     apply(vr, combine(vr, values.map(stringBytes(vr, _, bigEndian))))
 
-  private def shortBytes(vr: VR, value: Short, bigEndian: Boolean): Array[Byte] =
+  private def shortBytes(vr: VR, value: Short, bigEndian: Boolean): Bytes =
     vr match {
       case FL => floatToBytes(value.toFloat, bigEndian)
       case FD => doubleToBytes(value.toDouble, bigEndian)
@@ -411,7 +402,7 @@ object Value {
   def fromShorts(vr: VR, values: Seq[Short], bigEndian: Boolean = false): Value =
     apply(vr, combine(vr, values.map(shortBytes(vr, _, bigEndian))))
 
-  private def intBytes(vr: VR, value: Int, bigEndian: Boolean): Array[Byte] =
+  private def intBytes(vr: VR, value: Int, bigEndian: Boolean): Bytes =
     vr match {
       case AT                          => tagToBytes(value, bigEndian)
       case FL                          => floatToBytes(value.toFloat, bigEndian)
@@ -429,7 +420,7 @@ object Value {
   def fromInts(vr: VR, values: Seq[Int], bigEndian: Boolean = false): Value =
     apply(vr, combine(vr, values.map(intBytes(vr, _, bigEndian))))
 
-  private def longBytes(vr: VR, value: Long, bigEndian: Boolean): Array[Byte] =
+  private def longBytes(vr: VR, value: Long, bigEndian: Boolean): Bytes =
     vr match {
       case AT                     => tagToBytes(value.toInt, bigEndian)
       case FL                     => floatToBytes(value.toFloat, bigEndian)
@@ -447,7 +438,7 @@ object Value {
   def fromLongs(vr: VR, values: Seq[Long], bigEndian: Boolean = false): Value =
     apply(vr, combine(vr, values.map(longBytes(vr, _, bigEndian))))
 
-  private def veryLongBytes(vr: VR, value: BigInteger, bigEndian: Boolean): Array[Byte] =
+  private def veryLongBytes(vr: VR, value: BigInteger, bigEndian: Boolean): Bytes =
     vr match {
       case AT                     => tagToBytes(value.intValue, bigEndian)
       case FL                     => floatToBytes(value.floatValue, bigEndian)
@@ -466,7 +457,7 @@ object Value {
   def fromVeryLongs(vr: VR, values: Seq[BigInteger], bigEndian: Boolean = false): Value =
     apply(vr, combine(vr, values.map(veryLongBytes(vr, _, bigEndian))))
 
-  private def floatBytes(vr: VR, value: Float, bigEndian: Boolean): Array[Byte] =
+  private def floatBytes(vr: VR, value: Float, bigEndian: Boolean): Bytes =
     vr match {
       case AT                     => tagToBytes(value.toInt, bigEndian)
       case FL                     => floatToBytes(value, bigEndian)
@@ -484,7 +475,7 @@ object Value {
   def fromFloats(vr: VR, values: Seq[Float], bigEndian: Boolean = false): Value =
     apply(vr, combine(vr, values.map(floatBytes(vr, _, bigEndian))))
 
-  private def doubleBytes(vr: VR, value: Double, bigEndian: Boolean): Array[Byte] =
+  private def doubleBytes(vr: VR, value: Double, bigEndian: Boolean): Bytes =
     vr match {
       case AT                     => tagToBytes(value.toInt, bigEndian)
       case FL                     => floatToBytes(value.toFloat, bigEndian)
@@ -503,7 +494,7 @@ object Value {
   def fromDoubles(vr: VR, values: Seq[Double], bigEndian: Boolean = false): Value =
     apply(vr, combine(vr, values.map(doubleBytes(vr, _, bigEndian))))
 
-  private def dateBytes(vr: VR, value: LocalDate): Array[Byte] =
+  private def dateBytes(vr: VR, value: LocalDate): Bytes =
     vr match {
       case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD =>
         throw new IllegalArgumentException(s"Cannot create value of VR $vr from date")
@@ -512,7 +503,7 @@ object Value {
   def fromDate(vr: VR, value: LocalDate): Value        = apply(vr, dateBytes(vr, value))
   def fromDates(vr: VR, values: Seq[LocalDate]): Value = apply(vr, combine(vr, values.map(dateBytes(vr, _))))
 
-  private def timeBytes(vr: VR, value: LocalTime): Array[Byte] =
+  private def timeBytes(vr: VR, value: LocalTime): Bytes =
     vr match {
       case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD =>
         throw new IllegalArgumentException(s"Cannot create value of VR $vr from time")
@@ -521,7 +512,7 @@ object Value {
   def fromTime(vr: VR, value: LocalTime): Value        = apply(vr, timeBytes(vr, value))
   def fromTimes(vr: VR, values: Seq[LocalTime]): Value = apply(vr, combine(vr, values.map(timeBytes(vr, _))))
 
-  private def dateTimeBytes(vr: VR, value: ZonedDateTime): Array[Byte] =
+  private def dateTimeBytes(vr: VR, value: ZonedDateTime): Bytes =
     vr match {
       case AT | FL | FD | SS | SL | SV | US | UL | UV | OB | OW | OL | OV | OF | OD =>
         throw new IllegalArgumentException(s"Cannot create value of VR $vr from date-time")
@@ -531,7 +522,7 @@ object Value {
   def fromDateTimes(vr: VR, values: Seq[ZonedDateTime]): Value =
     apply(vr, combine(vr, values.map(dateTimeBytes(vr, _))))
 
-  private def personNameBytes(vr: VR, value: PersonName): Array[Byte] =
+  private def personNameBytes(vr: VR, value: PersonName): Bytes =
     vr match {
       case PN => value.toString.utf8Bytes
       case _  => throw new IllegalArgumentException(s"Cannot create value of VR $vr from person name")
@@ -540,7 +531,7 @@ object Value {
   def fromPersonNames(vr: VR, values: Seq[PersonName]): Value =
     apply(vr, combine(vr, values.map(personNameBytes(vr, _))))
 
-  private def uriBytes(vr: VR, value: URI): Array[Byte] =
+  private def uriBytes(vr: VR, value: URI): Bytes =
     vr match {
       case UR => value.toString.utf8Bytes
       case _  => throw new IllegalArgumentException(s"Cannot create value of VR $vr from URI")
@@ -549,8 +540,8 @@ object Value {
 
   // parsing of value bytes for various value representations to higher types
 
-  def split(bytes: Array[Byte], size: Int): Seq[Array[Byte]] = bytes.grouped(size).filter(_.length == size).toSeq
-  def split(s: String): Seq[String]                          = s.split(multiValueDelimiterRegex).toSeq
+  def split(bytes: Bytes, size: Int): Seq[Bytes] = bytes.grouped(size).filter(_.length == size).toSeq
+  def split(s: String): Seq[String]              = s.split(multiValueDelimiterRegex).toSeq
 
   def trim(s: String): String = s.trim
   def trimPadding(s: String, paddingByte: Byte): String = {
@@ -561,17 +552,17 @@ object Value {
     if (n > 0) s.dropRight(n) else s
   }
 
-  def parseAT(value: Array[Byte], bigEndian: Boolean): Seq[Int]  = split(value, 4).map(b => bytesToTag(b, bigEndian))
-  def parseSL(value: Array[Byte], bigEndian: Boolean): Seq[Int]  = split(value, 4).map(bytesToInt(_, bigEndian))
-  def parseSV(value: Array[Byte], bigEndian: Boolean): Seq[Long] = split(value, 8).map(bytesToLong(_, bigEndian))
-  def parseUL(value: Array[Byte], bigEndian: Boolean): Seq[Long] = parseSL(value, bigEndian).map(intToUnsignedLong)
-  def parseUV(value: Array[Byte], bigEndian: Boolean): Seq[BigInteger] =
-    split(value, 8).map(bytes => new BigInteger(1, if (bigEndian) bytes else bytes.reverse))
-  def parseSS(value: Array[Byte], bigEndian: Boolean): Seq[Short]  = split(value, 2).map(bytesToShort(_, bigEndian))
-  def parseUS(value: Array[Byte], bigEndian: Boolean): Seq[Int]    = parseSS(value, bigEndian).map(shortToUnsignedInt)
-  def parseFL(value: Array[Byte], bigEndian: Boolean): Seq[Float]  = split(value, 4).map(bytesToFloat(_, bigEndian))
-  def parseFD(value: Array[Byte], bigEndian: Boolean): Seq[Double] = split(value, 8).map(bytesToDouble(_, bigEndian))
-  def parseDS(value: Array[Byte]): Seq[Double] =
+  def parseAT(value: Bytes, bigEndian: Boolean): Seq[Int]  = split(value, 4).map(b => bytesToTag(b, bigEndian))
+  def parseSL(value: Bytes, bigEndian: Boolean): Seq[Int]  = split(value, 4).map(bytesToInt(_, bigEndian))
+  def parseSV(value: Bytes, bigEndian: Boolean): Seq[Long] = split(value, 8).map(bytesToLong(_, bigEndian))
+  def parseUL(value: Bytes, bigEndian: Boolean): Seq[Long] = parseSL(value, bigEndian).map(intToUnsignedLong)
+  def parseUV(value: Bytes, bigEndian: Boolean): Seq[BigInteger] =
+    split(value, 8).map(bytes => new BigInteger(1, (if (bigEndian) bytes else bytes.reverse).unwrap))
+  def parseSS(value: Bytes, bigEndian: Boolean): Seq[Short]  = split(value, 2).map(bytesToShort(_, bigEndian))
+  def parseUS(value: Bytes, bigEndian: Boolean): Seq[Int]    = parseSS(value, bigEndian).map(shortToUnsignedInt)
+  def parseFL(value: Bytes, bigEndian: Boolean): Seq[Float]  = split(value, 4).map(bytesToFloat(_, bigEndian))
+  def parseFD(value: Bytes, bigEndian: Boolean): Seq[Double] = split(value, 8).map(bytesToDouble(_, bigEndian))
+  def parseDS(value: Bytes): Seq[Double] =
     split(value.utf8String)
       .map(trim)
       .flatMap(s =>
@@ -580,7 +571,7 @@ object Value {
           case _: Throwable => None
         }
       )
-  def parseIS(value: Array[Byte]): Seq[Long] =
+  def parseIS(value: Bytes): Seq[Long] =
     split(value.utf8String)
       .map(trim)
       .flatMap(s =>
@@ -589,16 +580,16 @@ object Value {
           case _: Throwable => None
         }
       )
-  def parseDA(value: Array[Byte]): Seq[LocalDate] = split(value.utf8String).flatMap(parseDate)
-  def parseTM(value: Array[Byte]): Seq[LocalTime] = split(value.utf8String).flatMap(parseTime)
-  def parseDT(value: Array[Byte], zoneOffset: ZoneOffset): Seq[ZonedDateTime] =
+  def parseDA(value: Bytes): Seq[LocalDate] = split(value.utf8String).flatMap(parseDate)
+  def parseTM(value: Bytes): Seq[LocalTime] = split(value.utf8String).flatMap(parseTime)
+  def parseDT(value: Bytes, zoneOffset: ZoneOffset): Seq[ZonedDateTime] =
     split(value.utf8String).flatMap(parseDateTime(_, zoneOffset))
   def parsePN(string: String): Seq[PersonName] =
     split(string).map(trimPadding(_, VR.PN.paddingByte)).flatMap(parsePersonName)
-  def parsePN(value: Array[Byte], characterSets: CharacterSets): Seq[PersonName] =
+  def parsePN(value: Bytes, characterSets: CharacterSets): Seq[PersonName] =
     parsePN(characterSets.decode(VR.PN, value))
-  def parseUR(string: String): Option[URI]     = parseURI(string)
-  def parseUR(value: Array[Byte]): Option[URI] = parseUR(trimPadding(value.utf8String, VR.UR.paddingByte))
+  def parseUR(string: String): Option[URI] = parseURI(string)
+  def parseUR(value: Bytes): Option[URI]   = parseUR(trimPadding(value.utf8String, VR.UR.paddingByte))
 
   // parsing of strings to more specific types
 

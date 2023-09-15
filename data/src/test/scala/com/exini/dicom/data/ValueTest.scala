@@ -24,7 +24,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "trim any characters at beginning and end" in {
-    Value(bytes(0x20, 0x20, 0x20, 0x20, 0x41, 0x41, 0x20, 0x20, 0x20)).toStrings(VR.SH) shouldBe Seq("AA")
+    Value(bytesi(0x20, 0x20, 0x20, 0x20, 0x41, 0x41, 0x20, 0x20, 0x20)).toStrings(VR.SH) shouldBe Seq("AA")
   }
 
   it should "trim any characters at or below 0x20 at beginning and end of each value" in {
@@ -32,7 +32,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "split and trim strings with multiple character set encodings" in {
-    val nameBytes = bytes(0x20, 0xd4, 0xcf, 0xc0, 0xde, 0x5c, 0x20, 0xc0, 0xdb, 0xb3, 0x3d, 0x1b, 0x24, 0x42, 0x3b,
+    val nameBytes = bytesi(0x20, 0xd4, 0xcf, 0xc0, 0xde, 0x5c, 0x20, 0xc0, 0xdb, 0xb3, 0x3d, 0x1b, 0x24, 0x42, 0x3b,
       0x33, 0x45, 0x44, 0x1b, 0x28, 0x4a, 0x5c, 0x1b, 0x24, 0x42, 0x42, 0x40, 0x4f, 0x3a, 0x1b, 0x28, 0x4a, 0x3d, 0x1b,
       0x24, 0x42, 0x24, 0x64, 0x24, 0x5e, 0x24, 0x40, 0x1b, 0x28, 0x4a, 0x5c, 0x20, 0x1b, 0x24, 0x42, 0x24, 0x3f, 0x24,
       0x6d, 0x24, 0x26, 0x1b, 0x28, 0x4a)
@@ -81,11 +81,11 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return None if no entry exists" in {
-    Value(Array.emptyByteArray).toInt(VR.SL) shouldBe None
+    Value(emptyBytes).toInt(VR.SL) shouldBe None
   }
 
   "Parsing long values" should "return empty sequence for empty byte string" in {
-    Value(Array.emptyByteArray).toLongs(VR.SL) shouldBe Seq.empty
+    Value(emptyBytes).toLongs(VR.SL) shouldBe Seq.empty
   }
 
   it should "parse multiple long values" in {
@@ -111,19 +111,19 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return None if no entry exists" in {
-    Value(Array.emptyByteArray).toLong(VR.SL) shouldBe None
+    Value(emptyBytes).toLong(VR.SL) shouldBe None
   }
 
   "Parsing very long values" should "return empty sequence for empty byte string" in {
-    Value(Array.emptyByteArray).toLongs(VR.UV) shouldBe Seq.empty
+    Value(emptyBytes).toLongs(VR.UV) shouldBe Seq.empty
   }
 
   it should "parse multiple long values" in {
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8) ++ bytes(1, 2, 1, 2, 1, 2, 1, 2))
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8) ++ bytesi(1, 2, 1, 2, 1, 2, 1, 2))
       .toVeryLongs(VR.UV, bigEndian = true) shouldBe
       Seq(
-        new BigInteger(1, bytes(1, 2, 3, 4, 5, 6, 7, 8)),
-        new BigInteger(1, bytes(1, 2, 1, 2, 1, 2, 1, 2))
+        new BigInteger(1, bytesi(1, 2, 3, 4, 5, 6, 7, 8).unwrap),
+        new BigInteger(1, bytesi(1, 2, 1, 2, 1, 2, 1, 2).unwrap)
       )
   }
 
@@ -142,17 +142,17 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   "Parsing a single very long value" should "return the first entry among multiple values" in {
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8) ++ bytes(1, 2, 1, 2, 1, 2, 1, 2))
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8) ++ bytesi(1, 2, 1, 2, 1, 2, 1, 2))
       .toVeryLong(VR.UV, bigEndian = true) shouldBe
-      Some(new BigInteger(1, bytes(1, 2, 3, 4, 5, 6, 7, 8)))
+      Some(new BigInteger(1, bytesi(1, 2, 3, 4, 5, 6, 7, 8).unwrap))
   }
 
   it should "return None if no entry exists" in {
-    Value(Array.emptyByteArray).toVeryLong(VR.UV) shouldBe None
+    Value(emptyBytes).toVeryLong(VR.UV) shouldBe None
   }
 
   "Parsing short values" should "return empty sequence for empty byte string" in {
-    Value(Array.emptyByteArray).toShorts(VR.SS) shouldBe Seq.empty
+    Value(emptyBytes).toShorts(VR.SS) shouldBe Seq.empty
   }
 
   it should "parse short values" in {
@@ -178,11 +178,11 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return None if no entry exists" in {
-    Value(Array.emptyByteArray).toShort(VR.SS) shouldBe None
+    Value(emptyBytes).toShort(VR.SS) shouldBe None
   }
 
   "Parsing float values" should "return empty sequence for empty byte string" in {
-    Value(Array.emptyByteArray).toFloats(VR.FL) shouldBe Seq.empty
+    Value(emptyBytes).toFloats(VR.FL) shouldBe Seq.empty
   }
 
   it should "parse float values" in {
@@ -208,11 +208,11 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return None if no entry exists" in {
-    Value(Array.emptyByteArray).toFloat(VR.FL) shouldBe None
+    Value(emptyBytes).toFloat(VR.FL) shouldBe None
   }
 
   "Parsing double values" should "return empty sequence for empty byte string" in {
-    Value(Array.emptyByteArray).toDoubles(VR.FD) shouldBe Seq.empty
+    Value(emptyBytes).toDoubles(VR.FD) shouldBe Seq.empty
   }
 
   it should "parse double values" in {
@@ -238,11 +238,11 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return None if no entry exists" in {
-    Value(Array.emptyByteArray).toDouble(VR.FD) shouldBe None
+    Value(emptyBytes).toDouble(VR.FD) shouldBe None
   }
 
   "Parsing date strings" should "return empty sequence for empty byte string" in {
-    Value(Array.emptyByteArray).toDates(VR.DA) shouldBe Seq.empty
+    Value(emptyBytes).toDates(VR.DA) shouldBe Seq.empty
   }
 
   it should "parse properly formatted date strings" in {
@@ -268,7 +268,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   "Parsing time strings" should "return empty sequence for empty byte string" in {
-    Value(Array.emptyByteArray).toTimes(VR.TM) shouldBe Seq.empty
+    Value(emptyBytes).toTimes(VR.TM) shouldBe Seq.empty
   }
 
   it should "parse partial time strings" in {
@@ -302,7 +302,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   "Parsing date time strings" should "return empty sequence for empty byte string" in {
-    Value(Array.emptyByteArray).toDateTimes(VR.DT) shouldBe Seq.empty
+    Value(emptyBytes).toDateTimes(VR.DT) shouldBe Seq.empty
   }
 
   it should "parse partial date time strings" in {
@@ -362,28 +362,28 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   "String representations of elements" should "format OW values" in {
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OW) shouldBe Some("0201 0403 0605 0807")
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OW, bigEndian = true) shouldBe Some(
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OW) shouldBe Some("0201 0403 0605 0807")
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OW, bigEndian = true) shouldBe Some(
       "0102 0304 0506 0708"
     )
   }
 
   it should "format OB values" in {
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OB) shouldBe Some(
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OB) shouldBe Some(
       "01 02 03 04 05 06 07 08"
     )
   }
 
   it should "format OL values" in {
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OL) shouldBe Some("04030201 08070605")
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OL, bigEndian = true) shouldBe Some(
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OL) shouldBe Some("04030201 08070605")
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OL, bigEndian = true) shouldBe Some(
       "01020304 05060708"
     )
   }
 
   it should "format OV values" in {
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OV) shouldBe Some("0807060504030201")
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OV, bigEndian = true) shouldBe Some(
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OV) shouldBe Some("0807060504030201")
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.OV, bigEndian = true) shouldBe Some(
       "0102030405060708"
     )
   }
@@ -400,43 +400,43 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "format AT values" in {
-    Value(bytes(1, 2, 3, 4)).toString(VR.AT) shouldBe Some("(0201,0403)")
+    Value(bytesi(1, 2, 3, 4)).toString(VR.AT) shouldBe Some("(0201,0403)")
   }
 
   it should "format US values" in {
-    Value(bytes(1, 2)).toString(VR.US) shouldBe Some(0x0201.toString)
-    Value(bytes(255, 255)).toString(VR.US) shouldBe Some(0xffff.toString)
+    Value(bytesi(1, 2)).toString(VR.US) shouldBe Some(0x0201.toString)
+    Value(bytesi(255, 255)).toString(VR.US) shouldBe Some(0xffff.toString)
   }
 
   it should "format UL values" in {
-    Value(bytes(1, 2, 3, 4)).toString(VR.UL) shouldBe Some(0x04030201.toString)
-    Value(bytes(255, 255, 255, 255)).toString(VR.UL) shouldBe Some(0xffffffffL.toString)
+    Value(bytesi(1, 2, 3, 4)).toString(VR.UL) shouldBe Some(0x04030201.toString)
+    Value(bytesi(255, 255, 255, 255)).toString(VR.UL) shouldBe Some(0xffffffffL.toString)
   }
 
   it should "format UV values" in {
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.UV) shouldBe Some(
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.UV) shouldBe Some(
       0x0807060504030201L.toString
     )
-    Value(bytes(255, 255, 255, 255, 255, 255, 255, 255)).toString(VR.UV) shouldBe Some(
+    Value(bytesi(255, 255, 255, 255, 255, 255, 255, 255)).toString(VR.UV) shouldBe Some(
       "18446744073709551615"
     )
   }
 
   it should "format SS values" in {
-    Value(bytes(1, 2)).toString(VR.SS) shouldBe Some(0x0201.toString)
-    Value(bytes(255, 255)).toString(VR.SS) shouldBe Some("-1")
+    Value(bytesi(1, 2)).toString(VR.SS) shouldBe Some(0x0201.toString)
+    Value(bytesi(255, 255)).toString(VR.SS) shouldBe Some("-1")
   }
 
   it should "format SL values" in {
-    Value(bytes(1, 2, 3, 4)).toString(VR.SL) shouldBe Some(0x04030201.toString)
-    Value(bytes(255, 255, 255, 255)).toString(VR.SL) shouldBe Some("-1")
+    Value(bytesi(1, 2, 3, 4)).toString(VR.SL) shouldBe Some(0x04030201.toString)
+    Value(bytesi(255, 255, 255, 255)).toString(VR.SL) shouldBe Some("-1")
   }
 
   it should "format SV values" in {
-    Value(bytes(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.SV) shouldBe Some(
+    Value(bytesi(1, 2, 3, 4, 5, 6, 7, 8)).toString(VR.SV) shouldBe Some(
       0x0807060504030201L.toString
     )
-    Value(bytes(255, 255, 255, 255, 255, 255, 255, 255)).toString(VR.SV) shouldBe Some("-1")
+    Value(bytesi(255, 255, 255, 255, 255, 255, 255, 255)).toString(VR.SV) shouldBe Some("-1")
   }
 
   it should "format FL values" in {

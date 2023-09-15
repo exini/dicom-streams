@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
-import akka.util.ByteString
 import com.exini.dicom.data._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
@@ -34,15 +33,15 @@ class ModifyFlowTest
   "The modify flow" should "modify the value of the specified elements" in {
     val bytes = studyDate() ++ personNameJohnDoe()
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(modifications =
           Seq(
-            TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty),
+            TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => emptyBytes),
             TagModification.equals(TagPath.fromTag(Tag.PatientName), _ => mikeBytes)
           )
         )
@@ -61,10 +60,10 @@ class ModifyFlowTest
       Tag.DerivationCodeSequence
     ) ++ item() ++ personNameJohnDoe() ++ studyDate() ++ itemDelimitation() ++ sequenceDelimitation()
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.PatientName), _ => mikeBytes))))
 
@@ -85,10 +84,10 @@ class ModifyFlowTest
     val bytes = personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
-        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => ByteString(studyDate().drop(8)))))
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => studyDate().drop(8))))
       )
 
     source
@@ -104,12 +103,10 @@ class ModifyFlowTest
     val bytes = studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
-        modifyFlow(insertions =
-          Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => ByteString(personNameJohnDoe().drop(8))))
-        )
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8))))
       )
 
     source
@@ -122,12 +119,12 @@ class ModifyFlowTest
   }
 
   it should "insert elements if not present also at end of dataset when last element is empty" in {
-    val bytes = tagToBytesLE(0x00080050) ++ ByteString("SH") ++ shortToBytesLE(0x0000)
+    val bytes = tagToBytesLE(0x00080050) ++ "SH".utf8Bytes ++ shortToBytesLE(0x0000)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.SOPInstanceUID), _ => ByteString("1.2.3.4 ")))))
+      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.SOPInstanceUID), _ => "1.2.3.4 ".utf8Bytes))))
 
     source
       .runWith(TestSink())
@@ -141,12 +138,10 @@ class ModifyFlowTest
     val bytes = studyDate() ++ sequence(Tag.AbstractPriorCodeSequence) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
-        modifyFlow(insertions =
-          Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => ByteString(personNameJohnDoe().drop(8))))
-        )
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8))))
       )
 
     source
@@ -164,12 +159,10 @@ class ModifyFlowTest
     val bytes = sequence(Tag.DerivationCodeSequence) ++ sequenceDelimitation() ++ patientID()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
-        modifyFlow(insertions =
-          Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => ByteString(personNameJohnDoe().drop(8))))
-        )
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8))))
       )
 
     source
@@ -189,12 +182,10 @@ class ModifyFlowTest
     ) ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
-        modifyFlow(insertions =
-          Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => ByteString(personNameJohnDoe().drop(8))))
-        )
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => personNameJohnDoe().drop(8))))
       )
 
     source
@@ -211,15 +202,15 @@ class ModifyFlowTest
   it should "modify, not insert, when 'insert' elements are already present" in {
     val bytes = studyDate() ++ personNameJohnDoe()
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(insertions =
           Seq(
-            TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty),
+            TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => emptyBytes),
             TagInsertion(TagPath.fromTag(Tag.PatientName), _ => mikeBytes)
           )
         )
@@ -236,21 +227,21 @@ class ModifyFlowTest
   it should "modify based on current value, when 'insert' elements are already present" in {
     val bytes = personNameJohnDoe()
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(insertions =
-          Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _.map(_ ++ ByteString(" Senior ")).getOrElse(mikeBytes)))
+          Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _.map(_ ++ " Senior ".utf8Bytes).getOrElse(mikeBytes)))
         )
       )
 
     source
       .runWith(TestSink())
       .expectHeader(Tag.PatientName, VR.PN, 16)
-      .expectValueChunk(ByteString("John^Doe Senior "))
+      .expectValueChunk("John^Doe Senior ".utf8Bytes)
       .expectDicomComplete()
   }
 
@@ -258,13 +249,13 @@ class ModifyFlowTest
     val bytes = personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(insertions =
           Seq(
-            TagInsertion(TagPath.fromTag(Tag.SeriesDate), _ => ByteString(studyDate().drop(8))),
-            TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => ByteString(studyDate().drop(8)))
+            TagInsertion(TagPath.fromTag(Tag.SeriesDate), _ => studyDate().drop(8)),
+            TagInsertion(TagPath.fromTag(Tag.StudyDate), _ => studyDate().drop(8))
           )
         )
       )
@@ -284,9 +275,7 @@ class ModifyFlowTest
     val source = Source.empty
       .via(parseFlow)
       .via(
-        modifyFlow(insertions =
-          Seq(TagInsertion(TagPath.fromTag(Tag.SeriesDate), _ => ByteString(studyDate().drop(8))))
-        )
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.SeriesDate), _ => studyDate().drop(8))))
       )
 
     source
@@ -300,14 +289,14 @@ class ModifyFlowTest
     ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(insertions =
           Seq(
             TagInsertion(
               TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),
-              _ => ByteString(studyDate().drop(8))
+              _ => studyDate().drop(8)
             )
           )
         )
@@ -330,18 +319,18 @@ class ModifyFlowTest
     val bytes = personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(insertions =
           Seq(
             TagInsertion(
               TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.StudyDate),
-              _ => ByteString(studyDate().drop(8))
+              _ => studyDate().drop(8)
             ),
             TagInsertion(
               TagPath.fromItem(Tag.DerivationCodeSequence, 1).thenTag(Tag.PatientName),
-              _ => ByteString.empty
+              _ => emptyBytes
             )
           )
         )
@@ -358,9 +347,9 @@ class ModifyFlowTest
     val bytes = personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
-      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(0x00200021), _ => ByteString(1, 2, 3, 4)))))
+      .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(0x00200021), _ => bytesi(1, 2, 3, 4)))))
 
     source
       .runWith(TestSink())
@@ -373,10 +362,10 @@ class ModifyFlowTest
     val bytes = personNameJohnDoe()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
-        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.DerivationCodeSequence), _ => ByteString.empty)))
+        modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.DerivationCodeSequence), _ => emptyBytes)))
       )
 
     source
@@ -390,14 +379,14 @@ class ModifyFlowTest
     ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(insertions =
           Seq(
             TagInsertion(
               TagPath.fromItem(Tag.DerivationCodeSequence, 2).thenTag(Tag.StudyDate),
-              _ => ByteString(studyDate().drop(8))
+              _ => studyDate().drop(8)
             )
           )
         )
@@ -425,10 +414,10 @@ class ModifyFlowTest
       Tag.DerivationCodeSequence
     ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(
         modifyFlow(modifications =
@@ -459,11 +448,11 @@ class ModifyFlowTest
       Tag.DerivationCodeSequence
     ) ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ item() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
     val tagTree   = TagTree.fromAnyItem(Tag.DerivationCodeSequence).thenTag(Tag.PatientName)
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(modifyFlow(modifications = Seq(TagModification(tagTree.hasPath, _ => mikeBytes))))
 
@@ -483,13 +472,13 @@ class ModifyFlowTest
   }
 
   it should "correctly sort elements with tag numbers exceeding the positive range of its signed integer representation" in {
-    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++ ByteString(0xff, 0xff, 0xff,
-      0xff, 68, 65, 10, 0, 49, 56, 51, 49, 51, 56, 46, 55, 54, 53)
+    val bytes = preamble ++ fmiGroupLength(transferSyntaxUID()) ++ transferSyntaxUID() ++
+      bytesi(0xff, 0xff, 0xff, 0xff, 68, 65, 10, 0, 49, 56, 51, 49, 51, 56, 46, 55, 54, 53)
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(modifyFlow(insertions = Seq(TagInsertion(TagPath.fromTag(Tag.PatientName), _ => mikeBytes))))
 
@@ -512,10 +501,10 @@ class ModifyFlowTest
       Tag.DerivationCodeSequence
     ) ++ item() ++ studyDate() ++ personNameJohnDoe() ++ itemDelimitation() ++ sequenceDelimitation()
 
-    val studyBytes = ByteString("2012-01-01")
+    val studyBytes = "2012-01-01".utf8Bytes
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(modifyFlow(modifications = Seq(TagModification.endsWith(TagPath.fromTag(Tag.StudyDate), _ => studyBytes))))
 
@@ -537,10 +526,10 @@ class ModifyFlowTest
   it should "pick up tag modifications from the stream" in {
     val bytes = studyDate() ++ personNameJohnDoe()
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .prepend(
         Source.single(
@@ -548,7 +537,7 @@ class ModifyFlowTest
         )
       )
       .via(
-        modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty)))
+        modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => emptyBytes)))
       )
 
     source
@@ -562,10 +551,10 @@ class ModifyFlowTest
   it should "pick up tag modifications and replace old modifications" in {
     val bytes = studyDate() ++ personNameJohnDoe()
 
-    val mikeBytes = ByteString('M', 'i', 'k', 'e')
+    val mikeBytes = bytesb('M', 'i', 'k', 'e')
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .prepend(
         Source.single(
@@ -577,7 +566,7 @@ class ModifyFlowTest
         )
       )
       .via(
-        modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => ByteString.empty)))
+        modifyFlow(modifications = Seq(TagModification.equals(TagPath.fromTag(Tag.StudyDate), _ => emptyBytes)))
       )
 
     source
@@ -595,7 +584,7 @@ class ModifyFlowTest
       item(16) ++ studyDate()
 
     val source = Source
-      .single(ByteString(bytes))
+      .single(bytes.toByteString)
       .via(parseFlow)
       .via(modifyFlow(logGroupLengthWarnings = false))
 

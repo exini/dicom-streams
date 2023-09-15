@@ -34,9 +34,9 @@ class ByteParserTest extends AnyFlatSpec with Matchers {
 
 object ByteParserTest {
 
-  class Fixture(chunks: Seq[Array[Byte]]) extends ByteParserTarget[String] {
-    val chunksIterator: Iterator[Array[Byte]] = chunks.iterator
-    var isCompleted                           = false
+  class Fixture(chunks: Seq[Bytes]) extends ByteParserTarget[String] {
+    val chunksIterator: Iterator[Bytes] = chunks.iterator
+    var isCompleted                     = false
 
     val parser: ByteParser[String]  = new ByteParser[String](this)
     val result: ArrayBuffer[String] = ArrayBuffer.empty[String]

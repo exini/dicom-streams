@@ -4,10 +4,10 @@ import java.util.zip.{ Deflater, Inflater }
 
 object Compression {
 
-  def compress(bytes: Array[Byte], compressor: Deflater): Array[Byte] = {
-    compressor.setInput(bytes)
+  def compress(bytes: Bytes, compressor: Deflater): Bytes = {
+    compressor.setInput(bytes.unwrap)
     val buffer = new Array[Byte](bytes.length)
-    var out    = Array.emptyByteArray
+    var out    = emptyBytes
     var n      = 1
     while (n > 0) {
       n = compressor.deflate(buffer, 0, buffer.length, Deflater.FULL_FLUSH)
@@ -16,15 +16,15 @@ object Compression {
     out
   }
 
-  def compress(bytes: Array[Byte], gzip: Boolean = false): Array[Byte] = {
+  def compress(bytes: Bytes, gzip: Boolean = false): Bytes = {
     val compressor = if (gzip) new Deflater() else new Deflater(-1, true)
     compress(bytes, compressor)
   }
 
-  def decompress(bytes: Array[Byte], decompressor: Inflater): Array[Byte] = {
-    decompressor.setInput(bytes)
+  def decompress(bytes: Bytes, decompressor: Inflater): Bytes = {
+    decompressor.setInput(bytes.unwrap)
     val buffer: Array[Byte] = new Array[Byte](bytes.length)
-    var out                 = Array.emptyByteArray
+    var out                 = emptyBytes
     var n                   = 1
     while (n > 0) {
       n = decompressor.inflate(buffer)
@@ -33,7 +33,7 @@ object Compression {
     out
   }
 
-  def decompress(bytes: Array[Byte], gzip: Boolean = false): Array[Byte] = {
+  def decompress(bytes: Bytes, gzip: Boolean = false): Bytes = {
     val decompressor: Inflater = new Inflater(!gzip)
     decompress(bytes, decompressor)
   }

@@ -2,8 +2,6 @@
 
 Service | Status | Description
 ------- | ------ | -----------
-Travis            | [![Build Status](https://travis-ci.org/exini/dicom-streams.svg?branch=develop)](https://travis-ci.org/exini/dicom-streams.svg?branch=develop) | [Tests](https://travis-ci.org/exini/dicom-streams/)
-Coveralls         | [![Coverage Status](https://coveralls.io/repos/github/exini/dicom-streams/badge.svg?branch=develop)](https://coveralls.io/github/exini/dicom-streams?branch=develop) | Code coverage
 Gitter            | [![Join the chat at https://gitter.im/exini/dicom-streams](https://badges.gitter.im/exini/dicom-streams.svg)](https://gitter.im/exini/dicom-streams?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Chatroom
 
 The purpose of this project is to create a streaming API for reading and processing DICOM data using [akka-streams](http://doc.akka.io/docs/akka/current/scala/stream/index.html). 
@@ -31,9 +29,9 @@ libraryDependencies += "com.exini" %% "dicom-streams" % "x.y.z"
 ### Data Model
 
 Streaming binary DICOM data may originate from many different sources such as files, a HTTP POST request, or a read from
-a database. Akka Streams provide a multitude of connectors for streaming binary data. Streaming data arrives in chunks
-(`ByteString`s). In the Akka Stream nomenclature, chunks originate from _sources_, they are processed in _flows_ and
-and folded into a non-streaming plain objects using _sinks_. 
+a database. Akka Streams provide a multitude of connectors for streaming binary data. Streaming data arrives in chunks. 
+In the Akka Stream nomenclature, chunks originate from _sources_, they are processed in _flows_ and folded into a 
+non-streaming plain objects using _sinks_. 
 
 This library provides flows for parsing binary DICOM data into DICOM parts (represented by the `DicomPart` interface) - 
 small objects representing a part of a data element. These DICOM parts are bounded in size by a user specified chunk 
@@ -86,14 +84,14 @@ and `SOPInstanceUID` attributes. To ensure the resulting data is valid, group le
 the meta information group tag is updated.
 
 ```scala
-val updatedSOPInstanceUID = padToEvenLength(ByteString(createUID()), VR.UI)
+val updatedSOPInstanceUID = padToEvenLength(createUID().utf8Bytes, VR.UI)
 
 FileIO.fromPath(Paths.get("source-file.dcm"))
   .via(parseFlow)
   .via(groupLengthDiscardFilter) // discard group length elements in dataset
   .via(modifyFlow(
     Seq(
-      TagModification.endsWith(TagPath.fromTag(Tag.PatientName), _ => padToEvenLength(ByteString("John Doe"), VR.PN)),
+      TagModification.endsWith(TagPath.fromTag(Tag.PatientName), _ => padToEvenLength("John Doe".utf8Bytes, VR.PN)),
       TagModification.endsWith(TagPath.fromTag(Tag.MediaStorageSOPInstanceUID), _ => updatedSOPInstanceUID)
     ), 
     Seq(
