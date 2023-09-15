@@ -230,7 +230,7 @@ object TagPath {
       *
       * @param s string to parse
       * @return a tag path
-      * @throws IllegalArgumentException for malformed input
+      * @throws java.lang.IllegalArgumentException for malformed input
       */
     def parse(s: String): TagPathTag = {
       def indexPart(s: String): String = s.substring(s.lastIndexOf('[') + 1, s.length - 1)

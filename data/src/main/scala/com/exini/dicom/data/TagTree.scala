@@ -329,7 +329,7 @@ object TagTree {
     *
     * @param s string to parse
     * @return a tag tree
-    * @throws IllegalArgumentException for malformed input
+    * @throws java.lang.IllegalArgumentException for malformed input
     */
   def parse(s: String): TagTree = {
     def isSeq(s: String): Boolean = s.last == ']'
@@ -342,7 +342,7 @@ object TagTree {
       try Integer.parseInt(s.substring(1, 5) + s.substring(6, 10), 16)
       catch {
         case _: Throwable =>
-          Lookup.tagOf(s).getOrElse(throw new RuntimeException(s"$s is not a recognizable tag or keyword"))
+          Lookup.tagOf(s).getOrElse(throw new IllegalArgumentException(s"$s is not a recognizable tag or keyword"))
       }
 
     def parseIndex(s: String): Option[Int] = if (s == "*") None else Some(Integer.parseInt(s))

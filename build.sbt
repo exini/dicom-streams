@@ -19,7 +19,8 @@ lazy val rootSettings = Seq(
     )
   ),
   ThisBuild / scalaVersion := "2.13.10",
-  ThisBuild / scalacOptions ++= Seq("-Vimplicits", "-Vtype-diffs", "-Ywarn-macros:after"),
+  scalacOptions ++= Seq("-Vimplicits", "-Vtype-diffs"),
+  publish / skip := true,
   resolvers ++= Dependencies.resolvers
 )
 
