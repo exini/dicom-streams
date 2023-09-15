@@ -3,10 +3,7 @@ import com.softwaremill.SbtSoftwareMillCommon.commonSmlBuildSettings
 import sbt.IO
 import sbt.Keys.{ organization, resolvers }
 
-enablePlugins(BuildInfoPlugin)
-
 lazy val rootSettings = Seq(
-  libraryDependencies ++= Dependencies.all,
   name := "dicom-streams",
   organization := "com.exini",
   organizationName := "EXINI Diagnostics",
@@ -21,14 +18,14 @@ lazy val rootSettings = Seq(
       url("https://exini.com")
     )
   ),
-  scalaVersion := "2.13.10",
-  scalacOptions ++= Seq("-Vimplicits", "-Vtype-diffs"),
+  ThisBuild / scalaVersion := "2.13.10",
+  ThisBuild / scalacOptions ++= Seq("-Vimplicits", "-Vtype-diffs", "-Ywarn-macros:after"),
   resolvers ++= Dependencies.resolvers
 )
 
 lazy val buildInfoSettings = Seq(
   buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
-  buildInfoPackage := "com.exini.dicom"
+  buildInfoPackage := "com.exini.dicom.data"
 )
 
 lazy val managedSourcesSettings = Seq(
@@ -58,10 +55,23 @@ lazy val coverageSettings = Seq(
   coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*\\.UIDToName.*"
 )
 
-lazy val root = project
-  .in(file("."))
-  .settings(rootSettings)
+lazy val dataLib = project
+  .in(file("data"))
+  .enablePlugins(BuildInfoPlugin)
+  .settings(name := "dicom-data")
   .settings(buildInfoSettings)
   .settings(managedSourcesSettings)
+  .settings(libraryDependencies ++= Dependencies.data)
+
+lazy val streamsLib = project
+  .in(file("streams"))
+  .settings(name := "dicom-streams")
+  .settings(libraryDependencies ++= Dependencies.streams)
+  .dependsOn(dataLib % "test->test;compile->compile")
+
+lazy val root = project
+  .in(file("."))
+  .aggregate(dataLib, streamsLib)
+  .settings(rootSettings)
   .settings(coverageSettings)
   .settings(commonSmlBuildSettings)
