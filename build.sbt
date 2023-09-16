@@ -5,12 +5,12 @@ import sbt.Keys.{ organization, resolvers }
 
 lazy val rootSettings = Seq(
   name := "dicom-streams",
-  organization := "com.exini",
-  organizationName := "EXINI Diagnostics",
-  startYear := Some(2019),
-  homepage := Some(url("https://github.com/exini/dicom-streams")),
-  licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
-  developers := List(
+  ThisBuild / organization := "com.exini",
+  ThisBuild / organizationName := "EXINI Diagnostics",
+  ThisBuild / startYear := Some(2019),
+  ThisBuild / homepage := Some(url("https://github.com/exini/dicom-streams")),
+  ThisBuild / licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+  ThisBuild / developers := List(
     Developer(
       "karl-exini",
       "Karl Sjöstrand",
