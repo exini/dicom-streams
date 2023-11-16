@@ -48,25 +48,25 @@ case class Value private[data] (bytes: Bytes) {
     if (bytes.isEmpty) Seq.empty
     else
       vr match {
-        case AT                => parseAT(bytes, bigEndian).map(tagToString)
-        case FL                => parseFL(bytes, bigEndian).map(_.toString)
-        case FD                => parseFD(bytes, bigEndian).map(_.toString)
-        case SS                => parseSS(bytes, bigEndian).map(_.toString)
-        case SL                => parseSL(bytes, bigEndian).map(_.toString)
-        case SV                => parseSV(bytes, bigEndian).map(_.toString)
-        case US                => parseSS(bytes, bigEndian).map(java.lang.Short.toUnsignedInt).map(_.toString)
-        case UL                => parseSL(bytes, bigEndian).map(java.lang.Integer.toUnsignedString)
-        case UV                => parseSV(bytes, bigEndian).map(java.lang.Long.toUnsignedString)
-        case OB                => Seq(bytes.map(byteToHexString).mkString(" "))
-        case OW                => Seq(split(bytes, 2).map(bytesToShort(_, bigEndian)).map(shortToHexString).mkString(" "))
-        case OL                => Seq(split(bytes, 4).map(bytesToInt(_, bigEndian)).map(intToHexString).mkString(" "))
-        case OV                => Seq(split(bytes, 8).map(bytesToLong(_, bigEndian)).map(longToHexString).mkString(" "))
-        case OF                => Seq(parseFL(bytes, bigEndian).mkString(" "))
-        case OD                => Seq(parseFD(bytes, bigEndian).mkString(" "))
-        case ST | LT | UT | UR => Seq(trimPadding(characterSets.decode(vr, bytes), vr.paddingByte))
-        case DA | TM | DT      => split(bytes.utf8String).map(trim)
-        case UC                => split(trimPadding(characterSets.decode(vr, bytes), vr.paddingByte))
-        case _                 => split(characterSets.decode(vr, bytes)).map(trim)
+        case AT           => parseAT(bytes, bigEndian).map(tagToString)
+        case FL           => parseFL(bytes, bigEndian).map(_.toString)
+        case FD           => parseFD(bytes, bigEndian).map(_.toString)
+        case SS           => parseSS(bytes, bigEndian).map(_.toString)
+        case SL           => parseSL(bytes, bigEndian).map(_.toString)
+        case SV           => parseSV(bytes, bigEndian).map(_.toString)
+        case US           => parseSS(bytes, bigEndian).map(java.lang.Short.toUnsignedInt).map(_.toString)
+        case UL           => parseSL(bytes, bigEndian).map(java.lang.Integer.toUnsignedString)
+        case UV           => parseSV(bytes, bigEndian).map(java.lang.Long.toUnsignedString)
+        case OB           => Seq(bytes.map(byteToHexString).mkString(" "))
+        case OW           => Seq(split(bytes, 2).map(bytesToShort(_, bigEndian)).map(shortToHexString).mkString(" "))
+        case OL           => Seq(split(bytes, 4).map(bytesToInt(_, bigEndian)).map(intToHexString).mkString(" "))
+        case OV           => Seq(split(bytes, 8).map(bytesToLong(_, bigEndian)).map(longToHexString).mkString(" "))
+        case OF           => Seq(parseFL(bytes, bigEndian).mkString(" "))
+        case OD           => Seq(parseFD(bytes, bigEndian).mkString(" "))
+        case ST | LT | UT => Seq(trimTrailing(characterSets.decode(vr, bytes), vr.paddingByte))
+        case LO | SH | UC => split(characterSets.decode(vr, bytes))
+        case PN           => split(characterSets.decode(vr, bytes)).map(trim)
+        case _            => split(bytes.utf8String).map(trim)
       }
 
   /**
@@ -251,7 +251,7 @@ case class Value private[data] (bytes: Bytes) {
     * Get the string representation of each component of this value, joined with the backslash character as separator
     *
     * @param characterSets Character sets used for string decoding
-    * @return a string repreentation of all components of this value, if any
+    * @return a string representation of all components of this value, if any
     */
   def toSingleString(
       vr: VR,
@@ -544,7 +544,7 @@ object Value {
   def split(s: String): Seq[String]              = s.split(multiValueDelimiterRegex).toSeq
 
   def trim(s: String): String = s.trim
-  def trimPadding(s: String, paddingByte: Byte): String = {
+  def trimTrailing(s: String, paddingByte: Byte): String = {
     var index = s.length - 1
     while (index >= 0 && s(index) <= paddingByte)
       index -= 1
@@ -585,11 +585,11 @@ object Value {
   def parseDT(value: Bytes, zoneOffset: ZoneOffset): Seq[ZonedDateTime] =
     split(value.utf8String).flatMap(parseDateTime(_, zoneOffset))
   def parsePN(string: String): Seq[PersonName] =
-    split(string).map(trimPadding(_, VR.PN.paddingByte)).flatMap(parsePersonName)
+    split(string).map(trimTrailing(_, VR.PN.paddingByte)).flatMap(parsePersonName)
   def parsePN(value: Bytes, characterSets: CharacterSets): Seq[PersonName] =
     parsePN(characterSets.decode(VR.PN, value))
   def parseUR(string: String): Option[URI] = parseURI(string)
-  def parseUR(value: Bytes): Option[URI]   = parseUR(trimPadding(value.utf8String, VR.UR.paddingByte))
+  def parseUR(value: Bytes): Option[URI]   = parseUR(trimTrailing(value.utf8String, VR.UR.paddingByte))
 
   // parsing of strings to more specific types
 

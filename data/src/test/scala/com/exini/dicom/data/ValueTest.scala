@@ -24,11 +24,11 @@ class ValueTest extends AnyFlatSpec with Matchers {
   }
 
   it should "trim any characters at beginning and end" in {
-    Value(bytesi(0x20, 0x20, 0x20, 0x20, 0x41, 0x41, 0x20, 0x20, 0x20)).toStrings(VR.SH) shouldBe Seq("AA")
+    Value(bytesi(0x20, 0x20, 0x20, 0x20, 0x41, 0x41, 0x20, 0x20, 0x20)).toStrings(VR.CS) shouldBe Seq("AA")
   }
 
   it should "trim any characters at or below 0x20 at beginning and end of each value" in {
-    Value("  one \\ two \\three  ".utf8Bytes).toStrings(VR.SH) shouldBe Seq("one", "two", "three")
+    Value("  one \\ two \\three  ".utf8Bytes).toStrings(VR.CS) shouldBe Seq("one", "two", "three")
   }
 
   it should "split and trim strings with multiple character set encodings" in {
@@ -37,7 +37,7 @@ class ValueTest extends AnyFlatSpec with Matchers {
       0x24, 0x42, 0x24, 0x64, 0x24, 0x5e, 0x24, 0x40, 0x1b, 0x28, 0x4a, 0x5c, 0x20, 0x1b, 0x24, 0x42, 0x24, 0x3f, 0x24,
       0x6d, 0x24, 0x26, 0x1b, 0x28, 0x4a)
     Value(nameBytes).toStrings(
-      VR.SH,
+      VR.PN,
       characterSets = new CharacterSets(Seq("ISO 2022 IR 13", "ISO 2022 IR 87"))
     ) shouldBe Seq("ﾔﾏﾀﾞ", "ﾀﾛｳ=山田", "太郎=やまだ", "たろう")
   }
@@ -50,8 +50,8 @@ class ValueTest extends AnyFlatSpec with Matchers {
     Value("one\\two\\three".utf8Bytes).toSingleString(VR.SH) shouldBe Some("one\\two\\three")
   }
 
-  it should "trim the string components" in {
-    Value("   one two  ".utf8Bytes).toSingleString(VR.SH) shouldBe Some("one two")
+  it should "trim trailing spaces in string components" in {
+    Value("   one two  ".utf8Bytes).toSingleString(VR.ST) shouldBe Some("   one two")
   }
 
   "Parsing int values" should "return empty sequence for empty byte string" in {
