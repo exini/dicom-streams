@@ -1,5 +1,7 @@
-import DicomSourceGenerators._
+import DicomSourceGenerators.*
 import com.softwaremill.SbtSoftwareMillCommon.commonSmlBuildSettings
+import com.softwaremill.Publish.ossPublishSettings
+import org.typelevel.scalacoptions.ScalacOptions
 import sbt.IO
 import sbt.Keys.{ organization, resolvers }
 
@@ -18,10 +20,10 @@ lazy val rootSettings = Seq(
       url("https://exini.com")
     )
   ),
-  ThisBuild / scalaVersion := "2.13.10",
-  scalacOptions ++= Seq("-Vimplicits", "-Vtype-diffs"),
+  ThisBuild / scalaVersion := "2.13.12",
+  ThisBuild / tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement,
   publish / skip := true,
-  resolvers ++= Dependencies.resolvers
+  resolvers += "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/"
 )
 
 lazy val buildInfoSettings = Seq(
@@ -29,7 +31,12 @@ lazy val buildInfoSettings = Seq(
   buildInfoPackage := "com.exini.dicom.data"
 )
 
+val CompileTime = config("compile-time").hide
+
 lazy val managedSourcesSettings = Seq(
+  ivyConfigurations += CompileTime,
+  Compile / unmanagedClasspath ++= update.value.select(configurationFilter(CompileTime.name)),
+  libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0" % CompileTime,
   Compile / sourceGenerators += Def.task {
     val tagFile          = (Compile / sourceManaged).value / "sbt-dicomdata" / "Tag.scala"
     val uidFile          = (Compile / sourceManaged).value / "sbt-dicomdata" / "UID.scala"
@@ -56,18 +63,31 @@ lazy val coverageSettings = Seq(
   coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*\\.UIDToName.*"
 )
 
+lazy val akkaVersion = "2.8.5"
+
 lazy val dataLib = project
   .in(file("data"))
   .enablePlugins(BuildInfoPlugin)
   .settings(name := "dicom-data")
   .settings(buildInfoSettings)
   .settings(managedSourcesSettings)
-  .settings(libraryDependencies ++= Dependencies.data)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.slf4j"      % "slf4j-simple" % "2.0.9",
+      "org.scalatest" %% "scalatest"    % "3.2.17" % "test"
+    )
+  )
 
 lazy val streamsLib = project
   .in(file("streams"))
   .settings(name := "dicom-streams")
-  .settings(libraryDependencies ++= Dependencies.streams)
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-stream"         % akkaVersion,
+      "com.typesafe.akka" %% "akka-slf4j"          % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test"
+    )
+  )
   .dependsOn(dataLib % "test->test;compile->compile")
 
 lazy val root = project
@@ -76,3 +96,4 @@ lazy val root = project
   .settings(rootSettings)
   .settings(coverageSettings)
   .settings(commonSmlBuildSettings)
+  .settings(ossPublishSettings)

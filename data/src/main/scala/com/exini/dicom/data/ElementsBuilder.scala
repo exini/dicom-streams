@@ -27,6 +27,32 @@ case class ElementAndLength(element: Element, var bytesLeft: Long)
 
 class ElementsBuilder() {
 
+  class DatasetBuilder(
+      protected[ElementsBuilder] var characterSets: CharacterSets,
+      protected[ElementsBuilder] var zoneOffset: ZoneOffset
+  ) {
+    private val data: ArrayBuffer[ElementSet] = ArrayBuffer.empty
+
+    def +=(elementSet: ElementSet): DatasetBuilder = {
+      elementSet match {
+        case e: ValueElement if e.tag == Tag.SpecificCharacterSet =>
+          characterSets = CharacterSets(e.value.bytes)
+        case e: ValueElement if e.tag == Tag.TimezoneOffsetFromUTC =>
+          for {
+            timeString <- e.value.toString(VR.SH, e.bigEndian, characterSets)
+            zoneOffset <- parseZoneOffset(timeString)
+          } yield this.zoneOffset = zoneOffset
+        case _ =>
+      }
+      data += elementSet
+      this
+    }
+
+    def build(): Elements = new Elements(characterSets, zoneOffset, data.toVector)
+
+    def isEmpty: Boolean = data.isEmpty
+  }
+
   protected val log: Logger = LoggerFactory.getLogger("ElementsBuilderLogger")
 
   private var builderStack: List[DatasetBuilder]  = List(new DatasetBuilder(CharacterSets.defaultOnly, systemZone))
@@ -167,27 +193,4 @@ class ElementsBuilder() {
     }
     this
   }
-}
-
-class DatasetBuilder(var characterSets: CharacterSets, var zoneOffset: ZoneOffset) {
-  private val data: ArrayBuffer[ElementSet] = ArrayBuffer.empty
-
-  def +=(elementSet: ElementSet): DatasetBuilder = {
-    elementSet match {
-      case e: ValueElement if e.tag == Tag.SpecificCharacterSet =>
-        characterSets = CharacterSets(e.value.bytes)
-      case e: ValueElement if e.tag == Tag.TimezoneOffsetFromUTC =>
-        for {
-          timeString <- e.value.toString(VR.SH, e.bigEndian, characterSets)
-          zoneOffset <- parseZoneOffset(timeString)
-        } yield this.zoneOffset = zoneOffset
-      case _ =>
-    }
-    data += elementSet
-    this
-  }
-
-  def build(): Elements = new Elements(characterSets, zoneOffset, data.toVector)
-
-  def isEmpty: Boolean = data.isEmpty
 }
