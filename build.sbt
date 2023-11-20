@@ -1,6 +1,5 @@
 import DicomSourceGenerators.*
 import com.softwaremill.SbtSoftwareMillCommon.commonSmlBuildSettings
-import com.softwaremill.Publish.ossPublishSettings
 import org.typelevel.scalacoptions.ScalacOptions
 import sbt.IO
 import sbt.Keys.{ organization, resolvers }
@@ -96,4 +95,3 @@ lazy val root = project
   .settings(rootSettings)
   .settings(coverageSettings)
   .settings(commonSmlBuildSettings)
-  .settings(ossPublishSettings)
