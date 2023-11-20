@@ -20,8 +20,6 @@ lazy val rootSettings = Seq(
       url("https://exini.com")
     )
   ),
-  ThisBuild / sonatypeCredentialHost := "oss.sonatype.org",
-  ThisBuild / sonatypeProfileName := "com.exini",
   ThisBuild / scalaVersion := "2.13.12",
   ThisBuild / tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement,
   publish / skip := true,
