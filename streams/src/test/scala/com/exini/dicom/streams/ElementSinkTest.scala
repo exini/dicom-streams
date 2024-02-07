@@ -1,14 +1,14 @@
 package com.exini.dicom.streams
 
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.{ FileIO, Source }
-import akka.testkit.TestKit
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
 import com.exini.dicom.streams.ElementFlows.elementFlow
 import com.exini.dicom.streams.ElementSink.elementSink
 import com.exini.dicom.streams.ParseFlow.parseFlow
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.scaladsl.{ FileIO, Source }
+import org.apache.pekko.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures._

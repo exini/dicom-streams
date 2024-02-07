@@ -62,7 +62,7 @@ lazy val coverageSettings = Seq(
   coverageExcludedPackages := ".*\\.BuildInfo.*;.*\\.Tag.*;.*\\.UID.*;.*\\.TagToKeyword.*;.*\\.TagToVR.*;.*\\.TagToVM.*\\.UIDToName.*"
 )
 
-lazy val akkaVersion = "2.8.5"
+lazy val pekkoVersion = "1.0.2"
 
 lazy val dataLib = project
   .in(file("data"))
@@ -72,7 +72,7 @@ lazy val dataLib = project
   .settings(managedSourcesSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.slf4j"      % "slf4j-simple" % "2.0.9",
+      "org.slf4j"      % "slf4j-simple" % "2.0.12",
       "org.scalatest" %% "scalatest"    % "3.2.17" % "test"
     )
   )
@@ -82,9 +82,9 @@ lazy val streamsLib = project
   .settings(name := "dicom-streams")
   .settings(
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-stream"         % akkaVersion,
-      "com.typesafe.akka" %% "akka-slf4j"          % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test"
+      "org.apache.pekko" %% "pekko-stream"         % pekkoVersion,
+      "org.apache.pekko" %% "pekko-slf4j"          % pekkoVersion,
+      "org.apache.pekko" %% "pekko-stream-testkit" % pekkoVersion % "test"
     )
   )
   .dependsOn(dataLib % "test->test;compile->compile")

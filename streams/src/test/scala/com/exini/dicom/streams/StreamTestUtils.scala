@@ -1,9 +1,9 @@
 package com.exini.dicom.streams
 
-import akka.stream.testkit.TestSubscriber
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data._
+import org.apache.pekko.stream.testkit.TestSubscriber
 
 object StreamTestUtils {
 

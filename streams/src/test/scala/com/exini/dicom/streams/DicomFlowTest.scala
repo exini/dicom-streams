@@ -1,14 +1,14 @@
 package com.exini.dicom.streams
 
-import akka.actor.ActorSystem
-import akka.stream.Attributes
-import akka.stream.scaladsl.{ FileIO, Flow, Sink, Source }
-import akka.stream.stage.GraphStageLogic
-import akka.stream.testkit.scaladsl.TestSink
-import akka.testkit.TestKit
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data._
 import com.exini.dicom.streams.ParseFlow.parseFlow
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Attributes
+import org.apache.pekko.stream.scaladsl.{ FileIO, Flow, Sink, Source }
+import org.apache.pekko.stream.stage.GraphStageLogic
+import org.apache.pekko.stream.testkit.scaladsl.TestSink
+import org.apache.pekko.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpecLike

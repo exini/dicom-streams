@@ -16,11 +16,11 @@
 
 package com.exini.dicom.streams
 
-import akka.stream.stage._
-import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath._
 import com.exini.dicom.data.{ Tag, TagPath, emptyBytes, isGroupLength }
+import org.apache.pekko.stream.stage._
+import org.apache.pekko.stream.{ Attributes, FlowShape, Inlet, Outlet }
 
 /**
   * This class defines events for modular construction of DICOM flows. Events correspond to the DICOM parts commonly

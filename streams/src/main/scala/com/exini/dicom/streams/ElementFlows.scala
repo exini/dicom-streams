@@ -16,15 +16,15 @@
 
 package com.exini.dicom.streams
 
-import akka.NotUsed
-import akka.stream.Attributes
-import akka.stream.scaladsl.Flow
-import akka.stream.stage.GraphStageLogic
-import akka.util.ByteString
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath._
 import com.exini.dicom.data.{ TagPath, Value }
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.Attributes
+import org.apache.pekko.stream.scaladsl.Flow
+import org.apache.pekko.stream.stage.GraphStageLogic
+import org.apache.pekko.util.ByteString
 
 object ElementFlows {
 
@@ -85,56 +85,63 @@ object ElementFlows {
           }
       })
 
+  private case class TagPathFlowState(tagPath: TagPath = EmptyTagPath, inFragments: Boolean = false)
+
   def tagPathFlow: Flow[Element, (TagPath, Element), NotUsed] =
     Flow[Element]
-      .statefulMapConcat {
-        var tagPath: TagPath = EmptyTagPath
-        var inFragments      = false
-
-        () => {
-          case e: ValueElement =>
-            tagPath = tagPath match {
+      .statefulMap(() => TagPathFlowState())(
+        {
+          case (state, e: ValueElement) =>
+            val newState = state.copy(tagPath = state.tagPath match {
               case t: TagPathItem => t.thenTag(e.tag)
               case t              => t.previous.thenTag(e.tag)
-            }
-            (tagPath, e) :: Nil
-          case e: FragmentsElement =>
-            tagPath = tagPath match {
-              case t: TagPathItem => t.thenTag(e.tag)
-              case t              => t.previous.thenTag(e.tag)
-            }
-            inFragments = true
-            (tagPath, e) :: Nil
-          case e: SequenceElement =>
-            tagPath = tagPath match {
+            })
+            (newState, (newState.tagPath, e))
+          case (state, e: FragmentsElement) =>
+            val newState = state.copy(
+              tagPath = state.tagPath match {
+                case t: TagPathItem => t.thenTag(e.tag)
+                case t              => t.previous.thenTag(e.tag)
+              },
+              inFragments = true
+            )
+            (newState, (newState.tagPath, e))
+          case (state, e: SequenceElement) =>
+            val newState = state.copy(tagPath = state.tagPath match {
               case t: TagPathItem => t.thenSequence(e.tag)
               case t              => t.previous.thenSequence(e.tag)
-            }
-            (tagPath, e) :: Nil
-          case e: SequenceDelimitationElement =>
-            if (!inFragments) tagPath = tagPath.previous.thenSequenceEnd(tagPath.tag)
-            inFragments = false
-            (tagPath, e) :: Nil
-          case e: ItemElement =>
-            if (!inFragments)
-              tagPath = tagPath match {
-                case t: TagPathItemEnd =>
-                  t.previous.thenItem(t.tag, t.item + 1)
-                case t => t.previous.thenItem(t.tag, 1)
-              }
-            (tagPath, e) :: Nil
-          case e: ItemDelimitationElement =>
-            tagPath = tagPath match {
+            })
+            (newState, (newState.tagPath, e))
+          case (state, e: SequenceDelimitationElement) =>
+            val newState =
+              if (!state.inFragments)
+                state.copy(tagPath = state.tagPath.previous.thenSequenceEnd(state.tagPath.tag), inFragments = false)
+              else
+                state.copy(inFragments = false)
+            (newState, (newState.tagPath, e))
+          case (state, e: ItemElement) =>
+            val newState =
+              if (!state.inFragments)
+                state.copy(tagPath = state.tagPath match {
+                  case t: TagPathItemEnd => t.previous.thenItem(t.tag, t.item + 1)
+                  case t                 => t.previous.thenItem(t.tag, 1)
+                })
+              else
+                state
+            (newState, (newState.tagPath, e))
+          case (state, e: ItemDelimitationElement) =>
+            val newState = state.copy(tagPath = state.tagPath match {
               case t: TagPathItem => t.previous.thenItemEnd(t.tag, t.item)
               case t =>
                 t.previous match {
                   case ti: TagPathItem => ti.previous.thenItemEnd(ti.tag, ti.item)
-                  case _               => tagPath // should never get delimitation when not inside item
+                  case _               => state.tagPath // should never get delimitation when not inside item
                 }
-            }
-            (tagPath, e) :: Nil
-          case e =>
-            (tagPath, e) :: Nil
-        }
-      }
+            })
+            (newState, (newState.tagPath, e))
+          case (state, e) =>
+            (state, (state.tagPath, e))
+        },
+        _ => None
+      )
 }

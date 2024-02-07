@@ -1,10 +1,10 @@
 package com.exini.dicom.streams
 
-import akka.stream._
-import akka.stream.stage._
-import akka.util.ByteString
 import com.exini.dicom.data.ByteParser
 import com.exini.dicom.data.ByteParser.{ ByteParserTarget, ByteReader, ParseStep }
+import org.apache.pekko.stream._
+import org.apache.pekko.stream.stage._
+import org.apache.pekko.util.ByteString
 
 abstract class ByteParserFlow[T] extends GraphStage[FlowShape[ByteString, T]] {
 

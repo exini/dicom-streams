@@ -16,11 +16,11 @@
 
 package com.exini.dicom.streams
 
-import akka.stream.Attributes
-import akka.stream.stage.GraphStageLogic
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.{ Elements, _ }
+import org.apache.pekko.stream.Attributes
+import org.apache.pekko.stream.stage.GraphStageLogic
 
 object CollectFlow {
 

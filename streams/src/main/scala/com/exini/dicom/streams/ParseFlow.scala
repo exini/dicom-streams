@@ -16,16 +16,16 @@
 
 package com.exini.dicom.streams
 
-import akka.NotUsed
-import akka.event.LoggingAdapter
-import akka.stream.javadsl.MergePreferred
-import akka.stream.scaladsl.{ Compression, Flow, GraphDSL, Partition }
-import akka.stream.stage._
-import akka.stream.{ Attributes, FlowShape }
-import akka.util.ByteString
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.Parsing._
 import com.exini.dicom.data._
+import org.apache.pekko.NotUsed
+import org.apache.pekko.event.LoggingAdapter
+import org.apache.pekko.stream.javadsl.MergePreferred
+import org.apache.pekko.stream.scaladsl.{ Compression, Flow, GraphDSL, Partition }
+import org.apache.pekko.stream.stage._
+import org.apache.pekko.stream.{ Attributes, FlowShape }
+import org.apache.pekko.util.ByteString
 
 class ParseFlow private (chunkSize: Int) extends ByteParserFlow[DicomPart] {
 
@@ -352,16 +352,14 @@ object ParseFlow {
 
         val decider = builder.add(
           partFlow
-            .statefulMapConcat { () =>
-              var route = 0
-
+            .statefulMap(() => 0)(
               {
-                case part: DeflatedChunk if route == 0 =>
-                  if (part.nowrap) route = 1 else route = 2
-                  (part, route) :: Nil
-                case part => (part, route) :: Nil
-              }
-            }
+                case (0, part: DeflatedChunk) =>
+                  if (part.nowrap) (1, (part, 1)) else (2, (part, 2))
+                case (route, part) => (route, (part, route))
+              },
+              _ => None
+            )
         )
         val partition = builder.add(Partition[(DicomPart, Int)](3, _._2))
         val toPart    = Flow.fromFunction[(DicomPart, Int), DicomPart](_._1)
