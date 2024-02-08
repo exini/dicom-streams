@@ -4,7 +4,7 @@ Service | Status | Description
 ------- | ------ | -----------
 Gitter            | [![Join the chat at https://gitter.im/exini/dicom-streams](https://badges.gitter.im/exini/dicom-streams.svg)](https://gitter.im/exini/dicom-streams?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Chatroom
 
-The purpose of this project is to create a streaming API for reading and processing DICOM data using [akka-streams](http://doc.akka.io/docs/akka/current/scala/stream/index.html). 
+The purpose of this project is to create a streaming API for reading and processing DICOM data using [pekko-streams](https://pekko.apache.org/docs/pekko/current/stream/index.html). 
 
 Advantages of streaming DICOM data include better control over resource allocation such as memory via strict bounds on
 DICOM data chunk size and network utilization using back-pressure as specified in the
@@ -12,7 +12,7 @@ DICOM data chunk size and network utilization using back-pressure as specified i
 
 The library is split in two projects. The `data` project defines data structures and common functionality with minimal
 dependencies and offers synchronous parsing of (possibly chunked) binary data. The `streams` project provides 
-functionality for streaming DICOM data and pulls in Akka as a required dependency.
+functionality for streaming DICOM data and pulls in [Pekko](https://pekko.apache.org) as a required dependency.
 
 The logic of parsing and handling DICOM data is inspired by [dcm4che](https://github.com/dcm4che/dcm4che)
 which provides a far more complete (albeit blocking and synchronous) implementation of the DICOM standard.
@@ -37,8 +37,8 @@ libraryDependencies += "com.exini" %% "dicom-data" % "x.y.z"
 ### Data Model
 
 Streaming binary DICOM data may originate from many different sources such as files, a HTTP POST request, or a read from
-a database. Akka Streams provide a multitude of connectors for streaming binary data. Streaming data arrives in chunks. 
-In the Akka Stream nomenclature, chunks originate from _sources_, they are processed in _flows_ and folded into a 
+a database. Pekko Streams provide a multitude of connectors for streaming binary data. Streaming data arrives in chunks. 
+In the Pekko Stream nomenclature, chunks originate from _sources_, they are processed in _flows_ and folded into a 
 non-streaming plain objects using _sinks_. 
 
 This library provides flows for parsing binary DICOM data into DICOM parts (represented by the `DicomPart` interface) - 
