@@ -1,8 +1,8 @@
 package com.exini.dicom.streams
 
-import akka.stream._
-import akka.stream.stage._
-import akka.util.ByteString
+import org.apache.pekko.stream._
+import org.apache.pekko.stream.stage._
+import org.apache.pekko.util.ByteString
 
 class Chunker(val chunkSize: Int) extends GraphStage[FlowShape[ByteString, ByteString]] {
   val in: Inlet[ByteString]                             = Inlet[ByteString]("Chunker.in")

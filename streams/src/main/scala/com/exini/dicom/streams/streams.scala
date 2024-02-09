@@ -16,12 +16,12 @@
 
 package com.exini.dicom
 
-import akka.NotUsed
-import akka.stream.Materializer
-import akka.stream.scaladsl.{ Flow, Source }
-import akka.util.ByteString
 import com.exini.dicom.data.DicomParts.DicomPart
 import com.exini.dicom.data._
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.{ Flow, Source }
+import org.apache.pekko.util.ByteString
 
 import scala.concurrent.duration.{ DurationInt, FiniteDuration }
 import scala.concurrent.{ Await, ExecutionContext, Future }

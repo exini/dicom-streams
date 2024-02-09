@@ -23,7 +23,7 @@ import scala.util.control.{ NoStackTrace, NonFatal }
 
 /**
   * This class is borrowed (with modifications) from the
-  * <a href="https://github.com/akka/akka/blob/master/akka-stream/src/main/scala/akka/stream/impl/io/ByteStringParser.scala">AKKA internal API</a>.
+  * <a href="https://github.com/apache/incubator-pekko/blob/main/stream/src/main/scala/org/apache/pekko/stream/impl/io/ByteStringParser.scala">Pekko internal API</a>.
   * It provides a stateful parser from byte chunks to objects of type <code>T</code>.
   *
   * @param target target

@@ -1,12 +1,12 @@
 package com.exini.dicom.streams
 
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.Source
-import akka.stream.testkit.scaladsl.TestSink
-import akka.testkit.TestKit
 import com.exini.dicom.data.Compression.compress
 import com.exini.dicom.data.DicomElements.ValueElement
 import com.exini.dicom.data._
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.stream.testkit.scaladsl.TestSink
+import org.apache.pekko.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers

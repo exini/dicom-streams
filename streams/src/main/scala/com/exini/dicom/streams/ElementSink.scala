@@ -16,9 +16,9 @@
 
 package com.exini.dicom.streams
 
-import akka.stream.scaladsl.{ Flow, Keep, Sink }
 import com.exini.dicom.data.DicomElements.Element
 import com.exini.dicom.data.{ Elements, ElementsBuilder }
+import org.apache.pekko.stream.scaladsl.{ Flow, Keep, Sink }
 
 import scala.concurrent.{ ExecutionContext, Future }
 

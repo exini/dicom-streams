@@ -1,15 +1,14 @@
 package com.exini.dicom.streams
 
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.Source
-import akka.stream.testkit.scaladsl.TestSink
-import akka.testkit.TestKit
 import com.exini.dicom.data.DicomElements._
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data.TestData._
 import com.exini.dicom.data._
 import com.exini.dicom.streams.ElementFlows._
-import com.exini.dicom.streams.StreamTestUtils._
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.stream.testkit.scaladsl.TestSink
+import org.apache.pekko.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -22,6 +21,8 @@ class ElementFlowsTest
     with AnyFlatSpecLike
     with Matchers
     with BeforeAndAfterAll {
+
+  import StreamTestUtils._
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
