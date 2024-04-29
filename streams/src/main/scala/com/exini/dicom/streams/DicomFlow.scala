@@ -245,7 +245,8 @@ trait GuaranteedValueEvent[Out] extends DicomFlow[Out] with InFragments[Out] {
   }
 }
 
-class SequenceDelimitationPartMarker(override val bigEndian: Boolean) extends SequenceDelimitationPart(bigEndian, emptyBytes)
+class SequenceDelimitationPartMarker(override val bigEndian: Boolean)
+    extends SequenceDelimitationPart(bigEndian, emptyBytes)
 
 class ItemDelimitationPartMarker(override val bigEndian: Boolean) extends ItemDelimitationPart(bigEndian, emptyBytes)
 
@@ -269,7 +270,7 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
       partStack = active // only keep items and sequences with bytes left to subtract
       inactive.flatMap { // call events, any items will be inserted in stream
         case (p: ItemPart, _) => onItemDelimitation(new ItemDelimitationPartMarker(p.bigEndian))
-        case (p, _)                => onSequenceDelimitation(new SequenceDelimitationPartMarker(p.bigEndian))
+        case (p, _)           => onSequenceDelimitation(new SequenceDelimitationPartMarker(p.bigEndian))
       }
     }
 
@@ -293,7 +294,8 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
         partStack = partStack.tail
       subtractAndEmit(
         part,
-        (p: SequenceDelimitationPart) => super.onSequenceDelimitation(p).filterNot(_.isInstanceOf[SequenceDelimitationPartMarker])
+        (p: SequenceDelimitationPart) =>
+          super.onSequenceDelimitation(p).filterNot(_.isInstanceOf[SequenceDelimitationPartMarker])
       )
     }
 
