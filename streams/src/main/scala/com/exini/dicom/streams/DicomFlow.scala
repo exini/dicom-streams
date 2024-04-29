@@ -219,7 +219,7 @@ trait InSequence[Out] extends DicomFlow[Out] with GuaranteedDelimitationEvents[O
   }
 }
 
-object ValueChunkMarker extends ValueChunk(bigEndian = false, emptyBytes, last = true)
+class ValueChunkMarker(override val bigEndian: Boolean) extends ValueChunk(bigEndian, emptyBytes, last = true)
 
 /**
   * This mixin makes sure the `onValueChunk` event is called also for empty elements. This special case requires
@@ -230,24 +230,24 @@ trait GuaranteedValueEvent[Out] extends DicomFlow[Out] with InFragments[Out] {
   trait GuaranteedValueEventLogic extends DicomLogic with InFragmentsLogic {
     abstract override def onHeader(part: HeaderPart): List[Out] =
       if (part.length == 0)
-        super.onHeader(part) ::: onValueChunk(ValueChunkMarker)
+        super.onHeader(part) ::: onValueChunk(new ValueChunkMarker(part.bigEndian))
       else
         super.onHeader(part)
 
     abstract override def onItem(part: ItemPart): List[Out] =
       if (inFragments && part.length == 0)
-        super.onItem(part) ::: onValueChunk(ValueChunkMarker)
+        super.onItem(part) ::: onValueChunk(new ValueChunkMarker(part.bigEndian))
       else
         super.onItem(part)
 
     abstract override def onValueChunk(part: ValueChunk): List[Out] =
-      super.onValueChunk(part).filterNot(_ == ValueChunkMarker)
+      super.onValueChunk(part).filterNot(_.isInstanceOf[ValueChunkMarker])
   }
 }
 
-object SequenceDelimitationPartMarker extends SequenceDelimitationPart(bigEndian = false, emptyBytes)
+class SequenceDelimitationPartMarker(override val bigEndian: Boolean) extends SequenceDelimitationPart(bigEndian, emptyBytes)
 
-object ItemDelimitationPartMarker extends ItemDelimitationPart(bigEndian = false, emptyBytes)
+class ItemDelimitationPartMarker(override val bigEndian: Boolean) extends ItemDelimitationPart(bigEndian, emptyBytes)
 
 /**
   * By mixing in this trait, sequences and items with determinate length will be concluded by delimitation events, just
@@ -268,8 +268,8 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
       val (inactive, active) = partStack.span { case (p, b) => !p.indeterminate && b <= 0 }
       partStack = active // only keep items and sequences with bytes left to subtract
       inactive.flatMap { // call events, any items will be inserted in stream
-        case (_: ItemPart, _) => onItemDelimitation(ItemDelimitationPartMarker)
-        case _                => onSequenceDelimitation(SequenceDelimitationPartMarker)
+        case (p: ItemPart, _) => onItemDelimitation(new ItemDelimitationPartMarker(p.bigEndian))
+        case (p, _)                => onSequenceDelimitation(new SequenceDelimitationPartMarker(p.bigEndian))
       }
     }
 
@@ -289,20 +289,20 @@ trait GuaranteedDelimitationEvents[Out] extends DicomFlow[Out] with InFragments[
     }
 
     abstract override def onSequenceDelimitation(part: SequenceDelimitationPart): List[Out] = {
-      if (partStack.nonEmpty && part != SequenceDelimitationPartMarker && !inFragments)
+      if (partStack.nonEmpty && !part.isInstanceOf[SequenceDelimitationPartMarker] && !inFragments)
         partStack = partStack.tail
       subtractAndEmit(
         part,
-        (p: SequenceDelimitationPart) => super.onSequenceDelimitation(p).filterNot(_ == SequenceDelimitationPartMarker)
+        (p: SequenceDelimitationPart) => super.onSequenceDelimitation(p).filterNot(_.isInstanceOf[SequenceDelimitationPartMarker])
       )
     }
 
     abstract override def onItemDelimitation(part: ItemDelimitationPart): List[Out] = {
-      if (partStack.nonEmpty && part != ItemDelimitationPartMarker)
+      if (partStack.nonEmpty && !part.isInstanceOf[ItemDelimitationPartMarker])
         partStack = partStack.tail
       subtractAndEmit(
         part,
-        (p: ItemDelimitationPart) => super.onItemDelimitation(p).filterNot(_ == ItemDelimitationPartMarker)
+        (p: ItemDelimitationPart) => super.onItemDelimitation(p).filterNot(_.isInstanceOf[ItemDelimitationPartMarker])
       )
     }
 
