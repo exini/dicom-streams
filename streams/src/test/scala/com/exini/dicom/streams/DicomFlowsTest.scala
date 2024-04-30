@@ -1063,6 +1063,45 @@ class DicomFlowsTest
       .expectDicomComplete()
   }
 
+  it should "handle big-endian datasets" in {
+    val bigEndian = true
+
+    val bytes =
+      sequence(Tag.DerivationCodeSequence, 56, bigEndian, explicitVR = true) ++ item(16, bigEndian) ++
+        studyDate(bigEndian) ++ item(bigEndian) ++ studyDate(bigEndian) ++ itemDelimitation(bigEndian) ++
+        sequence(Tag.AbstractPriorCodeSequence, bigEndian) ++ item(bigEndian) ++ studyDate(bigEndian) ++
+        itemDelimitation(bigEndian) ++ item(16, bigEndian) ++ studyDate(bigEndian) ++ sequenceDelimitation(bigEndian)
+
+    val source = Source
+      .single(bytes.toByteString)
+      .via(parseFlow)
+      .via(toIndeterminateLengthSequences)
+
+    source
+      .runWith(TestSink())
+      .expectSequence(Tag.DerivationCodeSequence, indeterminateLength)
+      .expectItem(indeterminateLength)
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation() // inserted
+      .expectItem()
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectSequenceDelimitation() // inserted
+      .expectSequence(Tag.AbstractPriorCodeSequence, indeterminateLength)
+      .expectItem(indeterminateLength)
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation()
+      .expectItem()
+      .expectHeader(Tag.StudyDate)
+      .expectValueChunk()
+      .expectItemDelimitation() // inserted
+      .expectSequenceDelimitation()
+      .expectDicomComplete()
+  }
+
   "The utf8 flow" should "transform a japanese patient name encoded with multiple character sets to valid utf8" in {
     val specificCharacterSet = tagToBytesLE(Tag.SpecificCharacterSet) ++ "CS".utf8Bytes ++
       shortToBytesLE(0x001e.toShort) ++ padToEvenLength("ISO 2022 IR 13\\ISO 2022 IR 87".utf8Bytes, VR.CS)

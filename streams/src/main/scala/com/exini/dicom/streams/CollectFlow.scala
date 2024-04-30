@@ -119,9 +119,9 @@ object CollectFlow {
                   throw new DicomStreamException("Error collecting elements: max buffer size exceeded")
 
                 part match {
-                  case ValueChunkMarker               =>
-                  case SequenceDelimitationPartMarker =>
-                  case ItemDelimitationPartMarker     =>
+                  case _: ValueChunkMarker               =>
+                  case _: SequenceDelimitationPartMarker =>
+                  case _: ItemDelimitationPartMarker     =>
                   case _ =>
                     buffer = buffer :+ part
                     currentBufferSize = currentBufferSize + part.bytes.length
@@ -163,12 +163,12 @@ object CollectFlow {
                   case item: ItemPart =>
                     maybeAdd(ItemElement(item.length, item.bigEndian))
                     Nil
-                  case ItemDelimitationPartMarker =>
+                  case _: ItemDelimitationPartMarker =>
                     Nil
                   case itemDelimitation: ItemDelimitationPart =>
                     maybeAdd(ItemDelimitationElement(itemDelimitation.bigEndian))
                     Nil
-                  case SequenceDelimitationPartMarker =>
+                  case _: SequenceDelimitationPartMarker =>
                     Nil
                   case sequenceDelimitation: SequenceDelimitationPart =>
                     maybeAdd(SequenceDelimitationElement(sequenceDelimitation.bigEndian))
