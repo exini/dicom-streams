@@ -564,7 +564,10 @@ object DicomFlows {
                     val header = currentHeader
                     currentHeader = None
                     val newValue = header
-                      .map(h => characterSets.decode(h.vr, currentValue.toBytes).utf8Bytes)
+                      .map { h =>
+                        val bytes = characterSets.decode(h.vr, currentValue.toBytes).utf8Bytes
+                        padToEvenLength(bytes, h.vr)
+                      }
                       .map(ByteString.apply)
                     val newLength = newValue.map(_.length)
                     val newElement = for {
