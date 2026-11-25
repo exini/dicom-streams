@@ -23,6 +23,8 @@ import org.apache.pekko.stream.stage._
 import org.apache.pekko.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import org.apache.pekko.util.ByteString
 
+import scala.collection.mutable
+
 /**
   * This class defines events for modular construction of DICOM flows. Events correspond to the DICOM parts commonly
   * encountered in a stream of DICOM data. Subclasses and/or traits add functionality by overriding and implementing
@@ -436,11 +438,12 @@ private trait CharacterSetTracking[Out]
       with GuaranteedValueEventLogic
       with GuaranteedDelimitationEventsLogic {
 
-    private var characterSetStack: List[Option[CharacterSets]] = List(None)
-    private var inSpecificCharacterSet: Boolean                = false
-    private var specificCharacterSetValue: ByteString          = ByteString.empty
+    private val characterSetStack: mutable.Stack[Option[CharacterSets]] = mutable.Stack(None)
+    private var inSpecificCharacterSet: Boolean                         = false
+    private var specificCharacterSetValue: ByteString                   = ByteString.empty
 
-    def characterSets: CharacterSets = characterSetStack.flatten.headOption.getOrElse(CharacterSets.defaultOnly)
+    def characterSets: CharacterSets =
+      characterSetStack.iterator.flatten.nextOption().getOrElse(CharacterSets.defaultOnly)
 
     abstract override def onHeader(part: HeaderPart): List[Out] = {
       inSpecificCharacterSet = part.tag == Tag.SpecificCharacterSet
@@ -451,8 +454,7 @@ private trait CharacterSetTracking[Out]
       if (inSpecificCharacterSet && !inFragments) {
         specificCharacterSetValue = specificCharacterSetValue ++ part.bytes.toByteString
         if (part.last) {
-          if (characterSetStack.head.isEmpty)
-            characterSetStack = Some(CharacterSets(specificCharacterSetValue.toBytes)) :: characterSetStack.tail
+          characterSetStack.push(characterSetStack.pop().orElse(Some(CharacterSets(specificCharacterSetValue.toBytes))))
           inSpecificCharacterSet = false
           specificCharacterSetValue = ByteString.empty
         }
@@ -461,12 +463,12 @@ private trait CharacterSetTracking[Out]
     }
 
     abstract override def onItem(part: ItemPart): List[Out] = {
-      if (!inFragments) characterSetStack = None :: characterSetStack
+      if (!inFragments) characterSetStack.push(None)
       super.onItem(part)
     }
 
     abstract override def onItemDelimitation(part: ItemDelimitationPart): List[Out] = {
-      if (characterSetStack.size > 1) characterSetStack = characterSetStack.tail
+      if (characterSetStack.size > 1) characterSetStack.pop()
       else log.warning("Item delimitation without a matching item, ignoring")
       super.onItemDelimitation(part)
     }
