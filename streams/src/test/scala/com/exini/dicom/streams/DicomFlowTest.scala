@@ -15,6 +15,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import java.io.File
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ Await, ExecutionContextExecutor }
 
@@ -818,6 +819,70 @@ class DicomFlowTest
       .expectItemDelimitation()
       .expectSequenceDelimitation()
       .expectDicomComplete()
+  }
+
+  /** Passes all parts through, recording the character sets in effect at each element header. */
+  def recordCharacterSets(recorded: ListBuffer[(String, String)]): IdentityFlow =
+    new IdentityFlow with CharacterSetTracking[DicomPart] {
+      override def createLogic(attr: Attributes): GraphStageLogic =
+        new IdentityLogic with CharacterSetTrackingLogic {
+          override def onHeader(part: HeaderPart): List[DicomPart] = {
+            recorded += Lookup.keywordOf(part.tag).getOrElse(tagToString(part.tag)) ->
+              characterSets.charsetNames.mkString("\\")
+            super.onHeader(part)
+          }
+        }
+    }
+
+  "DICOM flows with character set tracking" should "track character sets through nested sequences and items" in {
+    val bytes =
+      element(Tag.SpecificCharacterSet, "ISO_IR 101") ++ studyDate() ++
+        sequence(Tag.DerivationCodeSequence) ++
+        item() ++ element(Tag.SpecificCharacterSet, "ISO_IR 100") ++ studyDate() ++
+        sequence(Tag.DerivationCodeSequence) ++ item() ++ studyDate() ++
+        itemDelimitation() ++ sequenceDelimitation() ++
+        itemDelimitation() ++
+        item() ++ studyDate() ++ itemDelimitation() ++
+        item() ++ element(Tag.SpecificCharacterSet, "") ++ studyDate() ++ itemDelimitation() ++
+        sequenceDelimitation() ++
+        personNameJohnDoe()
+
+    val recorded = ListBuffer.empty[(String, String)]
+    Source
+      .single(bytes.toByteString)
+      .via(parseFlow)
+      .via(recordCharacterSets(recorded))
+      .runWith(Sink.ignore)
+      .futureValue
+
+    recorded.toList shouldBe List(
+      "SpecificCharacterSet" -> "", // no SpecificCharacterSet yet, default
+      "StudyDate"            -> "ISO_IR 101", // set at root
+      "SpecificCharacterSet" -> "ISO_IR 101", // new item inherits root until its own value is read
+      "StudyDate"            -> "ISO_IR 100", // overridden in item
+      "StudyDate"            -> "ISO_IR 100", // nested item inherits from enclosing item
+      "StudyDate"            -> "ISO_IR 101", // sibling item inherits from root
+      "SpecificCharacterSet" -> "ISO_IR 101",
+      "StudyDate"            -> "", // empty value means default, not inherited
+      "PatientName"          -> "ISO_IR 101" // back at root after the sequence
+    )
+  }
+
+  it should "handle SpecificCharacterSet values split into several chunks" in {
+    val bytes = element(Tag.SpecificCharacterSet, "ISO 2022 IR 13\\ISO 2022 IR 87") ++ studyDate()
+
+    val recorded = ListBuffer.empty[(String, String)]
+    Source
+      .single(bytes.toByteString)
+      .via(ParseFlow(chunkSize = 2))
+      .via(recordCharacterSets(recorded))
+      .runWith(Sink.ignore)
+      .futureValue
+
+    recorded.toList shouldBe List(
+      "SpecificCharacterSet" -> "",
+      "StudyDate"            -> "ISO 2022 IR 13\\ISO 2022 IR 87"
+    )
   }
 
   "ParseFlow" should "parse two streams properly without recreating the instance" in {

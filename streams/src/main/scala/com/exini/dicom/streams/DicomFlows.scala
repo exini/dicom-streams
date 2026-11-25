@@ -16,7 +16,6 @@
 
 package com.exini.dicom.streams
 
-import com.exini.dicom.data.DicomElements.ValueElement
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath.EmptyTagPath
 import com.exini.dicom.data._
@@ -513,9 +512,11 @@ object DicomFlows {
       })
 
   /**
-    * Convert all string values to UTF-8 corresponding to the DICOM character set ISO_IR 192. First collects the
-    * SpecificCharacterSet element. Any subsequent elements of VR type LO, LT, PN, SH, ST or UT will be decoded
-    * using the character set(s) of the dataset, and replaced by a value encoded using UTF-8.
+    * Convert all string values to UTF-8 corresponding to the DICOM character set ISO_IR 192. Elements of VR type LO,
+    * LT, PN, SH, ST or UT are decoded using the character set(s) in effect for the dataset or sequence item they belong
+    * to, and replaced by values encoded using UTF-8. The top-level SpecificCharacterSet is set to ISO_IR 192 (and
+    * inserted if missing). SpecificCharacterSet elements inside sequence items are removed, as items then inherit
+    * ISO_IR 192 from the top-level dataset.
     *
     * Changing element values will change and update the length of individual elements, but does not update group
     * length elements and sequences and items with specified length. The recommended approach is to remove group
@@ -525,30 +526,14 @@ object DicomFlows {
     */
   val toUtf8Flow: PartFlow =
     partFlow
-      .via(collectFlow(Set(TagTree.fromTag(Tag.SpecificCharacterSet)), "toutf8"))
-      .via(
-        modifyFlow(insertions =
-          Seq(TagInsertion(TagPath.fromTag(Tag.SpecificCharacterSet), _ => "ISO_IR 192".utf8Bytes))
-        )
-      )
-      .via(new DeferToPartFlow[DicomPart] with GroupLengthWarnings[DicomPart] {
+      .via(new DeferToPartFlow[DicomPart] with CharacterSetTracking[DicomPart] with GroupLengthWarnings[DicomPart] {
         override def createLogic(attr: Attributes): GraphStageLogic =
-          new DeferToPartLogic with GroupLengthWarningsLogic {
-            var characterSets: CharacterSets      = CharacterSets.defaultOnly
+          new DeferToPartLogic with CharacterSetTrackingLogic with GroupLengthWarningsLogic {
             var currentHeader: Option[HeaderPart] = None
             var currentValue: ByteString          = ByteString.empty
 
             override def onPart(part: DicomPart): List[DicomPart] =
               part match {
-                case attr: ElementsPart if attr.label == "toutf8" =>
-                  characterSets = attr
-                    .elements(Tag.SpecificCharacterSet)
-                    .map {
-                      case e: ValueElement => CharacterSets(e)
-                      case _               => characterSets
-                    }
-                    .getOrElse(characterSets)
-                  Nil
                 case header: HeaderPart =>
                   if (header.length > 0 && CharacterSets.isVrAffectedBySpecificCharacterSet(header.vr)) {
                     currentHeader = Some(header)
@@ -564,7 +549,10 @@ object DicomFlows {
                     val header = currentHeader
                     currentHeader = None
                     val newValue = header
-                      .map(h => characterSets.decode(h.vr, currentValue.toBytes).utf8Bytes)
+                      .map { h =>
+                        val bytes = characterSets.decode(h.vr, currentValue.toBytes).stripSuffix(" ").utf8Bytes
+                        padToEvenLength(bytes, h.vr)
+                      }
                       .map(ByteString.apply)
                     val newLength = newValue.map(_.length)
                     val newElement = for {
@@ -580,6 +568,12 @@ object DicomFlows {
               }
           }
       })
+      .via(
+        modifyFlow(insertions =
+          Seq(TagInsertion(TagPath.fromTag(Tag.SpecificCharacterSet), _ => "ISO_IR 192".utf8Bytes))
+        )
+      )
+      .via(tagFilter(tp => tp.tag != Tag.SpecificCharacterSet || tp.isRoot))
 
   /**
     * Ensure that the data has transfer syntax explicit VR little endian. Changes the TransferSyntaxUID, if present,

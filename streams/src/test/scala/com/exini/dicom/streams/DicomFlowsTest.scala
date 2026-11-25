@@ -17,6 +17,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import java.io.File
+import java.nio.charset.{ Charset, StandardCharsets }
 import scala.collection.immutable
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ Await, ExecutionContextExecutor }
@@ -1283,6 +1284,82 @@ class DicomFlowsTest
       .expectFragment(4)
       .expectValueChunk(bytesi(1, 2, 3, 4))
       .expectFragmentsDelimitation()
+      .expectDicomComplete()
+  }
+
+  it should "handle nested SpecificCharacterSet overrides" in {
+    val latin1 = StandardCharsets.ISO_8859_1   // ISO_IR 100
+    val latin2 = Charset.forName("ISO-8859-2") // ISO_IR 101
+
+    def textInCharset(tag: Int, text: String, charset: Charset) =
+      element(tag, padToEvenLength(text.getBytes(charset).wrap, tag), bigEndian = false, explicitVR = true)
+
+    val bytes =
+      element(Tag.SpecificCharacterSet, "ISO_IR 101") ++
+        textInCharset(Tag.InstitutionAddress, "Łódź", latin2) ++
+        sequence(Tag.DerivationCodeSequence) ++
+        item() ++ // item 1 with own SpecificCharacterSet
+        element(Tag.SpecificCharacterSet, "ISO_IR 100") ++
+        textInCharset(Tag.InstitutionAddress, "Västerås", latin1) ++
+        sequence(Tag.DerivationCodeSequence) ++
+        item() ++
+        textInCharset(Tag.InstitutionAddress, "Åmål", latin1) ++
+        itemDelimitation() ++
+        sequenceDelimitation() ++
+        itemDelimitation() ++
+        item() ++ // item 2 without SpecificCharacterSet - inherit from top
+        textInCharset(Tag.InstitutionAddress, "Gdańsk", latin2) ++
+        itemDelimitation() ++
+        sequenceDelimitation() ++
+        textInCharset(Tag.PersonAddress, "Toruń", latin2)
+
+    val source = Source
+      .single(bytes.toByteString)
+      .via(ParseFlow(chunkSize = 2)) // split values into several chunks
+      .via(toUtf8Flow)
+
+    source
+      .runWith(TestSink())
+      .expectHeader(Tag.SpecificCharacterSet)
+      .expectValueChunk("ISO_IR 192".utf8Bytes)
+      .expectHeader(Tag.InstitutionAddress)
+      .expectValueChunk("Łódź ".utf8Bytes)
+      .expectSequence(Tag.DerivationCodeSequence)
+      .expectItem()
+      .expectHeader(Tag.InstitutionAddress)
+      .expectValueChunk("Västerås".utf8Bytes)
+      .expectSequence(Tag.DerivationCodeSequence)
+      .expectItem()
+      .expectHeader(Tag.InstitutionAddress)
+      .expectValueChunk("Åmål".utf8Bytes)
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectItemDelimitation()
+      .expectItem()
+      .expectHeader(Tag.InstitutionAddress)
+      .expectValueChunk("Gdańsk ".utf8Bytes)
+      .expectItemDelimitation()
+      .expectSequenceDelimitation()
+      .expectHeader(Tag.PersonAddress)
+      .expectValueChunk("Toruń".utf8Bytes)
+      .expectDicomComplete()
+  }
+
+  it should "not add extra padding to values that were already padded" in {
+    val skane = padToEvenLength("Skåne".getBytes(StandardCharsets.ISO_8859_1).wrap, VR.ST) // "Skåne "
+    val bytes =
+      element(Tag.SpecificCharacterSet, "ISO_IR 100") ++
+        element(Tag.InstitutionAddress, skane, bigEndian = false, explicitVR = true)
+
+    Source
+      .single(bytes.toByteString)
+      .via(parseFlow)
+      .via(toUtf8Flow)
+      .runWith(TestSink())
+      .expectHeader(Tag.SpecificCharacterSet)
+      .expectValueChunk("ISO_IR 192".utf8Bytes)
+      .expectHeader(Tag.InstitutionAddress)
+      .expectValueChunk("Skåne".utf8Bytes) // 6 bytes in UTF-8, no padding needed
       .expectDicomComplete()
   }
 

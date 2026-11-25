@@ -18,9 +18,12 @@ package com.exini.dicom.streams
 
 import com.exini.dicom.data.DicomParts._
 import com.exini.dicom.data.TagPath._
-import com.exini.dicom.data.{ Tag, TagPath, emptyBytes, isGroupLength }
+import com.exini.dicom.data.{ CharacterSets, Tag, TagPath, emptyBytes, isGroupLength }
 import org.apache.pekko.stream.stage._
 import org.apache.pekko.stream.{ Attributes, FlowShape, Inlet, Outlet }
+import org.apache.pekko.util.ByteString
+
+import scala.collection.mutable
 
 /**
   * This class defines events for modular construction of DICOM flows. Events correspond to the DICOM parts commonly
@@ -413,6 +416,61 @@ trait GroupLengthWarnings[Out] extends DicomFlow[Out] with InFragments[Out] {
           "Determinate length item detected, consider re-encoding items to indeterminate length to maintain valid DICOM information"
         )
       super.onItem(part)
+    }
+  }
+}
+
+/**
+  * This mixin keeps track of the character sets in effect, as given by the SpecificCharacterSet attribute. A
+  * SpecificCharacterSet inside a sequence item applies to that item and to any items nested in it, while items without
+  * one inherit the character sets of the enclosing dataset. If no SpecificCharacterSet applies, or its value is empty,
+  * the default character repertoire is used. The character sets are updated in the event callbacks. This means that
+  * implementations of events using this mixin must remember to call the corresponding super method for the character
+  * sets to update.
+  */
+private trait CharacterSetTracking[Out]
+    extends DicomFlow[Out]
+    with GuaranteedValueEvent[Out]
+    with GuaranteedDelimitationEvents[Out] {
+
+  trait CharacterSetTrackingLogic
+      extends DicomLogic
+      with GuaranteedValueEventLogic
+      with GuaranteedDelimitationEventsLogic {
+
+    private val characterSetStack: mutable.Stack[Option[CharacterSets]] = mutable.Stack(None)
+    private var inSpecificCharacterSet: Boolean                         = false
+    private var specificCharacterSetValue: ByteString                   = ByteString.empty
+
+    def characterSets: CharacterSets =
+      characterSetStack.iterator.flatten.nextOption().getOrElse(CharacterSets.defaultOnly)
+
+    abstract override def onHeader(part: HeaderPart): List[Out] = {
+      inSpecificCharacterSet = part.tag == Tag.SpecificCharacterSet
+      super.onHeader(part)
+    }
+
+    abstract override def onValueChunk(part: ValueChunk): List[Out] = {
+      if (inSpecificCharacterSet && !inFragments) {
+        specificCharacterSetValue = specificCharacterSetValue ++ part.bytes.toByteString
+        if (part.last) {
+          characterSetStack.push(characterSetStack.pop().orElse(Some(CharacterSets(specificCharacterSetValue.toBytes))))
+          inSpecificCharacterSet = false
+          specificCharacterSetValue = ByteString.empty
+        }
+      }
+      super.onValueChunk(part)
+    }
+
+    abstract override def onItem(part: ItemPart): List[Out] = {
+      if (!inFragments) characterSetStack.push(None)
+      super.onItem(part)
+    }
+
+    abstract override def onItemDelimitation(part: ItemDelimitationPart): List[Out] = {
+      if (characterSetStack.size > 1) characterSetStack.pop()
+      else log.warning("Item delimitation without a matching item, ignoring")
+      super.onItemDelimitation(part)
     }
   }
 }
